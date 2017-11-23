@@ -10,9 +10,9 @@ Contributions:
 --------------
 
 You can contact us:
-* raydelalonsobaryolo.gmail.com - University of Havana
-* ivan.galban.smith@gmail.com   - University of Havana
-* 2235penton@gmail.com          - University of Havana
+* raydelalonsobaryolo.gmail.com
+* ivan.galban.smith@gmail.com
+* 2235penton@gmail.com
 
 Authors:
 -------

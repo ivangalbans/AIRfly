@@ -37,7 +37,6 @@ namespace DHTChord.Server
             }
             catch (Exception e)
             {
-
                 throw e;
             }
             return true;

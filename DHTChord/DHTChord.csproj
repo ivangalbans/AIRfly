@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Logger\Logger.cs" />
     <Compile Include="MathOperation\ChordMath.cs" />
     <Compile Include="Server\ChordServer.cs" />
     <Compile Include="State\ChordState.cs" />

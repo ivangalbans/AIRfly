@@ -11,6 +11,7 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Serialization.Formatters;
 using System.Collections;
 using DHTChord.State;
+using System.Security.Cryptography;
 namespace DHTChord.Server
 {
     public static class ChordServer
@@ -49,6 +50,12 @@ namespace DHTChord.Server
                 ChannelServices.UnregisterChannel(channel);
                 channel = null;
             }
+        }
+        public static ulong GetHash(string key)
+        {
+            var md5 = new MD5CryptoServiceProvider();
+            byte[] bytes = Encoding.ASCII.GetBytes(key);
+            return BitConverter.ToUInt64(md5.ComputeHash(bytes), 0);
         }
 
     }

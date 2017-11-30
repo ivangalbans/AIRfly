@@ -6,6 +6,7 @@ using static DHTChord.MathOperation.ChordMath;
 using System.ComponentModel;
 using System.Threading;
 using DHTChord.MathOperation;
+using static DHTChord.Logger.Logger;
 
 namespace DHTChord.State
 {
@@ -56,9 +57,9 @@ namespace DHTChord.State
             return currentNode;
         }
 
-        private ChordNode FindSuccessor(ulong id)
+        public ChordNode FindSuccessor(ulong id)
         {
-            return FindPredecessor(id).GetState().Successor;
+            return FindPredecessor(id).GetSuccessor();
         }
 
         private bool IsStateValid()
@@ -70,6 +71,7 @@ namespace DHTChord.State
             }
             catch (Exception e)
             {
+                Log("Incoming instance was not valid", e.Message);
                 throw e;
             }
             return false;
@@ -85,10 +87,11 @@ namespace DHTChord.State
             Successor = ChordServer.LocalNode;
             //TODO: Cache
 
-            if(seed != null)
+            if (seed != null)
             {
+                Log("Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
                 ChordState state = seed.GetState();
-                if(state.IsStateValid())
+                if (state.IsStateValid())
                 {
                     try
                     {
@@ -96,14 +99,20 @@ namespace DHTChord.State
                     }
                     catch (Exception e)
                     {
-
-                        throw e;
+                        Log("Navigation", $"Error setting  Successor Node {e.Message}");
+                        return false;
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"New Ring{host} {port}");
+                    Log("Navigation", "Invalid node seed");
+
+                    return false;
                 }
+            }
+            else
+            {
+                Log("Navigation", $"Sarting ring @ {seed.Host}:{seed.Port}");
             }
 
             StartMaintenance();
@@ -162,14 +171,13 @@ namespace DHTChord.State
                     }
                     catch (Exception e)
                     {
-                        //TODO: Log
+                        Log("StabilizePredecessors", $"StabilizePredecessors error: {e.Message}");
                         Predecessor = null;
                         throw e;
                     }
 
                 }
 
-                // TODO: make this configurable either via config file or passed in via arguments.
                 Thread.Sleep(5000);
             }
         }
@@ -183,15 +191,14 @@ namespace DHTChord.State
                 try
                 {
 
-                    ChordNode succPredNode = Successor.GetState().Predecessor;//ULTRA KILL
+                    ChordNode succPredNode = Successor.GetPredecessor();
                     if (succPredNode != null)
                     {
                         if (IsIDInRange(succPredNode.ID, ChordServer.LocalNode.ID, Successor.ID))
                         {
                             Successor = succPredNode;
                         }
-
-                        Successor.GetState().Notify(ChordServer.LocalNode);
+                        Successor.CallNotify(ChordServer.LocalNode);
                         //GetSuccessorCache(this.Successor);
                     }
                     else
@@ -228,15 +235,12 @@ namespace DHTChord.State
             }
         }
 
-        private void Notify(ChordNode callingNode)
+        public void Notify(ChordNode callingNode)
         {
-            if (Predecessor == null)
-                return;
-
-            if(IsIDInRange(callingNode.ID, Predecessor.ID, ChordServer.LocalNode.ID))
+            if (Predecessor == null || IsIDInRange(callingNode.ID, Predecessor.ID, ChordServer.LocalNode.ID))
             {
-                Predecessor = callingNode;
-                return; 
+                this.Predecessor = callingNode;
+                return;
             }
         }
 
@@ -256,15 +260,14 @@ namespace DHTChord.State
                     }
                     catch (Exception e)
                     {
-                        //ChordServer.Log(LogLevel.Error, "Navigation", "Unable to update Successor for start value {0} ({1}).", this.FingerTable.StartValues[this.m_NextFingerToUpdate], e.Message);
+                        Log("Navigation", $"Unable to update Successor for start value {FingerTable.StartValues[CurrentTableInput]} ({e.Message}).");
                     }
 
                     CurrentTableInput = (CurrentTableInput + 1) % FingerTable.Length;
                 }
                 catch (Exception e)
                 {
-                    // (overly safe here)
-                    //ChordServer.Log(LogLevel.Error, "Maintenance", "Error occured during UpdateFingerTable ({0})", e.Message);
+                    Log("Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
                 }
 
                 // TODO: make this configurable via config file or passed in as an argument
@@ -295,7 +298,7 @@ namespace DHTChord.State
                                 ChordState state = SeedNode.GetState();
                                 if (state.IsStateValid())
                                 {
-                                    //ChordServer.Log(LogLevel.Error, "ReJoin", "Unable to contact initial seed node {0}.  Re-Joining...", this.m_SeedNode);
+                                    Log( "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
                                     Join(SeedNode, ChordServer.LocalNode.Host, ChordServer.LocalNode.Port);
                                 }
 
@@ -312,7 +315,7 @@ namespace DHTChord.State
                 }
                 catch (Exception e)
                 {
-                    //ChordServer.Log(LogLevel.Error, "Maintenance", "Error occured during ReJoin ({0})", e.Message);
+                    Log( "Maintenance", $"Error occured during ReJoin ({e.Message})");
                 }
 
                 Thread.Sleep(30000);

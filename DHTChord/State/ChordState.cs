@@ -14,9 +14,8 @@ namespace DHTChord.State
         public FingerTable FingerTable { get; set; }
 
 
-        private ChordNode FindClosestPrecedingFinger(UInt64 id)
+        private ChordNode FindClosestPrecedingFinger(ulong id)
         {
-
             for (int i = FingerTable.Length - 1; i >= 0; i--)
             {
                 // if the finger is more closely between the local node and id and that finger corresponds to a valid node, return the finger
@@ -40,6 +39,23 @@ namespace DHTChord.State
 
 
             return ChordServer.LocalNode;
+        }
+
+        private ChordNode FindPredecessor(ulong id)
+        {
+            var currentNode = ChordServer.LocalNode;
+            var currentState = currentNode.GetState();
+            while (!IsIDInRange(id, currentNode.ID, currentState.Successor.ID))
+            {
+                currentNode = currentState.FindClosestPrecedingFinger(id);
+                currentState = currentNode.GetState();
+            }
+            return currentNode;
+        }
+
+        private ChordNode FindSuccessor(ulong id)
+        {
+            return FindPredecessor(id).GetState().Successor;
         }
 
         private bool IsStateValid()

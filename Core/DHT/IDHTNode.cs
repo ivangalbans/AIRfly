@@ -10,6 +10,6 @@ namespace Core.DHT
     {
         string Host { get; set; }
         int Port { get; set; }
-        ulong ID { get; set; }
+        ulong ID { get; }
     }
 }

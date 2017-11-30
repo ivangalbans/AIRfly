@@ -6,14 +6,21 @@ using System.Threading.Tasks;
 
 using Core.DHT;
 using DHTChord.State;
+using DHTChord.Server;
+
 namespace DHTChord.Node
 {
     public class ChordNode : IDHTNode
     {
-        public string Host { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int Port { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public ulong ID { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
+        public string Host { get; set; }
+        public int Port { get ; set; }
+        public ulong ID { get => ChordServer.GetHash(Host.ToUpper() + Port.ToString());}
+        public ChordNode(string host, int port)
+        {
+            Host = host;
+            Port = port;
+            
+        }
         public ChordState GetState()
         {
             if(this == null)

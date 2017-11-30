@@ -29,7 +29,5 @@ namespace DHTChord.Node
                 throw e;
             }
         }
-
-
     }
 }

@@ -8,19 +8,21 @@ using Core.DHT;
 
 namespace DHTChord.Node
 {
-    class FingerTable
+    public class FingerTable
     {
-        public ChordNode[] Successor { get; set; }
+        public ChordNode[] Successors { get; set; }
         public ulong[] StartValues { get; set; }
+        public int Length { get; }
 
         public FingerTable(ChordNode node)
         {
-            Successor = new ChordNode[64];
+            Successors = new ChordNode[64];
             StartValues = new ulong[64];
+            Length = 64;
 
-            for(int i = 0; i < Successor.Length; ++i)
+            for(int i = 0; i < Successors.Length; ++i)
             {
-                Successor[i] = node;
+                Successors[i] = node;
                 StartValues[i] = node.ID + (1UL << i);
             }
         }

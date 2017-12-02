@@ -295,5 +295,31 @@ namespace DHTChord.State
                 Thread.Sleep(30000);
             }
         }
+
+        public void Depart()
+        {
+            StopMaintenance();
+
+            try
+            {
+                var state = Successor.GetState();
+                state.Predecessor = Predecessor;
+
+                state = Predecessor.GetState();
+                state.Successor = Successor;
+            }
+            catch (Exception e)
+            {
+                Log("Navigation", $"Error on Depart {e.Message}");
+
+            }
+            finally
+            {
+                Successor = ChordServer.LocalNode;
+                Predecessor = ChordServer.LocalNode;
+                FingerTable = new FingerTable.FingerTable(ChordServer.LocalNode);
+                //TODO: Successor Cache
+            }
+        }
     }
 }

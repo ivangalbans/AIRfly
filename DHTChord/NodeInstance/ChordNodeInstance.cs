@@ -53,7 +53,7 @@ namespace DHTChord.NodeInstance
         {
             var currentNode = ChordServer.LocalNode;
             var currentNodeInstance = currentNode.GetState();
-            while (!IsIDInRange(id, currentNode.ID, currentNodeInstance.Successor.ID))
+            while (!IsIdInRange(id, currentNode.ID, currentNodeInstance.Successor.ID))
             {
                 currentNode = currentNodeInstance.FindClosestPrecedingFinger(id);
                 currentNodeInstance = currentNode.GetState();
@@ -195,7 +195,7 @@ namespace DHTChord.NodeInstance
                     ChordNode succPredNode = Successor.GetPredecessor();
                     if (succPredNode != null)
                     {
-                        if (IsIDInRange(succPredNode.ID, ChordServer.LocalNode.ID, Successor.ID))
+                        if (IsIdInRange(succPredNode.ID, ChordServer.LocalNode.ID, Successor.ID))
                         {
                             Successor = succPredNode;
                         }
@@ -238,7 +238,7 @@ namespace DHTChord.NodeInstance
 
         public void Notify(ChordNode callingNode)
         {
-            if (Predecessor == null || IsIDInRange(callingNode.ID, Predecessor.ID, ChordServer.LocalNode.ID))
+            if (Predecessor == null || IsIdInRange(callingNode.ID, Predecessor.ID, ChordServer.LocalNode.ID))
             {
                 this.Predecessor = callingNode;
                 return;

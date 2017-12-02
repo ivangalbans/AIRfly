@@ -7,7 +7,7 @@ using static DHTChord.Logger.Logger;
 
 namespace DHTChord.Node
 {
-    public class ChordNode : IDHTNode
+    public class ChordNode
     {
         public string Host { get; set; }
         public int Port { get ; set; }

@@ -24,7 +24,7 @@ namespace DHTChord.InitServices
                     {
                         case 'I':
                             {
-                                PrintNodeInfo(instance, false);
+                                PrintNodeInfo(instance, true);
                                 break;
                             }
                         case 'X':
@@ -113,6 +113,11 @@ namespace DHTChord.InitServices
                 Console.WriteLine("\n\r" + successorCacheString);
 
                 Console.WriteLine("\n\r" + fingerTableString);
+
+                foreach (var item in instance.SeedCache)
+                {
+                    Console.WriteLine(item);
+                }
             }
         }
     }

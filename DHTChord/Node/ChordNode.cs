@@ -1,6 +1,4 @@
 ﻿using System;
-
-using Core.DHT;
 using DHTChord.NodeInstance;
 using DHTChord.Server;
 using static DHTChord.Logger.Logger;
@@ -20,39 +18,8 @@ namespace DHTChord.Node
             Port = port;
             
         }
-        public ChordNodeInstance GetNodeInstance()
-        {
-            try
-            {
-                var retInstance = (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{Host}:{Port}/chord");
-                return retInstance;
-            }
-            catch (Exception e)
-            {
-                Log("Navigation", $"Unable to activate remote server {Host}:{Port} ({e.Message}).");
-
-                return null;
-            }
-        }
-        public static bool IsInstanceValid(ChordNodeInstance instance)
-        {
-            try
-            {
-                if (instance.Port > 0 && instance.Successor != null)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            catch (Exception e)
-            {
-                Log("Instance",$"Incoming instance was not valid: ({e.Message}).");  // TODO; better logging
-                return false;
-            }
-        }
+      
+        
 
         public static ChordNodeInstance Instance(ChordNode node)
         {
@@ -75,15 +42,15 @@ namespace DHTChord.Node
             }
         }
 
-        public ChordNode CallFindSuccessor(ulong id, int retryCount)
+        public static ChordNode CallFindSuccessor(ChordNode node, ulong id, int retryCount)
         {
-            var state = GetNodeInstance();
+            var instance = Instance(node);
 
             while(retryCount > 0)
             {
                 try
                 {
-                    return state.FindSuccessor(id);
+                    return instance.FindSuccessor(id);
                 }
                 catch (Exception e)
                 {
@@ -94,14 +61,15 @@ namespace DHTChord.Node
             return null;
         }
 
-        public ChordNode CallFindSuccessor(ulong id)
+        public static ChordNode CallFindSuccessor(ChordNode node, ulong id)
         {
-            return CallFindSuccessor(id, 3);
+            return CallFindSuccessor(node, id, 3);
         }
 
-        public ChordNode GetSuccessor(int retryCount)
+        public static ChordNode GetSuccessor(ChordNode node, int retryCount)
         {
-            var nodeInstance = GetNodeInstance();
+            var nodeInstance = Instance(node);
+
 
             while (retryCount-- > 0)
             {
@@ -117,20 +85,21 @@ namespace DHTChord.Node
             return null;
         }
 
-        public ChordNode GetSuccessor()
+        public static ChordNode GetSuccessor(ChordNode node)
         {
-            return GetSuccessor(3);
+            return GetSuccessor(node,3);
         }
+     
 
-        public ChordNode GetPredecessor(int retryCount)
+        public static ChordNode GetPredecessor(ChordNode node, int retryCount)
         {
-            var state = GetNodeInstance();
+            var instance = Instance(node);
 
             while (retryCount-- > 0)
             {
                 try
                 {
-                    return state.Predecessor;
+                    return instance.Predecessor;
                 }
                 catch (Exception e)
                 {
@@ -140,14 +109,16 @@ namespace DHTChord.Node
             return null;
         }
 
-        public ChordNode GetPredecessor()
+        public static ChordNode GetPredecessor(ChordNode node)
         {
-            return GetPredecessor(3);
+            return GetPredecessor(node, 3);
         }
+      
 
-        public bool  CallNotify(ChordNode node, int retryCount)
+        public static bool  CallNotify(ChordNode remoteNode,ChordNode node, int retryCount)
         {
-            var state = GetNodeInstance();
+
+            var state = Instance(remoteNode);
             while (retryCount-- > 0)
             {
                 try
@@ -162,25 +133,21 @@ namespace DHTChord.Node
             }
             return false;
         }
-        public bool CallNotify(ChordNode node)
+        public static bool CallNotify(ChordNode remoteNode,ChordNode node)
         {
-            return CallNotify(node, 3);
+            return CallNotify(remoteNode,node, 3);
         }
 
-        public  ChordNode[] GetSuccessorCache()
+      
+        public static ChordNode[] GetSuccessorCache(ChordNode node)
         {
-            return GetSuccessorCache(3);
+            return GetSuccessorCache(node,3);
         }
 
-        /// <summary>
-        /// Gets the remote SuccessorCache property, given a custom retry count.
-        /// </summary>
-        /// <param name="remoteNode">The remote node from which to access the property.</param>
-        /// <param name="retryCount">The number of times to retry the operation in case of error.</param>
-        /// <returns>The remote successorCache, or NULL in case of error.</returns>
-        public ChordNode[] GetSuccessorCache(int retryCount)
+        
+        public static ChordNode[] GetSuccessorCache(ChordNode node, int retryCount)
         {
-            ChordNodeInstance instance = GetNodeInstance();
+            ChordNodeInstance instance = Instance(node);
 
             while (retryCount-- > 0)
             {

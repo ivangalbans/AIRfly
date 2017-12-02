@@ -28,18 +28,10 @@
  * ****************************************************************************
  */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-using DHTChord;
-using DHTChord.FTable;
 using DHTChord.InitServices;
 using DHTChord.Node;
-using DHTChord.NodeInstance;
-using DHTChord.Server;
 
-namespace NChordServer
+namespace Tester1
 {
     class Program
     {

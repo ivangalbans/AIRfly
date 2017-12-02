@@ -15,7 +15,7 @@ namespace DHTChord.InitServices
             if (ChordServer.RegisterService(port))
             {
 
-                var instance = ChordServer.LocalNode.GetNodeInstance();
+                var instance = ChordNode.Instance(ChordServer.LocalNode);
                 instance.Join(seed);
 
                 while (true)
@@ -23,30 +23,26 @@ namespace DHTChord.InitServices
                     switch (Char.ToUpperInvariant(Console.ReadKey(true).KeyChar))
                     {
                         case 'I':
-                            {
-                                PrintNodeInfo(instance, true);
-                                break;
-                            }
+                        {
+                            PrintNodeInfo(instance, true);
+                            break;
+                        }
                         case 'X':
-                            {
-                                PrintNodeInfo(instance, true);
-                                break;
-                            }
-                        case '?':
-                            {
-                                Console.WriteLine("Get Server [I]nfo, E[x]tended Info, [Q]uit, or Get Help[?]");
-                                break;
-                            }
+                        {
+                            PrintNodeInfo(instance, true);
+                            break;
+                        }
+
                         case 'Q':
-                            {
-                                //instance.Depart();
-                                return;
-                            }
+                        {
+                            instance.Depart();
+                            return;
+                        }
                         default:
-                            {
-                                Console.WriteLine("Get Server [I]nfo, E[x]tended Info, [Q]uit, or Get Help[?]");
-                                break;
-                            }
+                        {
+                            Console.WriteLine("Get Server [I]nfo, E[x]tended Info, [Q]uit, or Get Help[?]");
+                            break;
+                        }
                     }
                 }
             }
@@ -59,29 +55,14 @@ namespace DHTChord.InitServices
             FingerTable fingerTable = instance.FingerTable;
             ChordNode[] successorCache = instance.SuccessorCache;
 
-            string successorString, predecessorString, successorCacheString, fingerTableString;
-            if (successor != null)
-            {
-                successorString = successor.ToString();
-            }
-            else
-            {
-                successorString = "NULL";
-            }
+            var successorString = successor?.ToString() ?? "NULL";
 
-            if (predecessor != null)
-            {
-                predecessorString = predecessor.ToString();
-            }
-            else
-            {
-                predecessorString = "NULL";
-            }
+            var predecessorString = predecessor?.ToString() ?? "NULL";
 
-            successorCacheString = "SUCCESSOR CACHE:";
+            var successorCacheString = "SUCCESSOR CACHE:";
             for (int i = 0; i < successorCache.Length; i++)
             {
-                successorCacheString += string.Format("\n\r{0}: ", i);
+                successorCacheString += $"\n\r{i}: ";
                 if (successorCache[i] != null)
                 {
                     successorCacheString += successorCache[i].ToString();
@@ -92,32 +73,24 @@ namespace DHTChord.InitServices
                 }
             }
 
-            fingerTableString = "FINGER TABLE:";
             for (int i = 0; i < fingerTable.Length; i++)
             {
-                fingerTableString += string.Format("\n\r{0:x8}: ", fingerTable.StartValues[i]);
                 if (fingerTable.Successors[i] != null)
                 {
-                    fingerTableString += fingerTable.Successors[i].ToString();
                 }
                 else
                 {
-                    fingerTableString += "NULL";
                 }
             }
 
-            Console.WriteLine("\n\rNODE INFORMATION:\n\rSuccessor: {1}\r\nLocal Node: {0}\r\nPredecessor: {2}\r\n", ChordServer.LocalNode, successorString, predecessorString);
+            Console.WriteLine("\n\rNODE INFORMATION:\n\rSuccessor: {1}\r\nLocal Node: {0}\r\nPredecessor: {2}\r\n",
+                ChordServer.LocalNode, successorString, predecessorString);
 
             if (extended)
             {
                 Console.WriteLine("\n\r" + successorCacheString);
 
                 //Console.WriteLine("\n\r" + fingerTableString);
-
-                foreach (var item in instance.SeedCache)
-                {
-                    Console.WriteLine(item);
-                }
             }
         }
     }

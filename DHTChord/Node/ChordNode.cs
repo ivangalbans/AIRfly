@@ -10,9 +10,10 @@ namespace DHTChord.Node
     [Serializable]
     public class ChordNode
     {
-        public string Host { get; set; }
+        public string Host{ get; set; }
         public int Port { get ; set; }
-        public ulong Id { get => ChordServer.GetHash(Host.ToUpper() + Port.ToString());}
+        public ulong Id => ChordServer.GetHash(Host.ToUpper() + Port.ToString());
+
         public ChordNode(string host, int port)
         {
             Host = host;

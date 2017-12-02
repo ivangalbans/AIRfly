@@ -13,6 +13,23 @@ namespace DHTChord.NodeInstance
 {
     public class ChordNodeInstance : MarshalByRefObject
     {
+        /// <summary>
+        /// The host name that identifies this ChordInstance.
+        /// </summary>
+        public string Host => ChordServer.LocalNode.Host;
+
+        /// <summary>
+        /// The port on which this ChordInstance is listening.
+        /// </summary>
+        public int Port => ChordServer.LocalNode.Port;
+
+        /// <summary>
+        /// The ID is the hash value that corresponds to the current ChordInstance, and is used, amongst
+        /// other things, to determine the correct position in a Chord ring for the ChordInstance and its
+        /// neighbors.
+        /// </summary>
+        public UInt64 Id => ChordServer.LocalNode.Id;
+
         public ChordNode SeedNode { get; set; }
 
         public ChordNode Successor
@@ -32,7 +49,7 @@ namespace DHTChord.NodeInstance
             {
                 if (FingerTable.Successors[i] != null && FingerTable.Successors[i] != ChordServer.LocalNode)
                 {
-                    if (FingerInRange(FingerTable.Successors[i].Id, ChordServer.LocalNode.Id, id))
+                    if (FingerInRange(FingerTable.Successors[i].Id, Id, id))
                     {
                         ChordNodeInstance nodeInstance = FingerTable.Successors[i].GetNodeInstance();
                         if (nodeInstance.IsStateValid())
@@ -46,7 +63,7 @@ namespace DHTChord.NodeInstance
             {
                 if (t != null && t != ChordServer.LocalNode)
                 {
-                    if (FingerInRange(t.Id,ChordServer.LocalNode.Id, id))
+                    if (FingerInRange(t.Id, Id, id))
                     {
                         if (t.GetNodeInstance().IsStateValid())
                         {
@@ -109,7 +126,7 @@ namespace DHTChord.NodeInstance
         {
             try
             {
-                if (ChordServer.LocalNode.Port > 0 && Successor != null)
+                if (Port > 0 && Successor != null)
                     return true;
                 else
                     return false;
@@ -147,7 +164,7 @@ namespace DHTChord.NodeInstance
                 {
                     try
                     {
-                        Successor = nodeInstance.FindSuccessor(ChordServer.LocalNode.Id);
+                        Successor = nodeInstance.FindSuccessor(Id);
                     }
                     catch (Exception e)
                     {
@@ -163,7 +180,7 @@ namespace DHTChord.NodeInstance
             }
             else
             {
-                Log("Navigation", $"Sarting ring @ {ChordServer.LocalNode.Host}:{ChordServer.LocalNode.Port}");
+                Log("Navigation", $"Sarting ring @ {Host}:{Port}");
             }
 
             StartMaintenance();
@@ -244,7 +261,7 @@ namespace DHTChord.NodeInstance
                     var succPredNode = Successor.GetPredecessor();
                     if (succPredNode != null)
                     {
-                        if (IsIdInRange(succPredNode.Id, ChordServer.LocalNode.Id, Successor.Id))
+                        if (IsIdInRange(succPredNode.Id, Id, Successor.Id))
                         {
                             Successor = succPredNode;
                         }
@@ -293,7 +310,7 @@ namespace DHTChord.NodeInstance
         public void Notify(ChordNode callingNode)
         {
 
-            if (Predecessor == null || IsIdInRange(callingNode.Id, Predecessor.Id, ChordServer.LocalNode.Id))
+            if (Predecessor == null || IsIdInRange(callingNode.Id, Predecessor.Id, Id))
             {
                 Predecessor = callingNode;
                 return;

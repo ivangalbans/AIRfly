@@ -22,15 +22,17 @@ namespace DHTChord.Node
         {
             if(this == null)
             {
-                throw new Exception("Invalid Node");
+                Log("Navigation","Invalid Node");
+                return null;
             }
             try
             {
                 return (ChordState)Activator.GetObject(typeof(ChordState), $"tcp://{Host} : {Port}/chord");
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                Log("Navigation",$"Unable to ativate remote server {Host} {Port} {e.Message}.");
+                return null;
             }
         }
 

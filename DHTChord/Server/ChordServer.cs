@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using DHTChord.Node;
 using DHTChord.State;
+using static DHTChord.Logger.Logger;
 
 namespace DHTChord.Server
 {
@@ -33,10 +34,12 @@ namespace DHTChord.Server
                 ChannelServices.RegisterChannel(Channel, false);
                 RemotingConfiguration.RegisterWellKnownServiceType(typeof(ChordState), "chord", WellKnownObjectMode.Singleton);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                Log("Configutration",$"Unable to register Chord Service {e.Message}.");
+                return false;
             }
+            Log("Configuration",$"Chord Service registered on port {port}");
             return true;
         }
 

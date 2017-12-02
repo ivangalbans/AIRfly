@@ -75,9 +75,9 @@ namespace DHTChord.State
             return false;
         }
 
-        public bool Join(ChordNode seed, string host, int port)
+        public bool Join(ChordNode seed)
         {
-            ChordServer.LocalNode = new ChordNode(host, port);
+            //ChordServer.LocalNode = new ChordNode(host, port);
             _seedNode = seed;
 
             FingerTable = new FingerTable.FingerTable(ChordServer.LocalNode);
@@ -104,13 +104,12 @@ namespace DHTChord.State
                 else
                 {
                     Log("Navigation", "Invalid node seed");
-
                     return false;
                 }
             }
             else
             {
-                Log("Navigation", $"Sarting ring @ {seed.Host}:{seed.Port}");
+                Log("Navigation", $"Sarting ring @ {ChordServer.LocalNode.Host}:{ChordServer.LocalNode.Port}");
             }
 
             StartMaintenance();
@@ -273,7 +272,7 @@ namespace DHTChord.State
                                 if (state.IsStateValid())
                                 {
                                     Log( "ReJoin", $"Unable to contact initial seed node {_seedNode}.  Re-Joining...");
-                                    Join(_seedNode, ChordServer.LocalNode.Host, ChordServer.LocalNode.Port);
+                                    Join(_seedNode);
                                 }
 
                                 // otherwise, in the future, there will be a cache of seed nodes to check/join from...

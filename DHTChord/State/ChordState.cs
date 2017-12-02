@@ -1,21 +1,19 @@
 ﻿using System;
-
+using System.ComponentModel;
+using System.Threading;
 using DHTChord.Node;
 using DHTChord.Server;
 using static DHTChord.MathOperation.ChordMath;
-using System.ComponentModel;
-using System.Threading;
-using DHTChord.MathOperation;
 using static DHTChord.Logger.Logger;
 
 namespace DHTChord.State
 {
     public class ChordState : MarshalByRefObject
     {
-        private ChordNode SeedNode = null;
+        private ChordNode _seedNode;
         public ChordNode Successor { get; set; }
         public ChordNode Predecessor { get; set; }
-        public FingerTable FingerTable { get; set; }
+        public FingerTable.FingerTable FingerTable { get; set; }
 
 
         private ChordNode FindClosestPrecedingFinger(ulong id)
@@ -23,11 +21,11 @@ namespace DHTChord.State
             for (int i = FingerTable.Length - 1; i >= 0; i--)
             {
                 // if the finger is more closely between the local node and id and that finger corresponds to a valid node, return the finger
-                if (this.FingerTable.Successors[i] != null && this.FingerTable.Successors[i] != ChordServer.LocalNode)
+                if (FingerTable.Successors[i] != null && FingerTable.Successors[i] != ChordServer.LocalNode)
                 {
-                    if (FingerInRange(FingerTable.Successors[i].ID, ChordServer.LocalNode.ID, id))
+                    if (FingerInRange(FingerTable.Successors[i].Id, ChordServer.LocalNode.Id, id))
                     {
-                        ChordState instance = FingerTable.Successors[i].GetState();
+                        var instance = FingerTable.Successors[i].GetState();
                         if (instance.IsStateValid())
                         {
                             return FingerTable.Successors[i];
@@ -47,9 +45,9 @@ namespace DHTChord.State
 
         private ChordNode FindPredecessor(ulong id)
         {
-            var currentNode = ChordServer.LocalNode;
+            var currentNode =  ChordServer.LocalNode;
             var currentState = currentNode.GetState();
-            while (!IsIDInRange(id, currentNode.ID, currentState.Successor.ID))
+            while (!IsIdInRange(id, currentNode.Id, currentState.Successor.Id))
             {
                 currentNode = currentState.FindClosestPrecedingFinger(id);
                 currentState = currentNode.GetState();
@@ -72,7 +70,7 @@ namespace DHTChord.State
             catch (Exception e)
             {
                 Log("Incoming instance was not valid", e.Message);
-                throw e;
+                throw;
             }
             return false;
         }
@@ -80,9 +78,9 @@ namespace DHTChord.State
         public bool Join(ChordNode seed, string host, int port)
         {
             ChordServer.LocalNode = new ChordNode(host, port);
-            SeedNode = seed;
+            _seedNode = seed;
 
-            FingerTable = new FingerTable(ChordServer.LocalNode);
+            FingerTable = new FingerTable.FingerTable(ChordServer.LocalNode);
 
             Successor = ChordServer.LocalNode;
             //TODO: Cache
@@ -90,12 +88,12 @@ namespace DHTChord.State
             if (seed != null)
             {
                 Log("Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
-                ChordState state = seed.GetState();
+                var state = seed.GetState();
                 if (state.IsStateValid())
                 {
                     try
                     {
-                        Successor = state.FindSuccessor(ChordServer.LocalNode.ID);
+                        Successor = state.FindSuccessor(ChordServer.LocalNode.Id);
                     }
                     catch (Exception e)
                     {
@@ -121,41 +119,41 @@ namespace DHTChord.State
 
         }
 
-        private BackgroundWorker m_StabilizeSuccessors = new BackgroundWorker();
-        private BackgroundWorker m_StabilizePredecessors = new BackgroundWorker();
-        private BackgroundWorker m_UpdateFingerTable = new BackgroundWorker();
-        private BackgroundWorker m_Rejoin = new BackgroundWorker();
+        private readonly BackgroundWorker _stabilizeSuccessors = new BackgroundWorker();
+        private readonly BackgroundWorker _stabilizePredecessors = new BackgroundWorker();
+        private readonly BackgroundWorker _updateFingerTable = new BackgroundWorker();
+        private readonly BackgroundWorker _rejoin = new BackgroundWorker();
 
         private void StartMaintenance()
         {
-            m_StabilizeSuccessors.DoWork += new DoWorkEventHandler(StabilizeSuccessors);
-            m_StabilizeSuccessors.WorkerSupportsCancellation = true;
-            m_StabilizeSuccessors.RunWorkerAsync();
+            _stabilizeSuccessors.DoWork += StabilizeSuccessors;
+            _stabilizeSuccessors.WorkerSupportsCancellation = true;
+            _stabilizeSuccessors.RunWorkerAsync();
 
-            m_StabilizePredecessors.DoWork += new DoWorkEventHandler(StabilizePredecessors);
-            m_StabilizePredecessors.WorkerSupportsCancellation = true;
-            m_StabilizePredecessors.RunWorkerAsync();
+            _stabilizePredecessors.DoWork += StabilizePredecessors;
+            _stabilizePredecessors.WorkerSupportsCancellation = true;
+            _stabilizePredecessors.RunWorkerAsync();
 
-            m_UpdateFingerTable.DoWork += new DoWorkEventHandler(UpdateFingerTable);
-            m_UpdateFingerTable.WorkerSupportsCancellation = true;
-            m_UpdateFingerTable.RunWorkerAsync();
+            _updateFingerTable.DoWork += UpdateFingerTable;
+            _updateFingerTable.WorkerSupportsCancellation = true;
+            _updateFingerTable.RunWorkerAsync();
 
-            m_Rejoin.DoWork += new DoWorkEventHandler(ReJoin);
-            m_Rejoin.WorkerSupportsCancellation = true;
-            m_Rejoin.RunWorkerAsync();
+            _rejoin.DoWork += ReJoin;
+            _rejoin.WorkerSupportsCancellation = true;
+            _rejoin.RunWorkerAsync();
         }
 
         private void StopMaintenance()
         {
-            m_StabilizeSuccessors.CancelAsync();
-            m_StabilizePredecessors.CancelAsync();
-            m_UpdateFingerTable.CancelAsync();
-            m_Rejoin.CancelAsync();
+            _stabilizeSuccessors.CancelAsync();
+            _stabilizePredecessors.CancelAsync();
+            _updateFingerTable.CancelAsync();
+            _rejoin.CancelAsync();
         }
 
         private void StabilizePredecessors(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -163,7 +161,7 @@ namespace DHTChord.State
                 {
                     try
                     {
-                        ChordState state = Predecessor.GetState();
+                        var state = Predecessor.GetState();
                         if (!state.IsStateValid())
                         {
                             Predecessor = null;
@@ -173,7 +171,7 @@ namespace DHTChord.State
                     {
                         Log("StabilizePredecessors", $"StabilizePredecessors error: {e.Message}");
                         Predecessor = null;
-                        throw e;
+                        throw;
                     }
 
                 }
@@ -184,48 +182,25 @@ namespace DHTChord.State
 
         private void StabilizeSuccessors(object sender, DoWorkEventArgs ea)//mierda
         {
-            BackgroundWorker me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
                 try
                 {
 
-                    ChordNode succPredNode = Successor.GetPredecessor();
+                    var succPredNode = Successor.GetPredecessor();
                     if (succPredNode != null)
                     {
-                        if (IsIDInRange(succPredNode.ID, ChordServer.LocalNode.ID, Successor.ID))
+                        if (IsIdInRange(succPredNode.Id, ChordServer.LocalNode.Id, Successor.Id))
                         {
                             Successor = succPredNode;
                         }
                         Successor.CallNotify(ChordServer.LocalNode);
                         //GetSuccessorCache(this.Successor);
                     }
-                    else
-                    {
-                        //bool successorCacheHelped = false;
-                        //foreach (ChordNode entry in this.m_SuccessorCache)
-                        //{
-                        //    ChordInstance instance = ChordServer.GetInstance(entry);
-                        //    if (ChordServer.IsInstanceValid(instance))
-                        //    {
-                        //        this.Successor = entry;
-                        //        ChordServer.CallNotify(this.Successor, ChordServer.LocalNode);
-                        //        GetSuccessorCache(this.Successor);
-                        //        successorCacheHelped = true;
-                        //        break;
-                        //    }
-                        //}
-
-                        //if (!successorCacheHelped)
-                        //{
-                        //    //ChordServer.Log(LogLevel.Error, "StabilizeSuccessors", "Ring consistency error, Re-Joining Chord ring.");
-                        //    Join(SeedNode, ChordServer.LocalNode.Host, ChordServer.LocalNode.Port);
-                        //    return;
-                        //}
-                    }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     //ChordServer.Log(LogLevel.Error, "Maintenance", "Error occured during StabilizeSuccessors ({0})", e.Message);
                 }
@@ -237,18 +212,17 @@ namespace DHTChord.State
 
         public void Notify(ChordNode callingNode)
         {
-            if (Predecessor == null || IsIDInRange(callingNode.ID, Predecessor.ID, ChordServer.LocalNode.ID))
+            if (Predecessor == null || IsIdInRange(callingNode.Id, Predecessor.Id, ChordServer.LocalNode.Id))
             {
-                this.Predecessor = callingNode;
-                return;
+                Predecessor = callingNode;
             }
         }
 
-        static int CurrentTableInput = 0;
+        private static int _currentTableInput;
         private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
         {
             
-            BackgroundWorker me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -256,14 +230,14 @@ namespace DHTChord.State
                 {
                     try
                     {
-                        this.FingerTable.Successors[CurrentTableInput] = FindSuccessor(FingerTable.StartValues[CurrentTableInput]);
+                        FingerTable.Successors[_currentTableInput] = FindSuccessor(FingerTable.StartValues[_currentTableInput]);
                     }
                     catch (Exception e)
                     {
-                        Log("Navigation", $"Unable to update Successor for start value {FingerTable.StartValues[CurrentTableInput]} ({e.Message}).");
+                        Log("Navigation", $"Unable to update Successor for start value {FingerTable.StartValues[_currentTableInput]} ({e.Message}).");
                     }
 
-                    CurrentTableInput = (CurrentTableInput + 1) % FingerTable.Length;
+                    _currentTableInput = (_currentTableInput + 1) % FingerTable.Length;
                 }
                 catch (Exception e)
                 {
@@ -275,31 +249,31 @@ namespace DHTChord.State
             }
         }
 
-        private bool m_HasReJoinRun = false;
+        private bool _hasReJoinRun;
         private void ReJoin(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
                 try
                 {
-                    if (this.m_HasReJoinRun)
+                    if (_hasReJoinRun)
                     {
                         // first find the successor for the seed node
-                        if (SeedNode != null)
+                        if (_seedNode != null)
                         {
-                            ChordNode seedSuccessor = FindSuccessor(SeedNode.ID);
+                            var seedSuccessor = FindSuccessor(_seedNode.Id);
 
                             // if the successor is not equal to the seed node, something is fishy
-                            if (seedSuccessor.ID != SeedNode.ID)
+                            if (seedSuccessor.Id != _seedNode.Id)
                             {
                                 // if the seed node is still active, re-join the ring to the seed node
-                                ChordState state = SeedNode.GetState();
+                                var state = _seedNode.GetState();
                                 if (state.IsStateValid())
                                 {
-                                    Log( "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                    Join(SeedNode, ChordServer.LocalNode.Host, ChordServer.LocalNode.Port);
+                                    Log( "ReJoin", $"Unable to contact initial seed node {_seedNode}.  Re-Joining...");
+                                    Join(_seedNode, ChordServer.LocalNode.Host, ChordServer.LocalNode.Port);
                                 }
 
                                 // otherwise, in the future, there will be a cache of seed nodes to check/join from...
@@ -310,7 +284,7 @@ namespace DHTChord.State
                     else
                     {
                        
-                        this.m_HasReJoinRun = true;
+                        _hasReJoinRun = true;
                     }
                 }
                 catch (Exception e)

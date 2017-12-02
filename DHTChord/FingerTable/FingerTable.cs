@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DHTChord.Node;
 
-using Core.DHT;
-
-namespace DHTChord.Node
+namespace DHTChord.FingerTable
 {
     public class FingerTable
     {
@@ -23,7 +17,7 @@ namespace DHTChord.Node
             for(int i = 0; i < Successors.Length; ++i)
             {
                 Successors[i] = node;
-                StartValues[i] = node.ID + (1UL << i);
+                StartValues[i] = node.Id + (1UL << i);
             }
         }
     }

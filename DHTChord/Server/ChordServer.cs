@@ -1,60 +1,57 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using DHTChord.Node;
+using System.Collections;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Serialization.Formatters;
-using System.Collections;
-using DHTChord.State;
 using System.Security.Cryptography;
+using System.Text;
+using DHTChord.Node;
+using DHTChord.State;
+
 namespace DHTChord.Server
 {
     public static class ChordServer
     {
         public static ChordNode LocalNode { get; set; }
-        private static TcpChannel channel { get; set; }
-        public static bool RegisterService(int Port)
+        private static TcpChannel Channel { get; set; }
+        public static bool RegisterService(int port)
         {
             try
             {
-                if(channel != null)
+                if(Channel != null)
                 {
                     UnregisterService();    
                 }
                 
-                channel = new TcpChannel(
-                        new Hashtable { ["port"] = Port },
+                Channel = new TcpChannel(
+                        new Hashtable { ["port"] = port },
                         null,
-                        new BinaryServerFormatterSinkProvider() { TypeFilterLevel = TypeFilterLevel.Full }
+                        new BinaryServerFormatterSinkProvider { TypeFilterLevel = TypeFilterLevel.Full }
                 );
 
-                ChannelServices.RegisterChannel(channel, false);
+                ChannelServices.RegisterChannel(Channel, false);
                 RemotingConfiguration.RegisterWellKnownServiceType(typeof(ChordState), "chord", WellKnownObjectMode.Singleton);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                throw e;
+                throw;
             }
             return true;
         }
 
         public static void UnregisterService()
         {
-            if(channel != null)
+            if(Channel != null)
             {
-                ChannelServices.UnregisterChannel(channel);
-                channel = null;
+                ChannelServices.UnregisterChannel(Channel);
+                Channel = null;
             }
         }
         public static ulong GetHash(string key)
         {
             var md5 = new MD5CryptoServiceProvider();
-            byte[] bytes = Encoding.ASCII.GetBytes(key);
+            var bytes = Encoding.ASCII.GetBytes(key);
             return BitConverter.ToUInt64(md5.ComputeHash(bytes), 0);
         }
 

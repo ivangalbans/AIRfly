@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DHTChord.Server;
 
 namespace DHTChord.Logger
 {
@@ -10,7 +7,7 @@ namespace DHTChord.Logger
     {
         public static void Log(string message, string details)
         {
-            Console.WriteLine($"{DateTime.Now} {Server.ChordServer.LocalNode} {message} {details}" );
+            Console.WriteLine($"{DateTime.Now} {ChordServer.LocalNode} {message} {details}" );
         }
     }
 }

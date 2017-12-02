@@ -129,6 +129,7 @@ namespace DHTChord.NodeInstance
                     try
                     {
                         Successor = nodeInstance.FindSuccessor(Id);
+                        GetSuccessorCache(Successor);
                     }
                     catch (Exception e)
                     {
@@ -153,36 +154,30 @@ namespace DHTChord.NodeInstance
 
         }
 
-        public readonly BackgroundWorker MStabilizeSuccessors = new BackgroundWorker();
-        public readonly BackgroundWorker MStabilizePredecessors = new BackgroundWorker();
-        public readonly BackgroundWorker MUpdateFingerTable = new BackgroundWorker();
-        //public readonly BackgroundWorker _mRejoin = new BackgroundWorker();
+        private readonly BackgroundWorker _stabilizeSuccessors = new BackgroundWorker();
+        private readonly BackgroundWorker _stabilizePredecessors = new BackgroundWorker();
+        private readonly BackgroundWorker _updateFingerTable = new BackgroundWorker();
 
         public void StartMaintenance()
         {
-            MStabilizeSuccessors.DoWork += StabilizeSuccessors;
-            MStabilizeSuccessors.WorkerSupportsCancellation = true;
-            MStabilizeSuccessors.RunWorkerAsync();
+            _stabilizeSuccessors.DoWork += StabilizeSuccessors;
+            _stabilizeSuccessors.WorkerSupportsCancellation = true;
+            _stabilizeSuccessors.RunWorkerAsync();
 
-            MStabilizePredecessors.DoWork += StabilizePredecessors;
-            MStabilizePredecessors.WorkerSupportsCancellation = true;
-            MStabilizePredecessors.RunWorkerAsync();
+            _stabilizePredecessors.DoWork += StabilizePredecessors;
+            _stabilizePredecessors.WorkerSupportsCancellation = true;
+            _stabilizePredecessors.RunWorkerAsync();
 
-            MUpdateFingerTable.DoWork += UpdateFingerTable;
-            MUpdateFingerTable.WorkerSupportsCancellation = true;
-            MUpdateFingerTable.RunWorkerAsync();
-
-            //_mRejoin.DoWork += ReJoin;
-            //_mRejoin.WorkerSupportsCancellation = true;
-            //_mRejoin.RunWorkerAsync();
+            _updateFingerTable.DoWork += UpdateFingerTable;
+            _updateFingerTable.WorkerSupportsCancellation = true;
+            _updateFingerTable.RunWorkerAsync();
         }
 
         public void StopMaintenance()
         {
-            MStabilizeSuccessors.CancelAsync();
-            MStabilizePredecessors.CancelAsync();
-            MUpdateFingerTable.CancelAsync();
-           // _mRejoin.CancelAsync();
+            _stabilizeSuccessors.CancelAsync();
+            _stabilizePredecessors.CancelAsync();
+            _updateFingerTable.CancelAsync();
         }
 
         public void StabilizePredecessors(object sender, DoWorkEventArgs ea)
@@ -231,7 +226,6 @@ namespace DHTChord.NodeInstance
                         CallNotify(Successor,ChordServer.LocalNode);
 
                         GetSuccessorCache(Successor);
-                        //GetSeedCache();
                     }
                     else
                     {
@@ -309,46 +303,6 @@ namespace DHTChord.NodeInstance
                 }
 
                 Thread.Sleep(1000);
-            }
-        }
-
-        public bool HasReJoinRun;
-        public void ReJoin(object sender, DoWorkEventArgs ea)
-        {
-            var me = (BackgroundWorker)sender;
-
-            while (!me.CancellationPending)
-            {
-                try
-                {
-                    if (HasReJoinRun)
-                    {
-                        if (SeedNode != null)
-                        {
-                            ChordNode seedSuccessor = FindSuccessor(SeedNode.Id);
-
-                            if (seedSuccessor.Id != SeedNode.Id)
-                            {
-                                var nodeInstance = Instance(SeedNode);
-                                if (IsInstanceValid(nodeInstance))
-                                {
-                                    Log( "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                    Join(SeedNode);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        HasReJoinRun = true;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log( "Maintenance", $"Error occured during ReJoin ({e.Message})");
-                }
-
-                Thread.Sleep(30000);
             }
         }
 

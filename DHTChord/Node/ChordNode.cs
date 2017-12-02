@@ -22,26 +22,62 @@ namespace DHTChord.Node
         }
         public ChordNodeInstance GetNodeInstance()
         {
-            if(this == null)
-            {
-                throw new Exception("Invalid Node");
-            }
             try
             {
-                return (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{Host}:{Port}/chord");
-               
+                var retInstance = (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{Host}:{Port}/chord");
+                return retInstance;
             }
             catch (Exception e)
             {
                 Log("Navigation", $"Unable to activate remote server {Host}:{Port} ({e.Message}).");
 
-                throw e;
+                return null;
+            }
+        }
+        public static bool IsInstanceValid(ChordNodeInstance instance)
+        {
+            try
+            {
+                if (instance.Port > 0 && instance.Successor != null)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                Log("Instance",$"Incoming instance was not valid: ({e.Message}).");  // TODO; better logging
+                return false;
+            }
+        }
+
+        public static ChordNodeInstance Instance(ChordNode node)
+        {
+            if (node == null)
+            {
+                Log("Navigation", "Invalid Node (Null Argument)");
+                return null;
+            }
+
+            try
+            {
+                ChordNodeInstance retInstance = (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{node.Host}:{node.Port}/chord");
+                return retInstance;
+            }
+            catch (Exception e)
+            {
+                // perhaps instead we should just pass on the error?
+                Log("Navigation", $"Unable to activate remote server {node.Host}:{node.Port} ({e.Message}).");
+                return null;
             }
         }
 
         public ChordNode CallFindSuccessor(ulong id, int retryCount)
         {
-            var state = this.GetNodeInstance();
+            var state = GetNodeInstance();
 
             while(retryCount > 0)
             {
@@ -67,7 +103,7 @@ namespace DHTChord.Node
         {
             var nodeInstance = GetNodeInstance();
 
-            while (retryCount > 0)
+            while (retryCount-- > 0)
             {
                 try
                 {
@@ -76,8 +112,6 @@ namespace DHTChord.Node
                 catch (Exception e)
                 {
                     Log("Remote Accessor", $"GetSuccessor error: {e.Message}");
-                    retryCount--;
-                    throw;
                 }
             }
             return null;
@@ -92,7 +126,7 @@ namespace DHTChord.Node
         {
             var state = GetNodeInstance();
 
-            while (retryCount > 0)
+            while (retryCount-- > 0)
             {
                 try
                 {
@@ -101,8 +135,6 @@ namespace DHTChord.Node
                 catch (Exception e)
                 {
                     Log("Remote Accessor", $"GetPredecessor error: {e.Message}");
-                    retryCount--;
-                    throw;
                 }
             }
             return null;

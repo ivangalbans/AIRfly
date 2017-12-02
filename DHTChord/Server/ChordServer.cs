@@ -9,7 +9,7 @@ using System.Runtime.Serialization.Formatters;
 using System.Collections;
 using System.Security.Cryptography;
 using DHTChord.NodeInstance;
-
+using static DHTChord.Logger.Logger;
 namespace DHTChord.Server
 {
     public static class ChordServer
@@ -36,8 +36,11 @@ namespace DHTChord.Server
             }
             catch (Exception e)
             {
-                throw e;
+                Log("Configuration", $"Unable to register Chord Service ({e.Message}).");
+                return false;
             }
+            Log("Configuration", $"Chord Service registered on port {port}.");
+
             return true;
         }
 

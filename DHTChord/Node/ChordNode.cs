@@ -18,7 +18,7 @@ namespace DHTChord.Node
             Port = port;
             
         }
-        public ChordNodeInstance GetState()
+        public ChordNodeInstance GetNodeInstance()
         {
             if(this == null)
             {
@@ -36,7 +36,7 @@ namespace DHTChord.Node
 
         public ChordNode CallFindSuccessor(ulong ID, int retryCount)
         {
-            var state = this.GetState();
+            var state = this.GetNodeInstance();
 
             while(retryCount > 0)
             {
@@ -60,13 +60,13 @@ namespace DHTChord.Node
 
         public ChordNode GetSuccessor(int retryCount)
         {
-            var state = GetState();
+            var nodeInstance = GetNodeInstance();
 
             while (retryCount > 0)
             {
                 try
                 {
-                    return state.Successor;
+                    return nodeInstance.Successor;
                 }
                 catch (Exception e)
                 {
@@ -85,7 +85,7 @@ namespace DHTChord.Node
 
         public ChordNode GetPredecessor(int retryCount)
         {
-            var state = GetState();
+            var state = GetNodeInstance();
 
             while (retryCount > 0)
             {
@@ -110,7 +110,7 @@ namespace DHTChord.Node
 
         public bool  CallNotify(ChordNode node, int retryCount)
         {
-            var state = GetState();
+            var state = GetNodeInstance();
             while (retryCount > 0)
             {
                 try

@@ -15,23 +15,23 @@ namespace DHTChord.Server
     public static class ChordServer
     {
         public static ChordNode LocalNode { get; set; }
-        private static TcpChannel channel { get; set; }
-        public static bool RegisterService(int Port)
+        private static TcpChannel Channel { get; set; }
+        public static bool RegisterService(int port)
         {
             try
             {
-                if(channel != null)
+                if(Channel != null)
                 {
                     UnregisterService();    
                 }
                 
-                channel = new TcpChannel(
-                        new Hashtable { ["port"] = Port },
+                Channel = new TcpChannel(
+                        new Hashtable { ["port"] = port },
                         null,
                         new BinaryServerFormatterSinkProvider() { TypeFilterLevel = TypeFilterLevel.Full }
                 );
 
-                ChannelServices.RegisterChannel(channel, false);
+                ChannelServices.RegisterChannel(Channel, false);
                 RemotingConfiguration.RegisterWellKnownServiceType(typeof(ChordNodeInstance), "chord", WellKnownObjectMode.Singleton);
             }
             catch (Exception e)
@@ -43,10 +43,10 @@ namespace DHTChord.Server
 
         public static void UnregisterService()
         {
-            if(channel != null)
+            if(Channel != null)
             {
-                ChannelServices.UnregisterChannel(channel);
-                channel = null;
+                ChannelServices.UnregisterChannel(Channel);
+                Channel = null;
             }
         }
         public static ulong GetHash(string key)

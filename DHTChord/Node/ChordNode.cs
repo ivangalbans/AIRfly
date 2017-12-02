@@ -11,7 +11,7 @@ namespace DHTChord.Node
     {
         public string Host { get; set; }
         public int Port { get ; set; }
-        public ulong ID { get => ChordServer.GetHash(Host.ToUpper() + Port.ToString());}
+        public ulong Id { get => ChordServer.GetHash(Host.ToUpper() + Port.ToString());}
         public ChordNode(string host, int port)
         {
             Host = host;
@@ -34,15 +34,15 @@ namespace DHTChord.Node
             }
         }
 
-        public ChordNode CallFindSuccessor(ulong ID, int retryCount)
+        public ChordNode CallFindSuccessor(ulong id, int retryCount)
         {
-            var state = this.GetState();
+            var state = GetState();
 
             while(retryCount > 0)
             {
                 try
                 {
-                    return state.FindSuccessor(ID);
+                    return state.FindSuccessor(id);
                 }
                 catch (Exception e)
                 {
@@ -53,9 +53,9 @@ namespace DHTChord.Node
             return null;
         }
 
-        public ChordNode CallFindSuccessor(ulong ID)
+        public ChordNode CallFindSuccessor(ulong id)
         {
-            return CallFindSuccessor(ID, 3);
+            return CallFindSuccessor(id, 3);
         }
 
         public ChordNode GetSuccessor(int retryCount)
@@ -130,6 +130,35 @@ namespace DHTChord.Node
         public bool CallNotify(ChordNode node)
         {
             return CallNotify(node, 3);
+        }
+
+        public  ChordNode[] GetSuccessorCache()
+        {
+            return GetSuccessorCache(3);
+        }
+
+        /// <summary>
+        /// Gets the remote SuccessorCache property, given a custom retry count.
+        /// </summary>
+        /// <param name="remoteNode">The remote node from which to access the property.</param>
+        /// <param name="retryCount">The number of times to retry the operation in case of error.</param>
+        /// <returns>The remote successorCache, or NULL in case of error.</returns>
+        public ChordNode[] GetSuccessorCache(int retryCount)
+        {
+            ChordNodeInstance instance = GetState();
+
+            while (retryCount-- > 0)
+            {
+                try
+                {
+                    return instance.SuccessorCache;
+                }
+                catch (Exception ex)
+                {
+                    Log("Remote Accessor", $"GetSuccessorCache error: {ex.Message}");
+                }
+            }
+            return null;
         }
     }
 }

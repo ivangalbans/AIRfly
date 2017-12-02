@@ -24,7 +24,7 @@ namespace DHTChord.FTable
             for(int i = 0; i < Length; ++i)
             {
                 Successors[i] = node;
-                StartValues[i] = node.ID + (1UL << i);
+                StartValues[i] = node.Id + (1UL << i);
             }
         }
     }

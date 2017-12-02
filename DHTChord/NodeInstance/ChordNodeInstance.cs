@@ -175,7 +175,7 @@ namespace DHTChord.NodeInstance
         public readonly BackgroundWorker _mStabilizeSuccessors = new BackgroundWorker();
         public readonly BackgroundWorker _mStabilizePredecessors = new BackgroundWorker();
         public readonly BackgroundWorker _mUpdateFingerTable = new BackgroundWorker();
-        public readonly BackgroundWorker _mRejoin = new BackgroundWorker();
+        //public readonly BackgroundWorker _mRejoin = new BackgroundWorker();
 
         public void StartMaintenance()
         {
@@ -191,9 +191,9 @@ namespace DHTChord.NodeInstance
             _mUpdateFingerTable.WorkerSupportsCancellation = true;
             _mUpdateFingerTable.RunWorkerAsync();
 
-            _mRejoin.DoWork += ReJoin;
-            _mRejoin.WorkerSupportsCancellation = true;
-            _mRejoin.RunWorkerAsync();
+            //_mRejoin.DoWork += ReJoin;
+            //_mRejoin.WorkerSupportsCancellation = true;
+            //_mRejoin.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -201,7 +201,7 @@ namespace DHTChord.NodeInstance
             _mStabilizeSuccessors.CancelAsync();
             _mStabilizePredecessors.CancelAsync();
             _mUpdateFingerTable.CancelAsync();
-            _mRejoin.CancelAsync();
+           // _mRejoin.CancelAsync();
         }
 
         public void StabilizePredecessors(object sender, DoWorkEventArgs ea)

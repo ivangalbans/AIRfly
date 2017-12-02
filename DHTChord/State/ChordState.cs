@@ -78,14 +78,12 @@ namespace DHTChord.State
             return false;
         }
 
-        public bool Join(ChordNode seed, string host, int port)
+        public bool Join(ChordNode seed)
         {
-            ChordServer.LocalNode = new ChordNode(host, port);
             SeedNode = seed;
-
             FingerTable = new FingerTable(ChordServer.LocalNode);
-
             Successor = ChordServer.LocalNode;
+
             //TODO: Cache
 
             if (seed != null)
@@ -300,7 +298,7 @@ namespace DHTChord.State
                                 if (state.IsStateValid())
                                 {
                                     Log( "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                    Join(SeedNode, ChordServer.LocalNode.Host, ChordServer.LocalNode.Port);
+                                    Join(SeedNode);
                                 }
 
                                 // otherwise, in the future, there will be a cache of seed nodes to check/join from...

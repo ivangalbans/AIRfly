@@ -17,11 +17,11 @@ namespace DHTChord.FTable
 
         public FingerTable(ChordNode node)
         {
-            Successors = new ChordNode[64];
-            StartValues = new ulong[64];
             Length = 64;
+            Successors = new ChordNode[Length];
+            StartValues = new ulong[Length];
 
-            for(int i = 0; i < Successors.Length; ++i)
+            for(int i = 0; i < Length; ++i)
             {
                 Successors[i] = node;
                 StartValues[i] = node.ID + (1UL << i);

@@ -46,9 +46,9 @@
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="MathOperation\ChordMath.cs" />
     <Compile Include="Server\ChordServer.cs" />
-    <Compile Include="State\ChordState.cs" />
+    <Compile Include="NodeInstance\ChordNodeInstance.cs" />
     <Compile Include="Node\ChordNode.cs" />
-    <Compile Include="FingerTable\FingerTable.cs" />
+    <Compile Include="FTable\FingerTable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

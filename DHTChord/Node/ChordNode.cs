@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Core.DHT;
-using DHTChord.State;
+using DHTChord.NodeInstance;
 using DHTChord.Server;
 using static DHTChord.Logger.Logger;
 
@@ -22,7 +18,7 @@ namespace DHTChord.Node
             Port = port;
             
         }
-        public ChordState GetState()
+        public ChordNodeInstance GetState()
         {
             if(this == null)
             {
@@ -30,7 +26,7 @@ namespace DHTChord.Node
             }
             try
             {
-                return (ChordState)Activator.GetObject(typeof(ChordState), $"tcp://{Host} : {Port}/chord");
+                return (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{Host} : {Port}/chord");
             }
             catch (Exception e)
             {

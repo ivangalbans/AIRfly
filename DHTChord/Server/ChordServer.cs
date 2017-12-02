@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 using DHTChord.Node;
 using System.Runtime.Remoting;
@@ -10,8 +7,9 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Serialization.Formatters;
 using System.Collections;
-using DHTChord.State;
 using System.Security.Cryptography;
+using DHTChord.NodeInstance;
+
 namespace DHTChord.Server
 {
     public static class ChordServer
@@ -34,7 +32,7 @@ namespace DHTChord.Server
                 );
 
                 ChannelServices.RegisterChannel(channel, false);
-                RemotingConfiguration.RegisterWellKnownServiceType(typeof(ChordState), "chord", WellKnownObjectMode.Singleton);
+                RemotingConfiguration.RegisterWellKnownServiceType(typeof(ChordNodeInstance), "chord", WellKnownObjectMode.Singleton);
             }
             catch (Exception e)
             {

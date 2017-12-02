@@ -1,35 +1,33 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Threading;
 
 using DHTChord.Node;
 using DHTChord.Server;
 using static DHTChord.MathOperation.ChordMath;
-using System.ComponentModel;
-using System.Threading;
-using DHTChord.MathOperation;
 using static DHTChord.Logger.Logger;
 using DHTChord.FTable;
 
-namespace DHTChord.State
+namespace DHTChord.NodeInstance
 {
-    public class ChordState : MarshalByRefObject
+    public class ChordNodeInstance : MarshalByRefObject
     {
         private ChordNode SeedNode = null;
         public ChordNode Successor { get; set; }
         public ChordNode Predecessor { get; set; }
         public FingerTable FingerTable { get; set; }
 
-
         private ChordNode FindClosestPrecedingFinger(ulong id)
         {
-            for (int i = FingerTable.Length - 1; i >= 0; i--)
+            for (int i = FingerTable.Length - 1; i >= 0; --i)
             {
                 // if the finger is more closely between the local node and id and that finger corresponds to a valid node, return the finger
                 if (this.FingerTable.Successors[i] != null && this.FingerTable.Successors[i] != ChordServer.LocalNode)
                 {
                     if (FingerInRange(FingerTable.Successors[i].ID, ChordServer.LocalNode.ID, id))
                     {
-                        ChordState instance = FingerTable.Successors[i].GetState();
-                        if (instance.IsStateValid())
+                        ChordNodeInstance nodeInstance = FingerTable.Successors[i].GetState();
+                        if (nodeInstance.IsStateValid())
                         {
                             return FingerTable.Successors[i];
                         }
@@ -46,14 +44,19 @@ namespace DHTChord.State
             return ChordServer.LocalNode;
         }
 
+        /// <summary>
+        /// Find the node whose ID has the greater value that is less or equal than id
+        /// </summary>
+        /// <param name="id">ID to search the corresponding node</param>
+        /// <returns>A ChordNode that is the responsable of the id</returns>
         private ChordNode FindPredecessor(ulong id)
         {
             var currentNode = ChordServer.LocalNode;
-            var currentState = currentNode.GetState();
-            while (!IsIDInRange(id, currentNode.ID, currentState.Successor.ID))
+            var currentNodeInstance = currentNode.GetState();
+            while (!IsIDInRange(id, currentNode.ID, currentNodeInstance.Successor.ID))
             {
-                currentNode = currentState.FindClosestPrecedingFinger(id);
-                currentState = currentNode.GetState();
+                currentNode = currentNodeInstance.FindClosestPrecedingFinger(id);
+                currentNodeInstance = currentNode.GetState();
             }
             return currentNode;
         }
@@ -89,12 +92,12 @@ namespace DHTChord.State
             if (seed != null)
             {
                 Log("Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
-                ChordState state = seed.GetState();
-                if (state.IsStateValid())
+                ChordNodeInstance nodeInstance = seed.GetState();
+                if (nodeInstance.IsStateValid())
                 {
                     try
                     {
-                        Successor = state.FindSuccessor(ChordServer.LocalNode.ID);
+                        Successor = nodeInstance.FindSuccessor(ChordServer.LocalNode.ID);
                     }
                     catch (Exception e)
                     {
@@ -162,8 +165,8 @@ namespace DHTChord.State
                 {
                     try
                     {
-                        ChordState state = Predecessor.GetState();
-                        if (!state.IsStateValid())
+                        ChordNodeInstance nodeInstance = Predecessor.GetState();
+                        if (!nodeInstance.IsStateValid())
                         {
                             Predecessor = null;
                         }
@@ -294,8 +297,8 @@ namespace DHTChord.State
                             if (seedSuccessor.ID != SeedNode.ID)
                             {
                                 // if the seed node is still active, re-join the ring to the seed node
-                                ChordState state = SeedNode.GetState();
-                                if (state.IsStateValid())
+                                ChordNodeInstance nodeInstance = SeedNode.GetState();
+                                if (nodeInstance.IsStateValid())
                                 {
                                     Log( "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
                                     Join(SeedNode);

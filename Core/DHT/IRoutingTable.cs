@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Core.DHT
+﻿namespace Core.DHT
 {
     public interface IRoutingTable
     {
-        void CreateTable(IDHTNode node);
+        void CreateTable(IDhtNode node);
     }
 }

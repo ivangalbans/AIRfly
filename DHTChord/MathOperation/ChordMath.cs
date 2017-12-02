@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DHTChord.MathOperation
+﻿namespace DHTChord.MathOperation
 {
     public static class ChordMath
     {
-        public static bool IsIDInRange(ulong id, ulong start, ulong end)
+        public static bool IsIdInRange(ulong id, ulong start, ulong end)
         {
             if(start >= end)
             {

@@ -48,7 +48,7 @@ namespace DHTChord.NodeInstance
                 {
                     if (FingerInRange(t.Id,ChordServer.LocalNode.Id, id))
                     {
-                        if (t.GetNodeInstance().IsStateValid())
+                        if (t.GetState().IsStateValid())
                         {
                             return t;
                         }
@@ -78,7 +78,7 @@ namespace DHTChord.NodeInstance
         {
             for (int i = 1; i < SuccessorCache.Length; i++)
             {
-                SeedCache[i] = SuccessorCache[i - 1].GetNodeInstance().SeedNode;
+                SeedCache[i] = SuccessorCache[i - 1].GetState().SeedNode;
             }
             for (int i = SuccessorCache.Length; i < SeedCache.Length; i++)
             {
@@ -91,8 +91,13 @@ namespace DHTChord.NodeInstance
         private ChordNode FindPredecessor(ulong id)
         {
             var currentNode = ChordServer.LocalNode;
-            var currentNodeInstance = currentNode.GetNodeInstance();
+<<<<<<< HEAD
+            var currentNodeInstance = currentNode.GetState();
             while (!IsIdInRange(id, currentNode.Id, currentNodeInstance.Successor.Id))
+=======
+            var currentNodeInstance = currentNode.GetNodeInstance();
+            while (!IsIdInRange(id, currentNode.ID, currentNodeInstance.Successor.ID))
+>>>>>>> 5ef537702ce2093720850d230ab78424dd809504
             {
                 currentNode = currentNodeInstance.FindClosestPrecedingFinger(id);
                 currentNodeInstance = currentNode.GetNodeInstance();
@@ -256,7 +261,7 @@ namespace DHTChord.NodeInstance
                         bool successorCacheHelped = false;
                         foreach (ChordNode entry in SuccessorCache)
                         {
-                            var instance = entry.GetNodeInstance();
+                            var instance = entry.GetState();
                             if (instance.IsStateValid())
                             {
                                 Successor = entry;
@@ -277,7 +282,7 @@ namespace DHTChord.NodeInstance
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     //ChordServer.Log(LogLevel.Error, "Maintenance", "Error occured during StabilizeSuccessors ({0})", e.Message);
                 }
@@ -351,7 +356,7 @@ namespace DHTChord.NodeInstance
                                 if (nodeInstance.IsStateValid())
                                 {
                                     Log( "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                    SeedCache.Any(Join);
+                                    Join(SeedNode);
                                 }
 
                                 // otherwise, in the future, there will be a cache of seed nodes to check/join from...
@@ -361,6 +366,7 @@ namespace DHTChord.NodeInstance
                     }
                     else
                     {
+                       
                         _mHasReJoinRun = true;
                     }
                 }

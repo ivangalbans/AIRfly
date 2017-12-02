@@ -36,7 +36,11 @@ namespace DHTChord.Node
 
         public ChordNode CallFindSuccessor(ulong id, int retryCount)
         {
+<<<<<<< HEAD
+            var state = GetState();
+=======
             var state = this.GetNodeInstance();
+>>>>>>> 5ef537702ce2093720850d230ab78424dd809504
 
             while(retryCount > 0)
             {
@@ -145,7 +149,7 @@ namespace DHTChord.Node
         /// <returns>The remote successorCache, or NULL in case of error.</returns>
         public ChordNode[] GetSuccessorCache(int retryCount)
         {
-            ChordNodeInstance instance = GetNodeInstance();
+            ChordNodeInstance instance = GetState();
 
             while (retryCount-- > 0)
             {

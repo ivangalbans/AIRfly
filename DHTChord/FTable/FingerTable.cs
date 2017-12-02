@@ -9,6 +9,8 @@ using DHTChord.Node;
 
 namespace DHTChord.FTable
 {
+
+    [Serializable]
     public class FingerTable
     {
         public ChordNode[] Successors { get; set; }

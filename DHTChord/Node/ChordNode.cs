@@ -7,6 +7,7 @@ using static DHTChord.Logger.Logger;
 
 namespace DHTChord.Node
 {
+    [Serializable]
     public class ChordNode
     {
         public string Host { get; set; }
@@ -26,10 +27,13 @@ namespace DHTChord.Node
             }
             try
             {
-                return (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{Host} : {Port}/chord");
+                return (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{Host}:{Port}/chord");
+               
             }
             catch (Exception e)
             {
+                Log("Navigation", $"Unable to activate remote server {Host}:{Port} ({e.Message}).");
+
                 throw e;
             }
         }
@@ -111,7 +115,7 @@ namespace DHTChord.Node
         public bool  CallNotify(ChordNode node, int retryCount)
         {
             var state = GetNodeInstance();
-            while (retryCount > 0)
+            while (retryCount-- > 0)
             {
                 try
                 {
@@ -121,8 +125,6 @@ namespace DHTChord.Node
                 catch (Exception e)
                 {
                     Log("Remote Invoker", $"CallNotify error: {e.Message}");
-                    retryCount--;
-                    throw;
                 }
             }
             return false;
@@ -159,6 +161,11 @@ namespace DHTChord.Node
                 }
             }
             return null;
+        }
+
+        public override string ToString()
+        {
+            return $"Host {Host}:{Port}";
         }
     }
 }

@@ -13,7 +13,7 @@ namespace DHTChord.NodeInstance
 {
     public class ChordNodeInstance : MarshalByRefObject
     {
-        private ChordNode SeedNode { get; set; }
+        public ChordNode SeedNode { get; set; }
 
         public ChordNode Successor
         {
@@ -26,7 +26,7 @@ namespace DHTChord.NodeInstance
         public ChordNode[] SuccessorCache { get; set; }
         public ChordNode[] SeedCache { get; set; }
 
-        private ChordNode FindClosestPrecedingFinger(ulong id)
+        public ChordNode FindClosestPrecedingFinger(ulong id)
         {
             for (int i = FingerTable.Length - 1; i >= 0; --i)
             {
@@ -60,7 +60,7 @@ namespace DHTChord.NodeInstance
             return ChordServer.LocalNode;
         }
 
-        private void GetSuccessorCache(ChordNode remoteNode)
+        public void GetSuccessorCache(ChordNode remoteNode)
         {
             var remoteSuccessorCache = remoteNode.GetSuccessorCache();
             if (remoteSuccessorCache != null)
@@ -73,8 +73,8 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private static Random _random = new Random(Environment.TickCount);
-        private void GetSeedCache()
+        public static Random _random = new Random(Environment.TickCount);
+        public void GetSeedCache()
         {
             for (int i = 1; i < SuccessorCache.Length; i++)
             {
@@ -88,7 +88,7 @@ namespace DHTChord.NodeInstance
         }
 
 
-        private ChordNode FindPredecessor(ulong id)
+        public ChordNode FindPredecessor(ulong id)
         {
             var currentNode = ChordServer.LocalNode;
             var currentNodeInstance = currentNode.GetNodeInstance();
@@ -105,19 +105,21 @@ namespace DHTChord.NodeInstance
             return FindPredecessor(id).GetSuccessor();
         }
 
-        private bool IsStateValid()
+        public bool IsStateValid()
         {
             try
             {
                 if (ChordServer.LocalNode.Port > 0 && Successor != null)
                     return true;
+                else
+                    return false;
             }
             catch (Exception e)
             {
                 Log("Incoming instance was not valid", e.Message);
-                throw e;
+                return false;
+
             }
-            return false;
         }
 
         public bool Join(ChordNode seed)
@@ -170,12 +172,12 @@ namespace DHTChord.NodeInstance
 
         }
 
-        private readonly BackgroundWorker _mStabilizeSuccessors = new BackgroundWorker();
-        private readonly BackgroundWorker _mStabilizePredecessors = new BackgroundWorker();
-        private readonly BackgroundWorker _mUpdateFingerTable = new BackgroundWorker();
-        private readonly BackgroundWorker _mRejoin = new BackgroundWorker();
+        public readonly BackgroundWorker _mStabilizeSuccessors = new BackgroundWorker();
+        public readonly BackgroundWorker _mStabilizePredecessors = new BackgroundWorker();
+        public readonly BackgroundWorker _mUpdateFingerTable = new BackgroundWorker();
+        public readonly BackgroundWorker _mRejoin = new BackgroundWorker();
 
-        private void StartMaintenance()
+        public void StartMaintenance()
         {
             _mStabilizeSuccessors.DoWork += StabilizeSuccessors;
             _mStabilizeSuccessors.WorkerSupportsCancellation = true;
@@ -194,7 +196,7 @@ namespace DHTChord.NodeInstance
             _mRejoin.RunWorkerAsync();
         }
 
-        private void StopMaintenance()
+        public void StopMaintenance()
         {
             _mStabilizeSuccessors.CancelAsync();
             _mStabilizePredecessors.CancelAsync();
@@ -202,7 +204,7 @@ namespace DHTChord.NodeInstance
             _mRejoin.CancelAsync();
         }
 
-        private void StabilizePredecessors(object sender, DoWorkEventArgs ea)
+        public void StabilizePredecessors(object sender, DoWorkEventArgs ea)
         {
             BackgroundWorker me = (BackgroundWorker)sender;
 
@@ -231,7 +233,7 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
+        public void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
         {
             BackgroundWorker me = (BackgroundWorker)sender;
 
@@ -239,7 +241,6 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-
                     var succPredNode = Successor.GetPredecessor();
                     if (succPredNode != null)
                     {
@@ -253,6 +254,7 @@ namespace DHTChord.NodeInstance
                     }
                     else
                     {
+
                         bool successorCacheHelped = false;
                         foreach (ChordNode entry in SuccessorCache)
                         {
@@ -277,8 +279,9 @@ namespace DHTChord.NodeInstance
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Console.WriteLine(e.Message);
                     //ChordServer.Log(LogLevel.Error, "Maintenance", "Error occured during StabilizeSuccessors ({0})", e.Message);
                 }
 
@@ -289,6 +292,7 @@ namespace DHTChord.NodeInstance
 
         public void Notify(ChordNode callingNode)
         {
+
             if (Predecessor == null || IsIdInRange(callingNode.Id, Predecessor.Id, ChordServer.LocalNode.Id))
             {
                 Predecessor = callingNode;
@@ -297,7 +301,7 @@ namespace DHTChord.NodeInstance
         }
 
         static int _currentTableInput = 0;
-        private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
+        public void UpdateFingerTable(object sender, DoWorkEventArgs ea)
         {
             
             BackgroundWorker me = (BackgroundWorker)sender;
@@ -327,8 +331,8 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private bool _mHasReJoinRun = false;
-        private void ReJoin(object sender, DoWorkEventArgs ea)
+        public bool _mHasReJoinRun = false;
+        public void ReJoin(object sender, DoWorkEventArgs ea)
         {
             BackgroundWorker me = (BackgroundWorker)sender;
 

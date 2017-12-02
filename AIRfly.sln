@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26730.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{2FD0A8CC-DF0B-42BD-ACAF-C0862DDBBAC0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DHTChord", "DHTChord\DHTChord.csproj", "{89108981-C90E-4D81-BCEA-2F1DAD007252}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester1", "Tester1\Tester1.csproj", "{121F0FF0-A725-494C-82F9-47B734C6D4E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,8 +23,15 @@ Global
 		{89108981-C90E-4D81-BCEA-2F1DAD007252}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89108981-C90E-4D81-BCEA-2F1DAD007252}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89108981-C90E-4D81-BCEA-2F1DAD007252}.Release|Any CPU.Build.0 = Release|Any CPU
+		{121F0FF0-A725-494C-82F9-47B734C6D4E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{121F0FF0-A725-494C-82F9-47B734C6D4E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{121F0FF0-A725-494C-82F9-47B734C6D4E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{121F0FF0-A725-494C-82F9-47B734C6D4E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {99356725-33DB-45F6-AE74-1BE4488D2A80}
 	EndGlobalSection
 EndGlobal

@@ -5,8 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Core.DHT;
+using DHTChord.Node;
 
-namespace DHTChord.Node
+namespace DHTChord.FTable
 {
     public class FingerTable
     {

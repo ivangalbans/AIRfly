@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Threading;
 using DHTChord.MathOperation;
 using static DHTChord.Logger.Logger;
+using DHTChord.FTable;
 
 namespace DHTChord.State
 {

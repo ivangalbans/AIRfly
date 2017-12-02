@@ -1,69 +1,68 @@
 ﻿using System;
+
 using Core.DHT;
+using DHTChord.NodeInstance;
 using DHTChord.Server;
-using DHTChord.State;
 using static DHTChord.Logger.Logger;
 
 namespace DHTChord.Node
 {
-    public class ChordNode : IDhtNode
+    public class ChordNode : IDHTNode
     {
         public string Host { get; set; }
         public int Port { get ; set; }
-        public ulong Id => ChordServer.GetHash(Host.ToUpper() + Port);
-
+        public ulong ID { get => ChordServer.GetHash(Host.ToUpper() + Port.ToString());}
         public ChordNode(string host, int port)
         {
             Host = host;
             Port = port;
             
         }
-        public ChordState GetState()
+        public ChordNodeInstance GetState()
         {
             if(this == null)
             {
-                Log("Navigation","Invalid Node");
-                return null;
+                throw new Exception("Invalid Node");
             }
             try
             {
-                return (ChordState)Activator.GetObject(typeof(ChordState), $"tcp://{Host} : {Port}/chord");
+                return (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{Host} : {Port}/chord");
             }
             catch (Exception e)
             {
-                Log("Navigation",$"Unable to ativate remote server {Host} {Port} {e.Message}.");
-                return null;
+                throw e;
             }
         }
 
-        public ChordNode CallFindSuccessor(ulong id, int retryCount)
+        public ChordNode CallFindSuccessor(ulong ID, int retryCount)
         {
-            var state = GetState();
+            var state = this.GetState();
 
-            while(retryCount-- > 0)
+            while(retryCount > 0)
             {
                 try
                 {
-                    return state.FindSuccessor(id);
+                    return state.FindSuccessor(ID);
                 }
                 catch (Exception e)
                 {
                     Log("Remote Invoker", $"CallFindSuccessor error: {e.Message}");
+                    retryCount--;
                 }
             }
             return null;
         }
 
-        public ChordNode CallFindSuccessor(ulong id)
+        public ChordNode CallFindSuccessor(ulong ID)
         {
-            return CallFindSuccessor(id, 3);
+            return CallFindSuccessor(ID, 3);
         }
 
         public ChordNode GetSuccessor(int retryCount)
         {
             var state = GetState();
 
-            while (retryCount-- > 0)
+            while (retryCount > 0)
             {
                 try
                 {
@@ -72,6 +71,8 @@ namespace DHTChord.Node
                 catch (Exception e)
                 {
                     Log("Remote Accessor", $"GetSuccessor error: {e.Message}");
+                    retryCount--;
+                    throw;
                 }
             }
             return null;
@@ -86,7 +87,7 @@ namespace DHTChord.Node
         {
             var state = GetState();
 
-            while (retryCount-- > 0)
+            while (retryCount > 0)
             {
                 try
                 {
@@ -95,6 +96,8 @@ namespace DHTChord.Node
                 catch (Exception e)
                 {
                     Log("Remote Accessor", $"GetPredecessor error: {e.Message}");
+                    retryCount--;
+                    throw;
                 }
             }
             return null;
@@ -108,7 +111,7 @@ namespace DHTChord.Node
         public bool  CallNotify(ChordNode node, int retryCount)
         {
             var state = GetState();
-            while (retryCount-- > 0)
+            while (retryCount > 0)
             {
                 try
                 {
@@ -118,6 +121,8 @@ namespace DHTChord.Node
                 catch (Exception e)
                 {
                     Log("Remote Invoker", $"CallNotify error: {e.Message}");
+                    retryCount--;
+                    throw;
                 }
             }
             return false;

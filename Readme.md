@@ -18,4 +18,4 @@ Authors:
 -------
 * Raydel E. Alonso Baryolo
 * Ivan Galban Smith
-* Abel Ibrahim Penton
+* Abel Penton Ibrahim

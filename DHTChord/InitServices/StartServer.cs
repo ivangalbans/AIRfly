@@ -112,7 +112,7 @@ namespace DHTChord.InitServices
             {
                 Console.WriteLine("\n\r" + successorCacheString);
 
-                Console.WriteLine("\n\r" + fingerTableString);
+                //Console.WriteLine("\n\r" + fingerTableString);
 
                 foreach (var item in instance.SeedCache)
                 {

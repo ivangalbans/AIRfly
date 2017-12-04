@@ -50,48 +50,31 @@ namespace DHTChord.InitServices
 
         static void PrintNodeInfo(ChordNodeInstance instance, bool extended)
         {
-            ChordNode successor = instance.Successor;
-            ChordNode predecessor = instance.Predecessor;
-            FingerTable fingerTable = instance.FingerTable;
-            ChordNode[] successorCache = instance.SuccessorCache;
+            var successor = instance.Successor;
+            var predecessor = instance.Predecessor;
+            var fingerTable = instance.FingerTable;
+            var successorCache = instance.SuccessorCache;
+            var port = instance.Port;
+            var host = instance.Host;
+            var seed = instance.SeedNode;
 
-            var successorString = successor?.ToString() ?? "NULL";
 
-            var predecessorString = predecessor?.ToString() ?? "NULL";
+            Console.WriteLine($"\nNODE INFORMATION: HOST: {host}   PORT {port}");
+            Console.WriteLine($"Successor: {successor?.ToString() ?? "NULL"}");
+            Console.WriteLine($"LocalNode: {ChordServer.LocalNode?.ToString() ?? "NULL"}");
+            Console.WriteLine($"Predecessor: {successor?.ToString() ?? "NULL"}");
+            Console.WriteLine($"Seed: {seed?.ToString() ?? "NULL"}");
 
-            var successorCacheString = "SUCCESSOR CACHE:";
-            for (int i = 0; i < successorCache.Length; i++)
-            {
-                successorCacheString += $"\n\r{i}: ";
-                if (successorCache[i] != null)
-                {
-                    successorCacheString += successorCache[i].ToString();
-                }
-                else
-                {
-                    successorCacheString += "NULL";
-                }
-            }
+            Console.WriteLine($"\nSUCCESSOR CACHE:");
 
-            for (int i = 0; i < fingerTable.Length; i++)
-            {
-                if (fingerTable.Successors[i] != null)
-                {
-                }
-                else
-                {
-                }
-            }
+            for (var i = 0; i < successorCache.Length; i++)
+                Console.WriteLine($"{i}: {successorCache[i]?.ToString()??"NULL"} ");
 
-            Console.WriteLine("\n\rNODE INFORMATION:\n\rSuccessor: {1}\r\nLocal Node: {0}\r\nPredecessor: {2}\r\n",
-                ChordServer.LocalNode, successorString, predecessorString);
+            Console.WriteLine($"\nFINGERTABLE:");
 
-            if (extended)
-            {
-                Console.WriteLine("\n\r" + successorCacheString);
+            for (var i = 0; i < fingerTable.Length; i++)
+                Console.WriteLine($"{i}: {fingerTable.Successors[i]?.ToString() ?? "NULL"} ");
 
-                //Console.WriteLine("\n\r" + fingerTableString);
-            }
         }
     }
 }

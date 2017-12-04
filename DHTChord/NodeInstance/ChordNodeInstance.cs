@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-
+using System.Windows.Markup;
 using DHTChord.Node;
 using DHTChord.Server;
 using DHTChord.FTable;
@@ -20,27 +20,64 @@ namespace DHTChord.NodeInstance
 
         public ulong Id => ChordServer.LocalNode.Id;
 
-        public ChordNode SeedNode { get; set; }
+        public ChordNode SeedNode { get => SeedCache[0];
+            set => SeedCache[0] = value;
+        }
+
 
         public ChordNode Successor
         {
             get => SuccessorCache[0];
-            set => SuccessorCache[0] = value;
+            set
+            {
+                if (value == null &&  SuccessorCache[0] != null)
+                {
+                    Log( "Navigation", "Setting successor to null.");
+                }
+                else if (value != null &&
+                         (SuccessorCache[0] == null || SuccessorCache[0].Id != value.Id))
+                {
+                    Log("Navigation", $"New Successor {value}.");
+                }
+                SuccessorCache[0] = value;
+            }
         }
-        public ChordNode Predecessor { get; set; }
+
+
+
+        private ChordNode _predecessorNode;
+        public ChordNode Predecessor
+        {
+            get => _predecessorNode;
+            set
+            {
+                if (value == null && null != _predecessorNode)
+                {
+                    Log("Navigation", "Setting predecessor to null.");
+                }
+                else if (value != null &&
+                         (_predecessorNode== null || _predecessorNode.Id != value.Id))  
+                {
+                    Log("Navigation", $"New Predecessor {value}.");
+                }
+                _predecessorNode = value;
+            }
+        }
         public FingerTable FingerTable { get; set; }
 
         public ChordNode[] SuccessorCache { get; set; }
 
+        public ChordNode[] SeedCache { get; set; }
+
         public ChordNode FindClosestPrecedingFinger(ulong id)
         {
-            for (int i = FingerTable.Length - 1; i >= 0; --i)
+            for (var i = FingerTable.Length - 1; i >= 0; --i)
             {
                 if (FingerTable.Successors[i] != null && FingerTable.Successors[i] != ChordServer.LocalNode)
                 {
                     if (FingerInRange(FingerTable.Successors[i].Id, Id, id))
                     {
-                        ChordNodeInstance nodeInstance = Instance(FingerTable.Successors[i]);
+                        var nodeInstance = Instance(FingerTable.Successors[i]);
                         if (IsInstanceValid(nodeInstance))
                         {
                             return FingerTable.Successors[i];
@@ -73,10 +110,17 @@ namespace DHTChord.NodeInstance
             if (remoteSuccessorCache != null)
             {
                 SuccessorCache[0] = remoteNode;
-                for (int i = 1; i < SuccessorCache.Length; i++)
+                for (var i = 1; i < SuccessorCache.Length; i++)
                 {
                     SuccessorCache[i] = remoteSuccessorCache[i - 1];
                 }
+            }
+        }
+        public void GetSeedCache()
+        {
+            for (int i = 1; i < SeedCache.Length; i++)
+            {
+                SeedCache[i] = FindSuccessor(ChordServer.GetHash(Random.Next() + Random.Next().ToString()));
             }
         }
 
@@ -114,8 +158,9 @@ namespace DHTChord.NodeInstance
             FingerTable = new FingerTable(ChordServer.LocalNode);
             
             SuccessorCache = new ChordNode[8];
+            SeedCache = new ChordNode[8];
 
-            for (int i = 0; i < SuccessorCache.Length; i++)
+            for (var i = 0; i < SuccessorCache.Length; i++)
             {
                 SuccessorCache[i] = ChordServer.LocalNode;
             }
@@ -123,7 +168,7 @@ namespace DHTChord.NodeInstance
             if (seed != null)
             {
                 Log("Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
-                ChordNodeInstance nodeInstance = Instance(seed);
+                var nodeInstance = Instance(seed);
                 if (IsInstanceValid(nodeInstance))
                 {
                     try
@@ -180,9 +225,9 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.CancelAsync();
         }
 
-        public void StabilizePredecessors(object sender, DoWorkEventArgs ea)
+        private void StabilizePredecessors(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -208,9 +253,9 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        public void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
+        private void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -229,8 +274,8 @@ namespace DHTChord.NodeInstance
                     }
                     else
                     {
-                        bool successorCacheHelped = false;
-                        foreach (ChordNode entry in SuccessorCache)
+                        var successorCacheHelped = false;
+                        foreach (var entry in SuccessorCache)
                         {
                             var instance = Instance(entry);
 
@@ -249,9 +294,10 @@ namespace DHTChord.NodeInstance
 
                         if (!successorCacheHelped)
                         {
+                            Console.WriteLine("***********\n************\n************");
                             Log("StabilizeSuccessors", "Ring consistency error, Re-Joining Chord ring.");
 
-                            if (Join(SeedNode))
+                            if (SeedCache.Any(Join))
                             {
                                 return;
                             }
@@ -277,10 +323,10 @@ namespace DHTChord.NodeInstance
         }
 
         private static int _currentTableInput;
-        public void UpdateFingerTable(object sender, DoWorkEventArgs ea)
+        private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
         {
             
-            BackgroundWorker me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -328,7 +374,7 @@ namespace DHTChord.NodeInstance
                 Successor = ChordServer.LocalNode;
                 Predecessor = ChordServer.LocalNode;
                 FingerTable = new FingerTable(ChordServer.LocalNode);
-                for (int i = 0; i < SuccessorCache.Length; i++)
+                for (var i = 0; i < SuccessorCache.Length; i++)
                 {
                     SuccessorCache[i] = ChordServer.LocalNode;
                 }

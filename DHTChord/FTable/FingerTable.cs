@@ -17,7 +17,7 @@ namespace DHTChord.FTable
             Successors = new ChordNode[Length];
             StartValues = new ulong[Length];
 
-            for(int i = 0; i < Length; ++i)
+            for(var i = 0; i < Length; ++i)
             {
                 Successors[i] = node;
                 StartValues[i] = node.Id + (1UL << i);

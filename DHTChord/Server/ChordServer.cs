@@ -55,7 +55,7 @@ namespace DHTChord.Server
         public static ulong GetHash(string key)
         {
             var md5 = new MD5CryptoServiceProvider();
-            byte[] bytes = Encoding.ASCII.GetBytes(key);
+            var bytes = Encoding.ASCII.GetBytes(key);
             return BitConverter.ToUInt64(md5.ComputeHash(bytes), 0);
         }
 

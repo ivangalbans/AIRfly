@@ -18,6 +18,8 @@ namespace DHTChord.Node
             Port = port;
             
         }
+
+        private static int _retryCount = 6;
       
         
 
@@ -31,7 +33,7 @@ namespace DHTChord.Node
 
             try
             {
-                ChordNodeInstance retInstance = (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{node.Host}:{node.Port}/chord");
+                var retInstance = (ChordNodeInstance)Activator.GetObject(typeof(ChordNodeInstance), $"tcp://{node.Host}:{node.Port}/chord");
                 return retInstance;
             }
             catch (Exception e)
@@ -46,7 +48,7 @@ namespace DHTChord.Node
         {
             var instance = Instance(node);
 
-            while(retryCount > 0)
+            while(retryCount-- > 0)
             {
                 try
                 {
@@ -55,7 +57,6 @@ namespace DHTChord.Node
                 catch (Exception e)
                 {
                     Log("Remote Invoker", $"CallFindSuccessor error: {e.Message}");
-                    retryCount--;
                 }
             }
             return null;
@@ -63,7 +64,7 @@ namespace DHTChord.Node
 
         public static ChordNode CallFindSuccessor(ChordNode node, ulong id)
         {
-            return CallFindSuccessor(node, id, 3);
+            return CallFindSuccessor(node, id, _retryCount);
         }
 
         public static ChordNode GetSuccessor(ChordNode node, int retryCount)
@@ -87,7 +88,7 @@ namespace DHTChord.Node
 
         public static ChordNode GetSuccessor(ChordNode node)
         {
-            return GetSuccessor(node,3);
+            return GetSuccessor(node,_retryCount);
         }
      
 
@@ -111,7 +112,7 @@ namespace DHTChord.Node
 
         public static ChordNode GetPredecessor(ChordNode node)
         {
-            return GetPredecessor(node, 3);
+            return GetPredecessor(node, _retryCount);
         }
       
 
@@ -135,19 +136,19 @@ namespace DHTChord.Node
         }
         public static bool CallNotify(ChordNode remoteNode,ChordNode node)
         {
-            return CallNotify(remoteNode,node, 3);
+            return CallNotify(remoteNode,node, _retryCount);
         }
 
       
         public static ChordNode[] GetSuccessorCache(ChordNode node)
         {
-            return GetSuccessorCache(node,3);
+            return GetSuccessorCache(node,_retryCount);
         }
 
         
         public static ChordNode[] GetSuccessorCache(ChordNode node, int retryCount)
         {
-            ChordNodeInstance instance = Instance(node);
+            var instance = Instance(node);
 
             while (retryCount-- > 0)
             {

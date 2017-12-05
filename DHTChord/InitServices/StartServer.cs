@@ -24,7 +24,7 @@ namespace DHTChord.InitServices
                     {
                         case 'I':
                         {
-                            PrintNodeInfo(instance, true);
+                            PrintNodeInfo(instance, false);
                             break;
                         }
                         case 'X':
@@ -70,11 +70,13 @@ namespace DHTChord.InitServices
             for (var i = 0; i < successorCache.Length; i++)
                 Console.WriteLine($"{i}: {successorCache[i]?.ToString()??"NULL"} ");
 
-            Console.WriteLine($"\nFINGERTABLE:");
+            if (extended)
+            {
+                Console.WriteLine($"\nFINGERTABLE:");
 
-            for (var i = 0; i < fingerTable.Length; i++)
-                Console.WriteLine($"{i}: {fingerTable.Successors[i]?.ToString() ?? "NULL"} ");
-
+                for (var i = 0; i < fingerTable.Length; i++)
+                    Console.WriteLine($"{i}: {fingerTable.Successors[i]?.ToString() ?? "NULL"} ");
+            }
         }
     }
 }

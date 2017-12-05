@@ -20,9 +20,7 @@ namespace DHTChord.NodeInstance
 
         public ulong Id => ChordServer.LocalNode.Id;
 
-        public ChordNode SeedNode { get => SeedCache[0];
-            set => SeedCache[0] = value;
-        }
+        public ChordNode SeedNode { get; set; }
 
 
         public ChordNode Successor
@@ -67,7 +65,7 @@ namespace DHTChord.NodeInstance
 
         public ChordNode[] SuccessorCache { get; set; }
 
-        public ChordNode[] SeedCache { get; set; }
+        //public ChordNode[] SeedCache { get; set; }
 
         public ChordNode FindClosestPrecedingFinger(ulong id)
         {
@@ -116,13 +114,13 @@ namespace DHTChord.NodeInstance
                 }
             }
         }
-        public void GetSeedCache()
-        {
-            for (int i = 1; i < SeedCache.Length; i++)
-            {
-                SeedCache[i] = FindSuccessor(ChordServer.GetHash(Random.Next() + Random.Next().ToString()));
-            }
-        }
+        //public void GetSeedCache()
+        //{
+        //    for (int i = 1; i < SeedCache.Length; i++)
+        //    {
+        //        SeedCache[i] = FindSuccessor(ChordServer.GetHash(Random.Next() + Random.Next().ToString()));
+        //    }
+        //}
 
         public static Random Random = new Random(Environment.TickCount);
 
@@ -158,7 +156,7 @@ namespace DHTChord.NodeInstance
             FingerTable = new FingerTable(ChordServer.LocalNode);
             
             SuccessorCache = new ChordNode[8];
-            SeedCache = new ChordNode[8];
+           // SeedCache = new ChordNode[8];
 
             for (var i = 0; i < SuccessorCache.Length; i++)
             {
@@ -297,7 +295,7 @@ namespace DHTChord.NodeInstance
                             Console.WriteLine("***********\n************\n************");
                             Log("StabilizeSuccessors", "Ring consistency error, Re-Joining Chord ring.");
 
-                            if (SeedCache.Any(Join))
+                            if (Join(SeedNode))
                             {
                                 return;
                             }

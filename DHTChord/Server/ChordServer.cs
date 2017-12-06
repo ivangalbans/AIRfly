@@ -113,5 +113,45 @@ namespace DHTChord.Server
             }
         }
 
+
+        /// <summary>
+        /// Calls AddKey() remotely, using a default retry value of three.
+        /// </summary>
+        /// <param name="remoteNode">The remote on which to call the method.</param>
+        /// <param name="value">The string value to add.</param>
+        public static void CallAddKey(ChordNode remoteNode, string value)
+        {
+            CallAddKey(remoteNode, value, 3);
+        }
+
+        /// <summary>
+        /// Calls AddKey remotely.
+        /// </summary>
+        /// <param name="remoteNode">The remote node on which to call AddKey.</param>
+        /// <param name="value">The string value to add.</param>
+        /// <param name="retryCount">The number of retries to attempt.</param>
+        public static void CallAddKey(ChordNode remoteNode, string value, int retryCount)
+        {
+            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+
+            try
+            {
+                instance.AddKey(value);
+            }
+            catch (System.Exception ex)
+            {
+                Log("Remote Invoker", $"CallAddKey error: {ex.Message}");
+
+                if (retryCount > 0)
+                {
+                    CallAddKey(remoteNode, value, --retryCount);
+                }
+                else
+                {
+                    Log("Remote Invoker", $"CallAddKey failed - error: {ex.Message}");
+                }
+            }
+        }
+
     }
 }

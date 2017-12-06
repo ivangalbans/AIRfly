@@ -189,7 +189,6 @@ namespace DHTChord.NodeInstance
             }
 
             StartMaintenance();
-            UpdateDataNode();
 
             return true;
         }
@@ -375,5 +374,27 @@ namespace DHTChord.NodeInstance
                 }
             }
         }
+
+        #region Storage
+        
+        private SortedList<ulong, string> db = new SortedList<ulong, string>();
+
+        /// <summary>
+        /// Add a key-value pair into database
+        /// </summary>
+        /// <param name="value">The value to add.</param>
+        public void AddKey(string value)
+        {
+            ulong key = ChordServer.GetHash(value);
+            ChordNode owningNode = ChordServer.CallFindSuccessor(key);
+
+            if (owningNode != ChordServer.LocalNode)
+                ChordServer.CallAddKey(owningNode, value);
+            else
+                this.db.Add(key, value);
+        }
+
+        #endregion
+
     }
 }

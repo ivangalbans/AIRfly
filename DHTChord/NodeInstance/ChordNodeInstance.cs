@@ -214,13 +214,13 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
-            _reJoin.DoWork += ReJoin;
-            _reJoin.WorkerSupportsCancellation = true;
-            _reJoin.RunWorkerAsync();
+            //_reJoin.DoWork += ReJoin;
+            //_reJoin.WorkerSupportsCancellation = true;
+            //_reJoin.RunWorkerAsync();
 
-            _replicationStorage.DoWork += ReplicateStorage;
-            _replicationStorage.WorkerSupportsCancellation = true;
-            _replicationStorage.RunWorkerAsync();
+            //_replicationStorage.DoWork += ReplicateStorage;
+            //_replicationStorage.WorkerSupportsCancellation = true;
+            //_replicationStorage.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -478,7 +478,12 @@ namespace DHTChord.NodeInstance
         {
             var tmp = FindContainerKey(key);
             nodeOut = new ChordNode(tmp.Host, tmp.Port);
-            return tmp.db.ContainsKey(key) ? tmp.db[key] : string.Empty;
+            return tmp.GetFromDB(key);
+        }
+
+        public string GetFromDB(ulong key)
+        {
+            return db.ContainsKey(key) ? db[key] : string.Empty;
         }
 
         /// <summary>
@@ -488,12 +493,10 @@ namespace DHTChord.NodeInstance
         /// <returns>The node instance responsable of the key</returns>
         public ChordNodeInstance FindContainerKey(ulong key)
         {
-            Console.WriteLine("hi");
             ChordNode owningNode = ChordServer.CallFindSuccessor(key);
 
             if (owningNode.Equals(ChordServer.LocalNode))
                 return Instance(owningNode);
-            Console.WriteLine("buuh");
             return ChordServer.CallFindContainerKey(owningNode, key);
         }
 

@@ -210,11 +210,9 @@ namespace DHTChord.Server
         public static ChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount)
         {
             ChordNodeInstance instance = ChordNode.Instance(remoteNode);
-            Console.WriteLine("CallFindContainerKey");
             try
             {
                 var a =  instance.FindContainerKey(key);
-                Console.WriteLine("AAAAAAAAAAAAAAAAAAAA");
                 return a;
             }
             catch (System.Exception ex)

@@ -44,7 +44,7 @@ namespace DHTChord.InitServices
 
                         case 'U':
                         {
-                                for(int i = 0; i < 1; ++i)
+                                for(int i = 0; i < 10; ++i)
                                 {
                                     ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Wolrd {i}");
                                     Log(LogLevel.Info, "Add New Value", "Adding the value");
@@ -54,10 +54,10 @@ namespace DHTChord.InitServices
 
                         case 'F':
                         {
-                                for (int i = 0; i < 1; ++i)
+                                for (int i = 0; i < 10; ++i)
                                 {
                                     var val = ChordServer.CallGetValue(ChordServer.LocalNode, ChordServer.GetHash($"Hello Wolrd {i}"), out var tmp);
-                                    if(tmp == null)
+                                    if(val == null)
                                     {
                                         Log(LogLevel.Error, "GetValue", $"The instance is null. Value is not found: Hello Wolrd {i}");
                                     }

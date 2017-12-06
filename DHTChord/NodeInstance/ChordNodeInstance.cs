@@ -218,9 +218,9 @@ namespace DHTChord.NodeInstance
             //_reJoin.WorkerSupportsCancellation = true;
             //_reJoin.RunWorkerAsync();
 
-            //_replicationStorage.DoWork += ReplicateStorage;
-            //_replicationStorage.WorkerSupportsCancellation = true;
-            //_replicationStorage.RunWorkerAsync();
+            _replicationStorage.DoWork += ReplicateStorage;
+            _replicationStorage.WorkerSupportsCancellation = true;
+            _replicationStorage.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -508,7 +508,10 @@ namespace DHTChord.NodeInstance
         public void ReplicateKey(ulong key, string value)
         {
             if (!this.db.ContainsKey(key))
+            {
+                Log(LogLevel.Info, "Replication", $"Replication Key and Value {key} {value}");
                 this.db.Add(key, value);
+            }
         }
 
         /// <summary>
@@ -526,8 +529,8 @@ namespace DHTChord.NodeInstance
                 {
                     foreach (ulong key in this.db.Keys)
                     {
-                        if (IsIdInRange(key, Id, Successor.Id))
-                        {
+                        if (IsIdInRange(key, Predecessor.Id, Id))
+                        {                        
                             ChordServer.CallReplicateKey(this.Successor, key, this.db[key]);
                         }
                     }

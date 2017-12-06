@@ -438,6 +438,18 @@ namespace DHTChord.NodeInstance
         
         private SortedList<ulong, string> db = new SortedList<ulong, string>();
 
+
+        public void ViewDataBase()
+        {
+            Console.WriteLine($"Data Base details");
+            foreach (var item in db)
+            {
+                Console.WriteLine($"{item.Key} {item.Value}");
+            }
+            Console.WriteLine("*************************************");
+            Console.WriteLine();
+        }
+
         /// <summary>
         /// Add a key-value pair into database
         /// </summary>
@@ -445,7 +457,7 @@ namespace DHTChord.NodeInstance
         public void AddValue(string value)
         {
             ulong key = ChordServer.GetHash(value);
-            FindContainerKey(key).db.Add(key, value);
+            ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key).db.Add(key, value);
         }
 
         /// <summary>
@@ -454,9 +466,10 @@ namespace DHTChord.NodeInstance
         /// </summary>
         /// <param name="key">The key whose value should be returned.</param>
         /// <returns>The string value for the given key, or an empty string if not found.</returns>
-        public string GetValue(ulong key)
+        public string GetValue(ulong key, out ChordNode nodeOut)
         {
             var tmp = FindContainerKey(key);
+            nodeOut = new ChordNode(tmp.Host, tmp.Port);
             return tmp.db.ContainsKey(key) ? tmp.db[key] : string.Empty;
         }
 
@@ -467,10 +480,12 @@ namespace DHTChord.NodeInstance
         /// <returns>The node instance responsable of the key</returns>
         public ChordNodeInstance FindContainerKey(ulong key)
         {
+            Console.WriteLine("hi");
             ChordNode owningNode = ChordServer.CallFindSuccessor(key);
 
-            if (owningNode == ChordServer.LocalNode)
+            if (owningNode.Equals(ChordServer.LocalNode))
                 return Instance(owningNode);
+            Console.WriteLine("buuh");
             return ChordServer.CallFindContainerKey(owningNode, key);
         }
 

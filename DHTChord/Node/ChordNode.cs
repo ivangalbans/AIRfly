@@ -169,5 +169,13 @@ namespace DHTChord.Node
         {
             return $"Host {Host}:{Port}";
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is ChordNode tmp)
+                return Id == tmp.Id;
+            return false;
+        }
+
     }
 }

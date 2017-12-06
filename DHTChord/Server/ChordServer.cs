@@ -140,6 +140,7 @@ namespace DHTChord.Server
             try
             {
                 instance.AddValue(value);
+                return;
             }
             catch (System.Exception ex)
             {
@@ -163,9 +164,9 @@ namespace DHTChord.Server
         /// <param name="remoteNode">The remote on which to call the method.</param>
         /// <param name="key">The key to look up.</param>
         /// <returns>The value corresponding to the key, or empty string if not found.</returns>
-        public static string CallGetValue(ChordNode remoteNode, ulong key)
+        public static string CallGetValue(ChordNode remoteNode, ulong key, out ChordNode nodeOut)
         {
-            return CallGetValue(remoteNode, key, 3);
+            return CallGetValue(remoteNode, key, 3, out nodeOut);
         }
 
 
@@ -176,13 +177,13 @@ namespace DHTChord.Server
         /// <param name="key">The key to look up.</param>
         /// <param name="retryCount">The number of retries to attempt.</param>
         /// <returns>The value corresponding to the key, or empty string if not found.</returns>
-        public static string CallGetValue(ChordNode remoteNode, ulong key, int retryCount)
+        public static string CallGetValue(ChordNode remoteNode, ulong key, int retryCount, out ChordNode nodeOut)
         {
             ChordNodeInstance instance = ChordNode.Instance(remoteNode);
 
             try
             {
-                return instance.GetValue(key);
+                return instance.GetValue(key, out nodeOut);
             }
             catch (System.Exception ex)
             {
@@ -190,11 +191,12 @@ namespace DHTChord.Server
 
                 if (retryCount > 0)
                 {
-                    return CallGetValue(remoteNode, key, --retryCount);
+                    return CallGetValue(remoteNode, key, --retryCount, out nodeOut);
                 }
                 else
                 {
                     Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
+                    nodeOut = null;
                     return string.Empty;
                 }
             }
@@ -208,7 +210,7 @@ namespace DHTChord.Server
         public static ChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount)
         {
             ChordNodeInstance instance = ChordNode.Instance(remoteNode);
-
+            Console.WriteLine("CallFindContainerKey");
             try
             {
                 return instance.FindContainerKey(key);

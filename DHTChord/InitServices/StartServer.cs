@@ -1,8 +1,11 @@
 ﻿using System;
+
 using DHTChord.FTable;
 using DHTChord.Server;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
+
+using static DHTChord.Logger.Logger;
 
 namespace DHTChord.InitServices
 {
@@ -38,6 +41,40 @@ namespace DHTChord.InitServices
                             instance.Depart();
                             return;
                         }
+
+                        case 'U':
+                        {
+                                for(int i = 0; i < 1; ++i)
+                                {
+                                    ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Wolrd {i}");
+                                    Log(LogLevel.Info, "Add New Value", "Adding the value");
+                                }
+                                break;
+                        }
+
+                        case 'F':
+                        {
+                                for (int i = 0; i < 1; ++i)
+                                {
+                                    var val = ChordServer.CallGetValue(ChordServer.LocalNode, ChordServer.GetHash($"Hello Wolrd {i}"), out var tmp);
+                                    if(tmp == null)
+                                    {
+                                        Log(LogLevel.Error, "GetValue", $"The instance is null. Value is not found: Hello Wolrd {i}");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"Download from {tmp}: {val}");
+                                    }
+                                }
+                                break;
+                        }
+
+                        case 'D':
+                        {
+                                instance.ViewDataBase();
+                                break;
+                        }
+
                         default:
                         {
                             Console.WriteLine("Get Server [I]nfo, E[x]tended Info, [Q]uit, or Get Help[?]");

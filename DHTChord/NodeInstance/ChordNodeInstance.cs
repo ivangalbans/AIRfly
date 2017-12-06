@@ -7,10 +7,11 @@ using System.Windows.Markup;
 
 using DHTChord.FTable;
 using DHTChord.Node;
+using DHTChord.Server;
+
 using static DHTChord.Logger.Logger;
 using static DHTChord.Node.ChordNode;
 using static DHTChord.MathOperation.ChordMath;
-using DHTChord.Server;
 
 namespace DHTChord.NodeInstance
 {
@@ -31,12 +32,12 @@ namespace DHTChord.NodeInstance
             {
                 if (value == null &&  SuccessorCache[0] != null)
                 {
-                    Log( "Navigation", "Setting successor to null.");
+                    Log(LogLevel.Info, "Navigation", "Setting successor to null.");
                 }
                 else if (value != null &&
                          (SuccessorCache[0] == null || SuccessorCache[0].Id != value.Id))
                 {
-                    Log("Navigation", $"New Successor {value}.");
+                    Log(LogLevel.Info, "Navigation", $"New Successor {value}.");
                 }
                 SuccessorCache[0] = value;
             }
@@ -50,12 +51,12 @@ namespace DHTChord.NodeInstance
             {
                 if (value == null && null != _predecessorNode)
                 {
-                    Log("Navigation", "Setting predecessor to null.");
+                    Log(LogLevel.Info, "Navigation", "Setting predecessor to null.");
                 }
                 else if (value != null &&
                          (_predecessorNode== null || _predecessorNode.Id != value.Id))  
                 {
-                    Log("Navigation", $"New Predecessor {value}.");
+                    Log(LogLevel.Info, "Navigation", $"New Predecessor {value}.");
                 }
                 _predecessorNode = value;
             }
@@ -143,7 +144,7 @@ namespace DHTChord.NodeInstance
             }
             catch (Exception e)
             {
-                Log("Instance", $"Incoming instance was not valid: ({e.Message}).");
+                Log(LogLevel.Debug, "Instance", $"Incoming instance was not valid: ({e.Message}).");
                 return false;
             }
         }
@@ -162,7 +163,7 @@ namespace DHTChord.NodeInstance
 
             if (seed != null)
             {
-                Log("Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
+                Log(LogLevel.Info, "Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
                 var nodeInstance = Instance(seed);
                 if (IsInstanceValid(nodeInstance))
                 {
@@ -173,19 +174,19 @@ namespace DHTChord.NodeInstance
                     }
                     catch (Exception e)
                     {
-                        Log("Navigation", $"Error setting  Successor Node {e.Message}");
+                        Log(LogLevel.Error, "Navigation", $"Error setting  Successor Node {e.Message}");
                         return false;
                     }
                 }
                 else
                 {
-                    Log("Navigation", "Invalid node seed");
+                    Log(LogLevel.Error, "Navigation", "Invalid node seed");
                     return false;
                 }
             }
             else
             {
-                Log("Navigation", $"Sarting ring @ {Host}:{Port}");
+                Log(LogLevel.Info, "Navigation", $"Sarting ring @ {Host}:{Port}");
             }
 
             StartMaintenance();
@@ -246,7 +247,7 @@ namespace DHTChord.NodeInstance
                                 ChordNodeInstance instance = Instance(SeedNode);
                                 if (ChordNodeInstance.IsInstanceValid(instance))
                                 {
-                                    Log("ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
+                                    Log(LogLevel.Debug, "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
                                     Join(SeedNode);
                                 }
 
@@ -263,7 +264,7 @@ namespace DHTChord.NodeInstance
                 }
                 catch (Exception e)
                 {
-                    Log("Maintenance", $"Error occured during ReJoin ({e.Message})");
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during ReJoin ({e.Message})");
                 }
 
                 Thread.Sleep(3000);
@@ -288,7 +289,7 @@ namespace DHTChord.NodeInstance
                     }
                     catch (Exception e)
                     {
-                        Log("StabilizePredecessors", $"StabilizePredecessors error: {e.Message}");
+                        Log(LogLevel.Error, "StabilizePredecessors", $"StabilizePredecessors error: {e.Message}");
                         Predecessor = null;
                     }
 
@@ -340,7 +341,7 @@ namespace DHTChord.NodeInstance
                         if (!successorCacheHelped)
                         {
                             Console.WriteLine("***********\n************\n************");
-                            Log("StabilizeSuccessors", "Ring consistency error, Re-Joining Chord ring.");
+                            Log(LogLevel.Error, "StabilizeSuccessors", "Ring consistency error, Re-Joining Chord ring.");
 
                             if (Join(SeedNode))
                             {
@@ -351,7 +352,7 @@ namespace DHTChord.NodeInstance
                 }
                 catch (Exception e)
                 {
-                   Log("Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
+                   Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
                 }
 
                 Thread.Sleep(100);
@@ -383,14 +384,14 @@ namespace DHTChord.NodeInstance
                     }
                     catch (Exception e)
                     {
-                        Log("Navigation", $"Unable to update Successor for start value {FingerTable.StartValues[_currentTableInput]} ({e.Message}).");
+                        Log(LogLevel.Error, "Navigation", $"Unable to update Successor for start value {FingerTable.StartValues[_currentTableInput]} ({e.Message}).");
                     }
 
                     _currentTableInput = (_currentTableInput + 1) % FingerTable.Length;
                 }
                 catch (Exception e)
                 {
-                    Log("Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
                 }
 
                 Thread.Sleep(100);
@@ -411,7 +412,7 @@ namespace DHTChord.NodeInstance
             }
             catch (Exception e)
             {
-                Log( "Navigation", $"Error on Depart ({e.Message})." );
+                Log(LogLevel.Error, "Navigation", $"Error on Depart ({e.Message})." );
             }
             finally
             {

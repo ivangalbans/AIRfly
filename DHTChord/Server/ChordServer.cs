@@ -38,10 +38,10 @@ namespace DHTChord.Server
             }
             catch (Exception e)
             {
-                Log("Configuration", $"Unable to register Chord Service ({e.Message}).");
+                Log(LogLevel.Error, "Configuration", $"Unable to register Chord Service ({e.Message}).");
                 return false;
             }
-            Log("Configuration", $"Chord Service registered on port {port}.");
+            Log(LogLevel.Info, "Configuration", $"Chord Service registered on port {port}.");
 
             return true;
         }
@@ -102,7 +102,7 @@ namespace DHTChord.Server
             }
             catch (System.Exception ex)
             {
-                Log("Remote Invoker", $"CallFindSuccessor error: {ex.Message}");
+                Log(LogLevel.Debug, "Remote Invoker", $"CallFindSuccessor error: {ex.Message}");
 
                 if (retryCount > 0)
                 {
@@ -143,7 +143,7 @@ namespace DHTChord.Server
             }
             catch (System.Exception ex)
             {
-                Log("Remote Invoker", $"CallAddKey error: {ex.Message}");
+                Log(LogLevel.Debug, "Remote Invoker", $"CallAddKey error: {ex.Message}");
 
                 if (retryCount > 0)
                 {
@@ -151,7 +151,7 @@ namespace DHTChord.Server
                 }
                 else
                 {
-                    Log("Remote Invoker", $"CallAddKey failed - error: {ex.Message}");
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallAddKey failed - error: {ex.Message}");
                 }
             }
         }
@@ -185,7 +185,7 @@ namespace DHTChord.Server
             }
             catch (System.Exception ex)
             {
-                Log("Remote Invoker", $"CallFindKey error: {ex.Message}");
+                Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey error: {ex.Message}");
 
                 if (retryCount > 0)
                 {
@@ -193,7 +193,7 @@ namespace DHTChord.Server
                 }
                 else
                 {
-                    Log("Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
                     return string.Empty;
                 }
             }
@@ -227,7 +227,7 @@ namespace DHTChord.Server
             }
             catch (Exception ex)
             {
-                Log("Remote Invoker", $"CallReplicateKey error: {ex.Message}");
+                Log(LogLevel.Debug, "Remote Invoker", $"CallReplicateKey error: {ex.Message}");
 
                 if (retryCount > 0)
                 {
@@ -235,7 +235,7 @@ namespace DHTChord.Server
                 }
                 else
                 {
-                    Log("Remote Invoker", $"CallReplicateKey failed - error: {ex.Message}");
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallReplicateKey failed - error: {ex.Message}");
                 }
             }
         }

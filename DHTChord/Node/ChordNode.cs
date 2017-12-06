@@ -1,6 +1,7 @@
 ﻿using System;
 using DHTChord.NodeInstance;
 using DHTChord.Server;
+using DHTChord.Logger;
 using static DHTChord.Logger.Logger;
 
 namespace DHTChord.Node
@@ -27,7 +28,7 @@ namespace DHTChord.Node
         {
             if (node == null)
             {
-                Log("Navigation", "Invalid Node (Null Argument)");
+                Log(LogLevel.Error, "Navigation", "Invalid Node (Null Argument)");
                 return null;
             }
 
@@ -39,7 +40,7 @@ namespace DHTChord.Node
             catch (Exception e)
             {
                 // perhaps instead we should just pass on the error?
-                Log("Navigation", $"Unable to activate remote server {node.Host}:{node.Port} ({e.Message}).");
+                Log(LogLevel.Error, "Navigation", $"Unable to activate remote server {node.Host}:{node.Port} ({e.Message}).");
                 return null;
             }
         }
@@ -56,7 +57,7 @@ namespace DHTChord.Node
                 }
                 catch (Exception e)
                 {
-                    Log("Remote Invoker", $"CallFindSuccessor error: {e.Message}");
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallFindSuccessor error: {e.Message}");
                 }
             }
             return null;
@@ -80,7 +81,7 @@ namespace DHTChord.Node
                 }
                 catch (Exception e)
                 {
-                    Log("Remote Accessor", $"GetSuccessor error: {e.Message}");
+                    Log(LogLevel.Debug, "Remote Accessor", $"GetSuccessor error: {e.Message}");
                 }
             }
             return null;
@@ -104,7 +105,7 @@ namespace DHTChord.Node
                 }
                 catch (Exception e)
                 {
-                    Log("Remote Accessor", $"GetPredecessor error: {e.Message}");
+                    Log(LogLevel.Debug, "Remote Accessor", $"GetPredecessor error: {e.Message}");
                 }
             }
             return null;
@@ -129,7 +130,7 @@ namespace DHTChord.Node
                 }
                 catch (Exception e)
                 {
-                    Log("Remote Invoker", $"CallNotify error: {e.Message}");
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallNotify error: {e.Message}");
                 }
             }
             return false;
@@ -158,7 +159,7 @@ namespace DHTChord.Node
                 }
                 catch (Exception ex)
                 {
-                    Log("Remote Accessor", $"GetSuccessorCache error: {ex.Message}");
+                    Log(LogLevel.Debug, "Remote Accessor", $"GetSuccessorCache error: {ex.Message}");
                 }
             }
             return null;

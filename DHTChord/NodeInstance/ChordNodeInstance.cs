@@ -394,6 +394,25 @@ namespace DHTChord.NodeInstance
                 this.db.Add(key, value);
         }
 
+        /// <summary>
+        /// Retrieve the string value for a given ulong
+        /// key.
+        /// </summary>
+        /// <param name="key">The key whose value should be returned.</param>
+        /// <returns>The string value for the given key, or an empty string if not found.</returns>
+        public string FindKey(ulong key)
+        {
+            ChordNode owningNode = ChordServer.CallFindSuccessor(key);
+
+            if (owningNode != ChordServer.LocalNode)
+                return ChordServer.CallFindKey(owningNode, key);
+            else
+                if (this.db.ContainsKey(key))
+                    return this.db[key];
+                else
+                    return string.Empty;
+        }
+
         #endregion
 
     }

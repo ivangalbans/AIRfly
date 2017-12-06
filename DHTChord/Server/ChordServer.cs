@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Text;
-
-using DHTChord.Node;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Serialization.Formatters;
 using System.Collections;
 using System.Security.Cryptography;
+
+using DHTChord.Node;
 using DHTChord.NodeInstance;
+
 using static DHTChord.Logger.Logger;
+
 namespace DHTChord.Server
 {
     public static class ChordServer
@@ -197,6 +199,48 @@ namespace DHTChord.Server
             }
         }
 
+        /// <summary>
+        /// Calls ReplicateKey() remotely, using a default retry value of three.
+        /// </summary>
+        /// <param name="remoteNode">The remote on which to call the method.</param>
+        /// <param name="key">The key to replicate.</param>
+        /// <param name="value">The string value to replicate.</param>
+        public static void CallReplicateKey(ChordNode remoteNode, ulong key, string value)
+        {
+            CallReplicateKey(remoteNode, key, value, 3);
+        }
+
+        /// <summary>
+        /// Calls ReplicateKey remotely.
+        /// </summary>
+        /// <param name="remoteNode">The remote node on which to call ReplicateKey.</param>
+        /// <param name="key">The key to replicate.</param>
+        /// <param name="value">The string value to replicate.</param>
+        /// <param name="retryCount">The number of retries to attempt.</param>
+        public static void CallReplicateKey(ChordNode remoteNode, ulong key, string value, int retryCount)
+        {
+            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+
+            try
+            {
+                instance.ReplicateKey(key, value);
+            }
+            catch (Exception ex)
+            {
+                Log("Remote Invoker", $"CallReplicateKey error: {ex.Message}");
+
+                if (retryCount > 0)
+                {
+                    CallReplicateKey(remoteNode, key, value, --retryCount);
+                }
+                else
+                {
+                    Log("Remote Invoker", $"CallReplicateKey failed - error: {ex.Message}");
+                }
+            }
+        }
+
         #endregion
+
     }
 }

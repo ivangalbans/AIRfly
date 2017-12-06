@@ -464,6 +464,21 @@ namespace DHTChord.NodeInstance
                     return string.Empty;
         }
 
+        /// <summary>
+        /// Add the given key/value pair as replicas to the local store.
+        /// </summary>
+        /// <param name="key">The key to replicate.</param>
+        /// <param name="value">The value to replicate.</param>
+        public void ReplicateKey(ulong key, string value)
+        {
+            // add the key/value pair to the local
+            // data store regardless of ownership
+            if (!this.db.ContainsKey(key))
+            {
+                this.db.Add(key, value);
+            }
+        }
+
         #endregion
 
     }

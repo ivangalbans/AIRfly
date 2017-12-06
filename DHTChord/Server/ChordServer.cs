@@ -122,9 +122,9 @@ namespace DHTChord.Server
         /// </summary>
         /// <param name="remoteNode">The remote on which to call the method.</param>
         /// <param name="value">The string value to add.</param>
-        public static void CallAddKey(ChordNode remoteNode, string value)
+        public static void CallAddValue(ChordNode remoteNode, string value)
         {
-            CallAddKey(remoteNode, value, 3);
+            CallAddValue(remoteNode, value, 3);
         }
 
         /// <summary>
@@ -133,13 +133,13 @@ namespace DHTChord.Server
         /// <param name="remoteNode">The remote node on which to call AddKey.</param>
         /// <param name="value">The string value to add.</param>
         /// <param name="retryCount">The number of retries to attempt.</param>
-        public static void CallAddKey(ChordNode remoteNode, string value, int retryCount)
+        public static void CallAddValue(ChordNode remoteNode, string value, int retryCount)
         {
             ChordNodeInstance instance = ChordNode.Instance(remoteNode);
 
             try
             {
-                instance.AddKey(value);
+                instance.AddValue(value);
             }
             catch (System.Exception ex)
             {
@@ -147,7 +147,7 @@ namespace DHTChord.Server
 
                 if (retryCount > 0)
                 {
-                    CallAddKey(remoteNode, value, --retryCount);
+                    CallAddValue(remoteNode, value, --retryCount);
                 }
                 else
                 {
@@ -163,10 +163,11 @@ namespace DHTChord.Server
         /// <param name="remoteNode">The remote on which to call the method.</param>
         /// <param name="key">The key to look up.</param>
         /// <returns>The value corresponding to the key, or empty string if not found.</returns>
-        public static string CallFindKey(ChordNode remoteNode, ulong key)
+        public static string CallGetValue(ChordNode remoteNode, ulong key)
         {
-            return CallFindKey(remoteNode, key, 3);
+            return CallGetValue(remoteNode, key, 3);
         }
+
 
         /// <summary>
         /// Calls FindKey remotely.
@@ -175,13 +176,13 @@ namespace DHTChord.Server
         /// <param name="key">The key to look up.</param>
         /// <param name="retryCount">The number of retries to attempt.</param>
         /// <returns>The value corresponding to the key, or empty string if not found.</returns>
-        public static string CallFindKey(ChordNode remoteNode, ulong key, int retryCount)
+        public static string CallGetValue(ChordNode remoteNode, ulong key, int retryCount)
         {
             ChordNodeInstance instance = ChordNode.Instance(remoteNode);
 
             try
             {
-                return instance.FindKey(key);
+                return instance.GetValue(key);
             }
             catch (System.Exception ex)
             {
@@ -189,7 +190,7 @@ namespace DHTChord.Server
 
                 if (retryCount > 0)
                 {
-                    return CallFindKey(remoteNode, key, --retryCount);
+                    return CallGetValue(remoteNode, key, --retryCount);
                 }
                 else
                 {
@@ -198,6 +199,36 @@ namespace DHTChord.Server
                 }
             }
         }
+
+        public static ChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key)
+        {
+            return CallFindContainerKey(remoteNode, key, 3);
+        }
+
+        public static ChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount)
+        {
+            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+
+            try
+            {
+                return instance.FindContainerKey(key);
+            }
+            catch (System.Exception ex)
+            {
+                Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey error: {ex.Message}");
+
+                if (retryCount > 0)
+                {
+                    return CallFindContainerKey(remoteNode, key, --retryCount);
+                }
+                else
+                {
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
+                    return null;
+                }
+            }
+        }
+
 
         /// <summary>
         /// Calls ReplicateKey() remotely, using a default retry value of three.

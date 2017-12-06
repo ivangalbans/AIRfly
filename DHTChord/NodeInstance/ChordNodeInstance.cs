@@ -435,15 +435,10 @@ namespace DHTChord.NodeInstance
         /// Add a key-value pair into database
         /// </summary>
         /// <param name="value">The value to add.</param>
-        public void AddKey(string value)
+        public void AddValue(string value)
         {
             ulong key = ChordServer.GetHash(value);
-            ChordNode owningNode = ChordServer.CallFindSuccessor(key);
-
-            if (owningNode != ChordServer.LocalNode)
-                ChordServer.CallAddKey(owningNode, value);
-            else
-                this.db.Add(key, value);
+            FindContainerKey(key).db.Add(key, value);
         }
 
         /// <summary>
@@ -452,17 +447,24 @@ namespace DHTChord.NodeInstance
         /// </summary>
         /// <param name="key">The key whose value should be returned.</param>
         /// <returns>The string value for the given key, or an empty string if not found.</returns>
-        public string FindKey(ulong key)
+        public string GetValue(ulong key)
+        {
+            var tmp = FindContainerKey(key);
+            return tmp.db.ContainsKey(key) ? tmp.db[key] : string.Empty;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key">The key to find</param>
+        /// <returns>The node instance responsable of the key</returns>
+        public ChordNodeInstance FindContainerKey(ulong key)
         {
             ChordNode owningNode = ChordServer.CallFindSuccessor(key);
 
-            if (owningNode != ChordServer.LocalNode)
-                return ChordServer.CallFindKey(owningNode, key);
-            else
-                if (this.db.ContainsKey(key))
-                    return this.db[key];
-                else
-                    return string.Empty;
+            if (owningNode == ChordServer.LocalNode)
+                return Instance(owningNode);
+            return ChordServer.CallFindContainerKey(owningNode, key);
         }
 
         /// <summary>
@@ -472,12 +474,8 @@ namespace DHTChord.NodeInstance
         /// <param name="value">The value to replicate.</param>
         public void ReplicateKey(ulong key, string value)
         {
-            // add the key/value pair to the local
-            // data store regardless of ownership
             if (!this.db.ContainsKey(key))
-            {
                 this.db.Add(key, value);
-            }
         }
 
         /// <summary>
@@ -510,6 +508,12 @@ namespace DHTChord.NodeInstance
                 Thread.Sleep(3000);
             }
         }
+
+        #endregion
+
+        #region Transmission
+
+
 
         #endregion
 

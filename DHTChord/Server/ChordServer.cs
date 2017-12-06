@@ -213,11 +213,14 @@ namespace DHTChord.Server
             Console.WriteLine("CallFindContainerKey");
             try
             {
-                return instance.FindContainerKey(key);
+                var a =  instance.FindContainerKey(key);
+                Console.WriteLine("AAAAAAAAAAAAAAAAAAAA");
+                return a;
             }
             catch (System.Exception ex)
             {
-                Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey error: {ex.Message}");
+
+                Log(LogLevel.Error, "Remote Invoker", $"CallFindKey error: {ex.Message}");
 
                 if (retryCount > 0)
                 {

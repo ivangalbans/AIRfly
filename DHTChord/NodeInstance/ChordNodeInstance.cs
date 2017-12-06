@@ -456,8 +456,16 @@ namespace DHTChord.NodeInstance
         /// <param name="value">The value to add.</param>
         public void AddValue(string value)
         {
+           
             ulong key = ChordServer.GetHash(value);
-            ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key).db.Add(key, value);
+            ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key).AddDB(key, value);            
+        }
+
+        public void AddDB(ulong key, string value)
+        {
+
+            db.Add(key, value);
+            Console.WriteLine(db.Count);
         }
 
         /// <summary>

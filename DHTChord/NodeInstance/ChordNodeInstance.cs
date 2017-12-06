@@ -1,14 +1,16 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Markup;
-using DHTChord.Node;
-using DHTChord.Server;
+
 using DHTChord.FTable;
+using DHTChord.Node;
+using static DHTChord.Logger.Logger;
 using static DHTChord.Node.ChordNode;
 using static DHTChord.MathOperation.ChordMath;
-using static DHTChord.Logger.Logger;
+using DHTChord.Server;
 
 namespace DHTChord.NodeInstance
 {
@@ -21,7 +23,6 @@ namespace DHTChord.NodeInstance
         public ulong Id => ChordServer.LocalNode.Id;
 
         public ChordNode SeedNode { get; set; }
-
 
         public ChordNode Successor
         {
@@ -41,8 +42,6 @@ namespace DHTChord.NodeInstance
             }
         }
 
-
-
         private ChordNode _predecessorNode;
         public ChordNode Predecessor
         {
@@ -61,6 +60,7 @@ namespace DHTChord.NodeInstance
                 _predecessorNode = value;
             }
         }
+
         public FingerTable FingerTable { get; set; }
 
         public ChordNode[] SuccessorCache { get; set; }
@@ -98,7 +98,6 @@ namespace DHTChord.NodeInstance
                 }
             }
 
-
             return ChordServer.LocalNode;
         }
 
@@ -114,6 +113,7 @@ namespace DHTChord.NodeInstance
                 }
             }
         }
+        
         //public void GetSeedCache()
         //{
         //    for (int i = 1; i < SeedCache.Length; i++)
@@ -123,8 +123,6 @@ namespace DHTChord.NodeInstance
         //}
 
         public static Random Random = new Random(Environment.TickCount);
-
-
         public ChordNode FindSuccessor(ulong id)
         {
             if (IsIdInRange(id, Id, Successor.Id))
@@ -154,9 +152,8 @@ namespace DHTChord.NodeInstance
         {
             SeedNode = seed;
             FingerTable = new FingerTable(ChordServer.LocalNode);
-            
             SuccessorCache = new ChordNode[8];
-           // SeedCache = new ChordNode[8];
+            // SeedCache = new ChordNode[8];
 
             for (var i = 0; i < SuccessorCache.Length; i++)
             {
@@ -192,9 +189,9 @@ namespace DHTChord.NodeInstance
             }
 
             StartMaintenance();
+            UpdateDataNode();
 
             return true;
-
         }
 
         private readonly BackgroundWorker _stabilizeSuccessors = new BackgroundWorker();
@@ -247,7 +244,7 @@ namespace DHTChord.NodeInstance
 
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
             }
         }
 
@@ -307,7 +304,7 @@ namespace DHTChord.NodeInstance
                    Log("Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
             }
         }
 
@@ -346,7 +343,7 @@ namespace DHTChord.NodeInstance
                     Log("Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
             }
         }
 

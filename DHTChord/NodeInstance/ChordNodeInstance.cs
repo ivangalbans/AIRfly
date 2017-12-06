@@ -480,6 +480,37 @@ namespace DHTChord.NodeInstance
             }
         }
 
+        /// <summary>
+        /// Replicate the local data store on a background thread.
+        /// </summary>
+        /// <param name="sender">The background worker thread this task is running on.</param>
+        /// <param name="ea">Args (ignored).</param>
+        private void ReplicateStorage(object sender, DoWorkEventArgs ea)
+        {
+            BackgroundWorker me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+                    foreach (ulong key in this.db.Keys)
+                    {
+                        if (IsIdInRange(key, Id, Successor.Id))
+                        {
+                            ChordServer.CallReplicateKey(this.Successor, key, this.db[key]);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during ReplicateStorage ({e.Message})");
+                }
+
+                // TODO: make this configurable via config file or passed in as an argument
+                Thread.Sleep(3000);
+            }
+        }
+
         #endregion
 
     }

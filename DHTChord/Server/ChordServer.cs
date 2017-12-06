@@ -59,5 +59,59 @@ namespace DHTChord.Server
             return BitConverter.ToUInt64(md5.ComputeHash(bytes), 0);
         }
 
+        /// <summary>
+        /// Convenience function to call FindSuccessor using ChordServer.LocalNode as the
+        /// "remote" node.
+        /// </summary>
+        /// <param name="id"> The ID to look up (ChordServer.LocalNode is used as the remoteNode).</param>
+        /// <returns>The Successor of ID, or NULL in case of error.</returns>
+        public static ChordNode CallFindSuccessor(UInt64 id)
+        {
+            return CallFindSuccessor(ChordServer.LocalNode, id);
+        }
+
+        /// <summary>
+        /// Calls FindSuccessor() remotely, using a default retry value of three
+        /// </summary>
+        /// <param name="remoteNode">The remote on which to call the method.</param>
+        /// <param name="id">The ID to look up.</param>
+        /// <returns>The Successor of ID, or NULL in case of error.</returns>
+        public static ChordNode CallFindSuccessor(ChordNode remoteNode, UInt64 id)
+        {
+            return CallFindSuccessor(remoteNode, id, 3);
+        }
+
+        /// <summary>
+        /// Calls FindSuccessor() remotely, using a default retry value of three.
+        /// </summary>
+        /// <param name="remoteNode">The remote node on which to call FindSuccessor().</param>
+        /// <param name="id">The ID to look up.</param>
+        /// <param name="retryCount">The number of times to retry the operation in case of error.</param>
+        /// <param name="hopCountIn">The known hopcount prior to calling FindSuccessor on this node.</param>
+        /// <param name="hopCountOut">The total hopcount of this operation (either returned upwards, or reported for hopcount efficiency validation).</param>
+        /// <returns>The Successor of ID, or NULL in case of error.</returns>
+        public static ChordNode CallFindSuccessor(ChordNode remoteNode, UInt64 id, int retryCount)
+        {
+            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+
+            try
+            {
+                return instance.FindSuccessor(id);
+            }
+            catch (System.Exception ex)
+            {
+                Log("Remote Invoker", $"CallFindSuccessor error: {ex.Message}");
+
+                if (retryCount > 0)
+                {
+                    return CallFindSuccessor(remoteNode, id, --retryCount);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
     }
 }

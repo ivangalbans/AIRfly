@@ -198,6 +198,7 @@ namespace DHTChord.NodeInstance
         private readonly BackgroundWorker _stabilizePredecessors = new BackgroundWorker();
         private readonly BackgroundWorker _updateFingerTable = new BackgroundWorker();
         private readonly BackgroundWorker _reJoin = new BackgroundWorker();
+        private readonly BackgroundWorker _replicationStorage = new BackgroundWorker();
 
         public void StartMaintenance()
         {
@@ -216,6 +217,10 @@ namespace DHTChord.NodeInstance
             _reJoin.DoWork += ReJoin;
             _reJoin.WorkerSupportsCancellation = true;
             _reJoin.RunWorkerAsync();
+
+            _replicationStorage.DoWork += ReplicateStorage;
+            _replicationStorage.WorkerSupportsCancellation = true;
+            _replicationStorage.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -223,6 +228,8 @@ namespace DHTChord.NodeInstance
             _stabilizeSuccessors.CancelAsync();
             _stabilizePredecessors.CancelAsync();
             _updateFingerTable.CancelAsync();
+            _reJoin.CancelAsync();
+            _replicationStorage.CancelAsync();
         }
 
 

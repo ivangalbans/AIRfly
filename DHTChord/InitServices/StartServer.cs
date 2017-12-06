@@ -60,11 +60,10 @@ namespace DHTChord.InitServices
 
 
             Console.WriteLine($"\nNODE INFORMATION: HOST: {host}   PORT {port}");
-            Console.WriteLine($"Successor: {successor?.ToString() ?? "NULL"}");
+            Console.WriteLine($"Predecessor: {predecessor?.ToString() ?? "NULL"}");
             Console.WriteLine($"LocalNode: {ChordServer.LocalNode?.ToString() ?? "NULL"}");
-            Console.WriteLine($"Predecessor: {successor?.ToString() ?? "NULL"}");
+            Console.WriteLine($"Successor: {successor?.ToString() ?? "NULL"}");
             Console.WriteLine($"Seed: {seed?.ToString() ?? "NULL"}");
-
             Console.WriteLine($"\nSUCCESSOR CACHE:");
 
             for (var i = 0; i < successorCache.Length; i++)

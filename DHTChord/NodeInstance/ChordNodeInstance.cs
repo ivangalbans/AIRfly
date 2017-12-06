@@ -196,6 +196,7 @@ namespace DHTChord.NodeInstance
         private readonly BackgroundWorker _stabilizeSuccessors = new BackgroundWorker();
         private readonly BackgroundWorker _stabilizePredecessors = new BackgroundWorker();
         private readonly BackgroundWorker _updateFingerTable = new BackgroundWorker();
+        private readonly BackgroundWorker _reJoin = new BackgroundWorker();
 
         public void StartMaintenance()
         {
@@ -210,6 +211,10 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.DoWork += UpdateFingerTable;
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
+
+            _reJoin.DoWork += ReJoin;
+            _reJoin.WorkerSupportsCancellation = true;
+            _reJoin.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -217,6 +222,52 @@ namespace DHTChord.NodeInstance
             _stabilizeSuccessors.CancelAsync();
             _stabilizePredecessors.CancelAsync();
             _updateFingerTable.CancelAsync();
+        }
+
+
+        private bool HasReJoin = false;
+
+        private void ReJoin(object sender, DoWorkEventArgs ea)
+        {
+            BackgroundWorker me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+                    if (HasReJoin)
+                    {
+                        if (SeedNode != null)
+                        {
+                            ChordNode seedSuccessor = FindSuccessor(SeedNode.Id);
+
+                            if (seedSuccessor.Id != SeedNode.Id)
+                            {
+                                ChordNodeInstance instance = Instance(SeedNode);
+                                if (ChordNodeInstance.IsInstanceValid(instance))
+                                {
+                                    Log("ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
+                                    Join(SeedNode);
+                                }
+
+                                //!!!!!!!!!!!!!!!TODO!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                // otherwise, in the future, there will be a cache of seed nodes to check/join from...
+                                // as it may be the case that the seed node simply has disconnected from the network.
+                            }
+                        }
+                    }
+                    else
+                    {
+                        this.HasReJoin = true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log("Maintenance", $"Error occured during ReJoin ({e.Message})");
+                }
+
+                Thread.Sleep(3000);
+            }
         }
 
         private void StabilizePredecessors(object sender, DoWorkEventArgs ea)

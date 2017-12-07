@@ -133,7 +133,7 @@ namespace DHTChord.NodeInstance
             else
             {
                 var predNode = FindClosestPrecedingFinger(id);
-                return CallFindSuccessor(predNode,id);
+                return ChordServer.CallFindSuccessor(predNode,id);
             }
         }
         public static bool IsInstanceValid(ChordNodeInstance instance)

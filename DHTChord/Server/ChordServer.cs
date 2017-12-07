@@ -92,27 +92,22 @@ namespace DHTChord.Server
         /// <param name="hopCountIn">The known hopcount prior to calling FindSuccessor on this node.</param>
         /// <param name="hopCountOut">The total hopcount of this operation (either returned upwards, or reported for hopcount efficiency validation).</param>
         /// <returns>The Successor of ID, or NULL in case of error.</returns>
-        public static ChordNode CallFindSuccessor(ChordNode remoteNode, UInt64 id, int retryCount)
+        public static ChordNode CallFindSuccessor(ChordNode node, ulong id, int retryCount)
         {
-            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+            var instance = ChordNode.Instance(node);
 
-            try
+            while (retryCount-- > 0)
             {
-                return instance.FindSuccessor(id);
-            }
-            catch (System.Exception ex)
-            {
-                Log(LogLevel.Debug, "Remote Invoker", $"CallFindSuccessor error: {ex.Message}");
-
-                if (retryCount > 0)
+                try
                 {
-                    return CallFindSuccessor(remoteNode, id, --retryCount);
+                    return instance.FindSuccessor(id);
                 }
-                else
+                catch (Exception e)
                 {
-                    return null;
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallFindSuccessor error: {e.Message}");
                 }
             }
+            return null;
         }
 
         #region Storage

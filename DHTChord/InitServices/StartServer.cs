@@ -1,6 +1,5 @@
 ﻿using System;
-
-using DHTChord.FTable;
+using System.ServiceModel;
 using DHTChord.Server;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
@@ -14,11 +13,15 @@ namespace DHTChord.InitServices
         public static void Start(int port, ChordNode seed = null)
         {
             ChordServer.LocalNode = new ChordNode(System.Net.Dns.GetHostName(), port);
-
-            if (ChordServer.RegisterService(port))
+            NetTcpBinding binding = new NetTcpBinding();
+            Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
+            using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))
             {
+                serviceHost.AddServiceEndpoint(typeof(IChordNodeInstance), binding, baseAddress);
+                serviceHost.Open();
 
-                var instance = ChordNode.Instance(ChordServer.LocalNode);
+
+                var instance = ChordServer.Instance(ChordServer.LocalNode);
                 instance.Join(seed);
 
                 while (true)
@@ -105,34 +108,34 @@ namespace DHTChord.InitServices
             }
         }
 
-        static void PrintNodeInfo(ChordNodeInstance instance, bool extended)
+        static void PrintNodeInfo(IChordNodeInstance instance, bool extended)
         {
             var successor = instance.Successor;
             var predecessor = instance.Predecessor;
-            var fingerTable = instance.FingerTable;
+            //var fingerTable = instance.FingerTable;
             var successorCache = instance.SuccessorCache;
             var port = instance.Port;
             var host = instance.Host;
-            var seed = instance.SeedNode;
+            //var seed = instance.SeedNode;
 
 
             Console.WriteLine($"\nNODE INFORMATION: HOST: {host}   PORT {port}");
             Console.WriteLine($"Predecessor: {predecessor?.ToString() ?? "NULL"}");
             Console.WriteLine($"LocalNode: {ChordServer.LocalNode?.ToString() ?? "NULL"}");
             Console.WriteLine($"Successor: {successor?.ToString() ?? "NULL"}");
-            Console.WriteLine($"Seed: {seed?.ToString() ?? "NULL"}");
+            //Console.WriteLine($"Seed: {seed?.ToString() ?? "NULL"}");
             Console.WriteLine($"\nSUCCESSOR CACHE:");
 
             for (var i = 0; i < successorCache.Length; i++)
                 Console.WriteLine($"{i}: {successorCache[i]?.ToString()??"NULL"} ");
 
-            if (extended)
-            {
-                Console.WriteLine($"\nFINGERTABLE:");
+            //if (extended)
+            //{
+            //    Console.WriteLine($"\nFINGERTABLE:");
 
-                for (var i = 0; i < fingerTable.Length; i++)
-                    Console.WriteLine($"{i}: {fingerTable.Successors[i]?.ToString() ?? "NULL"} ");
-            }
+            //    for (var i = 0; i < fingerTable.Length; i++)
+            //        Console.WriteLine($"{i}: {fingerTable.Successors[i]?.ToString() ?? "NULL"} ");
+            //}
         }
     }
 }

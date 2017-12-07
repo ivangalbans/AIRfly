@@ -6,7 +6,7 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Serialization.Formatters;
 using System.Collections;
 using System.Security.Cryptography;
-
+using System.ServiceModel;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
 
@@ -94,7 +94,7 @@ namespace DHTChord.Server
         /// <returns>The Successor of ID, or NULL in case of error.</returns>
         public static ChordNode CallFindSuccessor(ChordNode node, ulong id, int retryCount)
         {
-            var instance = ChordNode.Instance(node);
+            var instance =Instance(node);
 
             while (retryCount-- > 0)
             {
@@ -130,7 +130,7 @@ namespace DHTChord.Server
         /// <param name="retryCount">The number of retries to attempt.</param>
         public static void CallAddValue(ChordNode remoteNode, string value, int retryCount)
         {
-            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+            var instance =Instance(remoteNode);
 
             try
             {
@@ -174,7 +174,7 @@ namespace DHTChord.Server
         /// <returns>The value corresponding to the key, or empty string if not found.</returns>
         public static string CallGetValue(ChordNode remoteNode, ulong key, int retryCount, out ChordNode nodeOut)
         {
-            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+            var instance = Instance(remoteNode);
 
             try
             {
@@ -197,14 +197,14 @@ namespace DHTChord.Server
             }
         }
 
-        public static ChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key)
+        public static IChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key)
         {
             return CallFindContainerKey(remoteNode, key, 3);
         }
 
-        public static ChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount)
+        public static IChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount)
         {
-            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+            var instance =Instance(remoteNode);
             try
             {
                 var a =  instance.FindContainerKey(key);
@@ -248,7 +248,7 @@ namespace DHTChord.Server
         /// <param name="retryCount">The number of retries to attempt.</param>
         public static void CallReplicateKey(ChordNode remoteNode, ulong key, string value, int retryCount)
         {
-            ChordNodeInstance instance = ChordNode.Instance(remoteNode);
+            var instance = Instance(remoteNode);
 
             try
             {
@@ -270,6 +270,89 @@ namespace DHTChord.Server
         }
 
         #endregion
+        private const int RetryCount = 6;
+
+        public static IChordNodeInstance Instance(ChordNode node)
+        {
+            if (node == null)
+            {
+                Log(LogLevel.Error, "Navigation", "Invalid Node (Null Argument)");
+                return null;
+            }
+
+            try
+            {
+
+                NetTcpBinding binding = new NetTcpBinding();
+                EndpointAddress address = new EndpointAddress($"net.tcp://{node.Host}:{node.Port}/chord");
+                ChannelFactory<IChordNodeInstance> channelFactory =
+                    new ChannelFactory<IChordNodeInstance>(binding, address);
+                var server = channelFactory.CreateChannel();
+                return server;
+            }
+            catch (Exception e)
+            {
+                // perhaps instead we should just pass on the error?
+                Log(LogLevel.Error, "Navigation",
+                    $"Unable to activate remote server {node.Host}:{node.Port} ({e.Message}).");
+                return null;
+            }
+        }
+
+        public static ChordNode GetPredecessor(ChordNode node, int retryCount = RetryCount)
+        {
+            var instance = Instance(node);
+
+            while (retryCount-- > 0)
+            {
+                try
+                {
+                    return instance.Predecessor;
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Debug, "Remote Accessor", $"GetPredecessor error: {e.Message}");
+                }
+            }
+            return null;
+        }
+
+        public static bool CallNotify(ChordNode remoteNode, ChordNode node, int retryCount = RetryCount)
+        {
+
+            var state = Instance(remoteNode);
+            while (retryCount-- > 0)
+            {
+                try
+                {
+                    state.Notify(node);
+                    return true; 
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallNotify error: {e.Message}");
+                }
+            }
+            return false;
+        }
+
+        public static ChordNode[] GetSuccessorCache(ChordNode node, int retryCount = RetryCount)
+        {
+            var instance = Instance(node);
+
+            while (retryCount-- > 0)
+            {
+                try
+                {
+                    return instance.SuccessorCache;
+                }
+                catch (Exception ex)
+                {
+                    Log(LogLevel.Debug, "Remote Accessor", $"GetSuccessorCache error: {ex.Message}");
+                }
+            }
+            return null;
+        }
 
     }
 }

@@ -1,21 +1,19 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Collections.Generic;
+using System.ServiceModel;
 using System.Threading;
-using System.Windows.Markup;
-
 using DHTChord.FTable;
 using DHTChord.Node;
 using DHTChord.Server;
 
 using static DHTChord.Logger.Logger;
-using static DHTChord.Node.ChordNode;
 using static DHTChord.MathOperation.ChordMath;
 
 namespace DHTChord.NodeInstance
 {
-    public class ChordNodeInstance : MarshalByRefObject
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+    public class ChordNodeInstance: IChordNodeInstance
     {
         public string Host => ChordServer.LocalNode.Host;
 
@@ -66,8 +64,6 @@ namespace DHTChord.NodeInstance
 
         public ChordNode[] SuccessorCache { get; set; }
 
-        //public ChordNode[] SeedCache { get; set; }
-
         public ChordNode FindClosestPrecedingFinger(ulong id)
         {
             for (var i = FingerTable.Length - 1; i >= 0; --i)
@@ -76,7 +72,7 @@ namespace DHTChord.NodeInstance
                 {
                     if (FingerInRange(FingerTable.Successors[i].Id, Id, id))
                     {
-                        var nodeInstance = Instance(FingerTable.Successors[i]);
+                        var nodeInstance = ChordServer.Instance(FingerTable.Successors[i]);
                         if (IsInstanceValid(nodeInstance))
                         {
                             return FingerTable.Successors[i];
@@ -90,7 +86,7 @@ namespace DHTChord.NodeInstance
                 {
                     if (FingerInRange(t.Id, Id, id))
                     {
-                        var instance =Instance(t);
+                        var instance =ChordServer.Instance(t);
                         if (IsInstanceValid(instance))
                         {
                             return t;
@@ -104,7 +100,7 @@ namespace DHTChord.NodeInstance
 
         public void GetSuccessorCache(ChordNode remoteNode)
         {
-            var remoteSuccessorCache = ChordNode.GetSuccessorCache(remoteNode);
+            var remoteSuccessorCache = ChordServer.GetSuccessorCache(remoteNode);
             if (remoteSuccessorCache != null)
             {
                 SuccessorCache[0] = remoteNode;
@@ -136,7 +132,7 @@ namespace DHTChord.NodeInstance
                 return ChordServer.CallFindSuccessor(predNode,id);
             }
         }
-        public static bool IsInstanceValid(ChordNodeInstance instance)
+        public static bool IsInstanceValid(IChordNodeInstance instance)
         {
             try
             {
@@ -164,7 +160,7 @@ namespace DHTChord.NodeInstance
             if (seed != null)
             {
                 Log(LogLevel.Info, "Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
-                var nodeInstance = Instance(seed);
+                var nodeInstance = ChordServer.Instance(seed);
                 if (IsInstanceValid(nodeInstance))
                 {
                     try
@@ -215,17 +211,17 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
-            _reJoin.DoWork += ReJoin;
-            _reJoin.WorkerSupportsCancellation = true;
-            _reJoin.RunWorkerAsync();
+            //_reJoin.DoWork += ReJoin;
+            //_reJoin.WorkerSupportsCancellation = true;
+            //_reJoin.RunWorkerAsync();
 
-            _replicationStorage.DoWork += ReplicateStorage;
-            _replicationStorage.WorkerSupportsCancellation = true;
-            _replicationStorage.RunWorkerAsync();
+            //_replicationStorage.DoWork += ReplicateStorage;
+            //_replicationStorage.WorkerSupportsCancellation = true;
+            //_replicationStorage.RunWorkerAsync();
 
-            _stabilizeDataBase.DoWork += StabilizeDataBase;
-            _stabilizeDataBase.WorkerSupportsCancellation = true;
-            _stabilizeDataBase.RunWorkerAsync();
+            //_stabilizeDataBase.DoWork += StabilizeDataBase;
+            //_stabilizeDataBase.WorkerSupportsCancellation = true;
+            //_stabilizeDataBase.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -263,8 +259,8 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    var sucInstance = Instance(Successor);
-                    var preInstance = Instance(Predecessor);
+                    var sucInstance = ChordServer.Instance(Successor);
+                    var preInstance = ChordServer.Instance(Predecessor);
 
                     if (!Successor.Equals(Predecessor))
                     {
@@ -315,7 +311,7 @@ namespace DHTChord.NodeInstance
 
                             if (seedSuccessor.Id != SeedNode.Id)
                             {
-                                ChordNodeInstance instance = Instance(SeedNode);
+                                var instance = ChordServer.Instance(SeedNode);
                                 if (ChordNodeInstance.IsInstanceValid(instance))
                                 {
                                     Log(LogLevel.Debug, "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
@@ -352,7 +348,7 @@ namespace DHTChord.NodeInstance
                 {
                     try
                     {
-                        var nodeInstance = Instance(Predecessor);
+                        var nodeInstance = ChordServer.Instance(Predecessor);
                         if (!IsInstanceValid(nodeInstance))
                         {
                             Predecessor = null;
@@ -378,14 +374,14 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    var succPredNode = GetPredecessor(Successor);
+                    var succPredNode = ChordServer.GetPredecessor(Successor);
                     if (succPredNode != null)
                     {
                         if (IsIdInRange(succPredNode.Id, Id, Successor.Id))
                         {
                             Successor = succPredNode;
                         }
-                        CallNotify(Successor,ChordServer.LocalNode);
+                        ChordServer.CallNotify(Successor,ChordServer.LocalNode);
 
                         GetSuccessorCache(Successor);
                     }
@@ -394,13 +390,13 @@ namespace DHTChord.NodeInstance
                         var successorCacheHelped = false;
                         foreach (var entry in SuccessorCache)
                         {
-                            var instance = Instance(entry);
+                            var instance = ChordServer.Instance(entry);
 
                             if (IsInstanceValid(instance))
                             {
 
                                 Successor = entry;
-                                CallNotify(Successor, ChordServer.LocalNode);
+                                ChordServer.CallNotify(Successor, ChordServer.LocalNode);
 
                                 GetSuccessorCache(Successor);
 
@@ -474,10 +470,10 @@ namespace DHTChord.NodeInstance
 
             try
             {
-                var instance = Instance(Successor);
+                var instance = ChordServer.Instance(Successor);
                 instance.Predecessor = Predecessor;
 
-                instance = Instance(Predecessor);
+                instance = ChordServer.Instance(Predecessor);
                 instance.Successor = Successor;
             }
             catch (Exception e)
@@ -521,10 +517,10 @@ namespace DHTChord.NodeInstance
         {
            
             ulong key = ChordServer.GetHash(value);
-            ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key).AddDB(key, value);            
+            ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key).AddDb(key, value);            
         }
 
-        public void AddDB(ulong key, string value)
+        public void AddDb(ulong key, string value)
         {
 
             db.Add(key, value);
@@ -541,10 +537,10 @@ namespace DHTChord.NodeInstance
         {
             var tmp = FindContainerKey(key);
             nodeOut = new ChordNode(tmp.Host, tmp.Port);
-            return tmp.GetFromDB(key);
+            return tmp.GetFromDb(key);
         }
 
-        public string GetFromDB(ulong key)
+        public string GetFromDb(ulong key)
         {
             return db.ContainsKey(key) ? db[key] : string.Empty;
         }
@@ -554,12 +550,12 @@ namespace DHTChord.NodeInstance
         /// </summary>
         /// <param name="key">The key to find</param>
         /// <returns>The node instance responsable of the key</returns>
-        public ChordNodeInstance FindContainerKey(ulong key)
+        public IChordNodeInstance FindContainerKey(ulong key)
         {
             ChordNode owningNode = ChordServer.CallFindSuccessor(key);
 
             if (owningNode.Equals(ChordServer.LocalNode))
-                return Instance(owningNode);
+                return ChordServer.Instance(owningNode);
             return ChordServer.CallFindContainerKey(owningNode, key);
         }
 
@@ -594,16 +590,16 @@ namespace DHTChord.NodeInstance
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {                        
-                            ChordServer.CallReplicateKey(this.Successor, key, GetFromDB(key));
+                            ChordServer.CallReplicateKey(this.Successor, key, GetFromDb(key));
                         }
                     }
 
-                    var sucInstance = Instance(Successor);
+                    var sucInstance = ChordServer.Instance(Successor);
                     foreach (var key in sucInstance.GetKeys())
                     {
                         if(IsIdInRange(key, Predecessor.Id, Id))
                         {
-                            ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDB(key));
+                            ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
                         }
                     }
                 }

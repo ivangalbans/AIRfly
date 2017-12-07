@@ -13,13 +13,25 @@ using static DHTChord.MathOperation.ChordMath;
 namespace DHTChord.NodeInstance
 {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-    public class ChordNodeInstance: IChordNodeInstance
+    public class ChordNodeInstance : IChordNodeInstance
     {
-        public string Host => ChordServer.LocalNode.Host;
+        public string Host
+        {
+            get => ChordServer.LocalNode.Host;
+            set { }
+        }
 
-        public int Port => ChordServer.LocalNode.Port;
+        public int Port
+        {
+            get => ChordServer.LocalNode.Port;
+            set { }
+        }
 
-        public ulong Id => ChordServer.LocalNode.Id;
+        public ulong Id
+        {
+            get => ChordServer.LocalNode.Id;
+            set { }
+        }
 
         public ChordNode SeedNode { get; set; }
 
@@ -28,7 +40,7 @@ namespace DHTChord.NodeInstance
             get => SuccessorCache[0];
             set
             {
-                if (value == null &&  SuccessorCache[0] != null)
+                if (value == null && SuccessorCache[0] != null)
                 {
                     Log(LogLevel.Info, "Navigation", "Setting successor to null.");
                 }
@@ -42,6 +54,7 @@ namespace DHTChord.NodeInstance
         }
 
         private ChordNode _predecessorNode;
+
         public ChordNode Predecessor
         {
             get => _predecessorNode;
@@ -52,7 +65,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Info, "Navigation", "Setting predecessor to null.");
                 }
                 else if (value != null &&
-                         (_predecessorNode== null || _predecessorNode.Id != value.Id))  
+                         (_predecessorNode == null || _predecessorNode.Id != value.Id))
                 {
                     Log(LogLevel.Info, "Navigation", $"New Predecessor {value}.");
                 }
@@ -86,7 +99,7 @@ namespace DHTChord.NodeInstance
                 {
                     if (FingerInRange(t.Id, Id, id))
                     {
-                        var instance =ChordServer.Instance(t);
+                        var instance = ChordServer.Instance(t);
                         if (IsInstanceValid(instance))
                         {
                             return t;
@@ -110,7 +123,7 @@ namespace DHTChord.NodeInstance
                 }
             }
         }
-        
+
         //public void GetSeedCache()
         //{
         //    for (int i = 1; i < SeedCache.Length; i++)
@@ -120,6 +133,7 @@ namespace DHTChord.NodeInstance
         //}
 
         public static Random Random = new Random(Environment.TickCount);
+
         public ChordNode FindSuccessor(ulong id)
         {
             if (IsIdInRange(id, Id, Successor.Id))
@@ -129,9 +143,10 @@ namespace DHTChord.NodeInstance
             else
             {
                 var predNode = FindClosestPrecedingFinger(id);
-                return ChordServer.CallFindSuccessor(predNode,id);
+                return ChordServer.CallFindSuccessor(predNode, id);
             }
         }
+
         public static bool IsInstanceValid(IChordNodeInstance instance)
         {
             try
@@ -211,17 +226,17 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
-            //_reJoin.DoWork += ReJoin;
-            //_reJoin.WorkerSupportsCancellation = true;
-            //_reJoin.RunWorkerAsync();
+            _reJoin.DoWork += ReJoin;
+            _reJoin.WorkerSupportsCancellation = true;
+            _reJoin.RunWorkerAsync();
 
-            //_replicationStorage.DoWork += ReplicateStorage;
-            //_replicationStorage.WorkerSupportsCancellation = true;
-            //_replicationStorage.RunWorkerAsync();
+            _replicationStorage.DoWork += ReplicateStorage;
+            _replicationStorage.WorkerSupportsCancellation = true;
+            _replicationStorage.RunWorkerAsync();
 
-            //_stabilizeDataBase.DoWork += StabilizeDataBase;
-            //_stabilizeDataBase.WorkerSupportsCancellation = true;
-            //_stabilizeDataBase.RunWorkerAsync();
+            _stabilizeDataBase.DoWork += StabilizeDataBase;
+            _stabilizeDataBase.WorkerSupportsCancellation = true;
+            _stabilizeDataBase.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -239,13 +254,14 @@ namespace DHTChord.NodeInstance
 
         public IEnumerable<ulong> GetKeys()
         {
-            return db.Keys;            
+            return db.Keys;
         }
 
         public bool EraseKey(ulong key)
         {
-            return db.Remove(key);            
+            return db.Remove(key);
         }
+
         public bool ContainKey(ulong key)
         {
             return db.ContainsKey(key);
@@ -253,7 +269,7 @@ namespace DHTChord.NodeInstance
 
         private void StabilizeDataBase(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker)sender;
+            BackgroundWorker me = (BackgroundWorker) sender;
 
             while (!me.CancellationPending)
             {
@@ -271,16 +287,19 @@ namespace DHTChord.NodeInstance
                                 if (IsIdInRange(key, preInstance.Id, Id))
                                 {
                                     if (preInstance.EraseKey(key))
-                                        Log(LogLevel.Info, "EraseKey", $"Erase key {key} successful from {Predecessor}");
+                                        Log(LogLevel.Info, "EraseKey",
+                                            $"Erase key {key} successful from {Predecessor}");
                                     else
-                                        Log(LogLevel.Error, "EraseKey", $"Erase key {key} unsuccessful from {Predecessor}");
+                                        Log(LogLevel.Error, "EraseKey",
+                                            $"Erase key {key} unsuccessful from {Predecessor}");
                                 }
                                 else
                                 {
                                     if (sucInstance.EraseKey(key))
                                         Log(LogLevel.Info, "EraseKey", $"Erase key {key} successful from {Successor}");
                                     else
-                                        Log(LogLevel.Error, "EraseKey", $"Erase key {key} unsuccessful from {Successor}");
+                                        Log(LogLevel.Error, "EraseKey",
+                                            $"Erase key {key} unsuccessful from {Successor}");
                                 }
                             }
                         }
@@ -297,7 +316,7 @@ namespace DHTChord.NodeInstance
 
         private void ReJoin(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker)sender;
+            BackgroundWorker me = (BackgroundWorker) sender;
 
             while (!me.CancellationPending)
             {
@@ -314,7 +333,8 @@ namespace DHTChord.NodeInstance
                                 var instance = ChordServer.Instance(SeedNode);
                                 if (ChordNodeInstance.IsInstanceValid(instance))
                                 {
-                                    Log(LogLevel.Debug, "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
+                                    Log(LogLevel.Debug, "ReJoin",
+                                        $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
                                     Join(SeedNode);
                                 }
 
@@ -340,7 +360,7 @@ namespace DHTChord.NodeInstance
 
         private void StabilizePredecessors(object sender, DoWorkEventArgs ea)
         {
-            var me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker) sender;
 
             while (!me.CancellationPending)
             {
@@ -368,7 +388,7 @@ namespace DHTChord.NodeInstance
 
         private void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
         {
-            var me = (BackgroundWorker)sender;
+            var me = (BackgroundWorker) sender;
 
             while (!me.CancellationPending)
             {
@@ -381,7 +401,7 @@ namespace DHTChord.NodeInstance
                         {
                             Successor = succPredNode;
                         }
-                        ChordServer.CallNotify(Successor,ChordServer.LocalNode);
+                        ChordServer.CallNotify(Successor, ChordServer.LocalNode);
 
                         GetSuccessorCache(Successor);
                     }
@@ -407,7 +427,8 @@ namespace DHTChord.NodeInstance
 
                         if (!successorCacheHelped)
                         {
-                            Log(LogLevel.Error, "StabilizeSuccessors", "Ring consistency error, Re-Joining Chord ring.");
+                            Log(LogLevel.Error, "StabilizeSuccessors",
+                                "Ring consistency error, Re-Joining Chord ring.");
 
                             if (Join(SeedNode))
                             {
@@ -418,7 +439,7 @@ namespace DHTChord.NodeInstance
                 }
                 catch (Exception e)
                 {
-                   Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
                 }
 
                 Thread.Sleep(100);
@@ -435,10 +456,11 @@ namespace DHTChord.NodeInstance
         }
 
         private static int _currentTableInput;
+
         private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
         {
-            
-            var me = (BackgroundWorker)sender;
+
+            var me = (BackgroundWorker) sender;
 
             while (!me.CancellationPending)
             {
@@ -446,11 +468,13 @@ namespace DHTChord.NodeInstance
                 {
                     try
                     {
-                        FingerTable.Successors[_currentTableInput] = FindSuccessor(FingerTable.StartValues[_currentTableInput]);
+                        FingerTable.Successors[_currentTableInput] =
+                            FindSuccessor(FingerTable.StartValues[_currentTableInput]);
                     }
                     catch (Exception e)
                     {
-                        Log(LogLevel.Error, "Navigation", $"Unable to update Successor for start value {FingerTable.StartValues[_currentTableInput]} ({e.Message}).");
+                        Log(LogLevel.Error, "Navigation",
+                            $"Unable to update Successor for start value {FingerTable.StartValues[_currentTableInput]} ({e.Message}).");
                     }
 
                     _currentTableInput = (_currentTableInput + 1) % FingerTable.Length;
@@ -478,7 +502,7 @@ namespace DHTChord.NodeInstance
             }
             catch (Exception e)
             {
-                Log(LogLevel.Error, "Navigation", $"Error on Depart ({e.Message})." );
+                Log(LogLevel.Error, "Navigation", $"Error on Depart ({e.Message}).");
             }
             finally
             {
@@ -494,7 +518,7 @@ namespace DHTChord.NodeInstance
         }
 
         #region Storage
-        
+
         private SortedList<ulong, string> db = new SortedList<ulong, string>();
 
 
@@ -515,9 +539,9 @@ namespace DHTChord.NodeInstance
         /// <param name="value">The value to add.</param>
         public void AddValue(string value)
         {
-           
+
             ulong key = ChordServer.GetHash(value);
-            ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key).AddDb(key, value);            
+            ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key).AddDb(key, value);
         }
 
         public void AddDb(ulong key, string value)
@@ -580,7 +604,7 @@ namespace DHTChord.NodeInstance
         /// <param name="ea">Args (ignored).</param>
         private void ReplicateStorage(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker)sender;
+            BackgroundWorker me = (BackgroundWorker) sender;
 
             while (!me.CancellationPending)
             {
@@ -589,7 +613,7 @@ namespace DHTChord.NodeInstance
                     foreach (var key in GetKeys())
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
-                        {                        
+                        {
                             ChordServer.CallReplicateKey(this.Successor, key, GetFromDb(key));
                         }
                     }
@@ -597,7 +621,7 @@ namespace DHTChord.NodeInstance
                     var sucInstance = ChordServer.Instance(Successor);
                     foreach (var key in sucInstance.GetKeys())
                     {
-                        if(IsIdInRange(key, Predecessor.Id, Id))
+                        if (IsIdInRange(key, Predecessor.Id, Id))
                         {
                             ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
                         }

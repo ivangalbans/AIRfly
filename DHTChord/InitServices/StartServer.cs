@@ -13,7 +13,7 @@ namespace DHTChord.InitServices
         public static void Start(int port, ChordNode seed = null)
         {
             ChordServer.LocalNode = new ChordNode(System.Net.Dns.GetHostName(), port);
-            NetTcpBinding binding = new NetTcpBinding();
+            NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))
             {

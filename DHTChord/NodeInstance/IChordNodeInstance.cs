@@ -7,11 +7,11 @@ namespace DHTChord.NodeInstance
     [ServiceContract]
     public interface IChordNodeInstance
     {
-        string Host { [OperationContract] get; }
+        string Host { [OperationContract] get; [OperationContract] set; }
 
-        int Port { [OperationContract] get; }
+        int Port { [OperationContract] get; [OperationContract] set; }
 
-        ulong Id { [OperationContract] get; }
+        ulong Id { [OperationContract] get; [OperationContract] set; }
 
         ChordNode Successor { [OperationContract] get; [OperationContract] set; }
 

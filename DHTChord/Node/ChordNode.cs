@@ -12,8 +12,13 @@ namespace DHTChord.Node
         [DataMember]
         public int Port { get; set; }
 
+
         [DataMember]
-        public ulong Id => ChordServer.GetHash(Host.ToUpper() + Port.ToString());
+        public ulong Id
+        {
+            get => ChordServer.GetHash(Host.ToUpper() + Port.ToString());
+            set { }
+        }
 
         public ChordNode(string host, int port)
         {

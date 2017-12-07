@@ -283,7 +283,7 @@ namespace DHTChord.Server
             try
             {
 
-                NetTcpBinding binding = new NetTcpBinding();
+                NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
                 EndpointAddress address = new EndpointAddress($"net.tcp://{node.Host}:{node.Port}/chord");
                 ChannelFactory<IChordNodeInstance> channelFactory =
                     new ChannelFactory<IChordNodeInstance>(binding, address);

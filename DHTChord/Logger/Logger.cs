@@ -22,8 +22,10 @@ namespace DHTChord.Logger
         /// <param name="logLevel">The log level.</param>
         /// <param name="logArea">The functional source area of the log message.</param>
         /// <param name="message">The message to log.</param>
+        static object obj;
         public static void Log(LogLevel logLevel, string logArea, string message)
         {
+            
             ConsoleColor originColor = Console.ForegroundColor;
             ConsoleColor color = ConsoleColor.Black;
             if(logLevel != LogLevel.Debug)
@@ -41,11 +43,14 @@ namespace DHTChord.Logger
                     color = ConsoleColor.Yellow;
                 }
 
-                Console.Write($"{DateTime.Now} {ChordServer.LocalNode}");
-                Console.ForegroundColor = color;
-                Console.Write($" {logArea}: ");
-                Console.ForegroundColor = originColor;
-                Console.WriteLine($"{message}");
+                lock(obj)
+                {
+                    Console.Write($"{DateTime.Now} {ChordServer.LocalNode}");
+                    Console.ForegroundColor = color;
+                    Console.Write($" {logArea}: ");
+                    Console.ForegroundColor = originColor;
+                    Console.WriteLine($"{message}");
+                }
             }
         }
     }

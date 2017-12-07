@@ -199,6 +199,7 @@ namespace DHTChord.NodeInstance
         private readonly BackgroundWorker _updateFingerTable = new BackgroundWorker();
         private readonly BackgroundWorker _reJoin = new BackgroundWorker();
         private readonly BackgroundWorker _replicationStorage = new BackgroundWorker();
+        private readonly BackgroundWorker _stabilizeDataBase = new BackgroundWorker();
 
         public void StartMaintenance()
         {
@@ -214,13 +215,18 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
-            //_reJoin.DoWork += ReJoin;
-            //_reJoin.WorkerSupportsCancellation = true;
-            //_reJoin.RunWorkerAsync();
+            _reJoin.DoWork += ReJoin;
+            _reJoin.WorkerSupportsCancellation = true;
+            _reJoin.RunWorkerAsync();
 
             _replicationStorage.DoWork += ReplicateStorage;
             _replicationStorage.WorkerSupportsCancellation = true;
             _replicationStorage.RunWorkerAsync();
+
+
+            _stabilizeDataBase.DoWork += StabilizeDataBase;
+            _stabilizeDataBase.WorkerSupportsCancellation = true;
+            _stabilizeDataBase.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -230,10 +236,52 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.CancelAsync();
             _reJoin.CancelAsync();
             _replicationStorage.CancelAsync();
+            _stabilizeDataBase.CancelAsync();
         }
 
 
         private bool HasReJoin = false;
+
+        public IEnumerable<ulong> GetKeys()
+        {
+            return db.Keys;            
+        }
+
+        public void EraseKey(ulong key)
+        {
+            db.Remove(key);            
+        }
+        public bool ContainKey(ulong key)
+        {
+            return db.ContainsKey(key);
+        }
+
+        private void StabilizeDataBase(object sender, DoWorkEventArgs ea)
+        {
+            BackgroundWorker me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+                    var sucInstance = Instance(Successor);
+                    var preInstance = Instance(Predecessor);
+                    foreach (var key in sucInstance.GetKeys())
+                    {
+                        if(!Successor.Equals(Predecessor) && ContainKey(key) && preInstance.ContainKey(key))
+                        {
+                            sucInstance.EraseKey(key);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizaDataBase ({e.Message})");
+                }
+
+                Thread.Sleep(3000);
+            }
+        }
 
         private void ReJoin(object sender, DoWorkEventArgs ea)
         {

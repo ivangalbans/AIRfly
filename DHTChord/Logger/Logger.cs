@@ -22,7 +22,7 @@ namespace DHTChord.Logger
         /// <param name="logLevel">The log level.</param>
         /// <param name="logArea">The functional source area of the log message.</param>
         /// <param name="message">The message to log.</param>
-        static object obj;
+        static object obj = new object();
         public static void Log(LogLevel logLevel, string logArea, string message)
         {
             

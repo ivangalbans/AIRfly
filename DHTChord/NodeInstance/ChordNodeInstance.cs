@@ -223,7 +223,6 @@ namespace DHTChord.NodeInstance
             _replicationStorage.WorkerSupportsCancellation = true;
             _replicationStorage.RunWorkerAsync();
 
-
             _stabilizeDataBase.DoWork += StabilizeDataBase;
             _stabilizeDataBase.WorkerSupportsCancellation = true;
             _stabilizeDataBase.RunWorkerAsync();
@@ -247,9 +246,9 @@ namespace DHTChord.NodeInstance
             return db.Keys;            
         }
 
-        public void EraseKey(ulong key)
+        public bool EraseKey(ulong key)
         {
-            db.Remove(key);            
+            return db.Remove(key);            
         }
         public bool ContainKey(ulong key)
         {
@@ -266,11 +265,28 @@ namespace DHTChord.NodeInstance
                 {
                     var sucInstance = Instance(Successor);
                     var preInstance = Instance(Predecessor);
-                    foreach (var key in sucInstance.GetKeys())
+
+                    if (!Successor.Equals(Predecessor))
                     {
-                        if(!Successor.Equals(Predecessor) && ContainKey(key) && preInstance.ContainKey(key))
+                        foreach (var key in GetKeys())
                         {
-                            sucInstance.EraseKey(key);
+                            if (preInstance.ContainKey(key) && sucInstance.ContainKey(key))
+                            {
+                                if (IsIdInRange(key, preInstance.Id, Id))
+                                {
+                                    if (preInstance.EraseKey(key))
+                                        Log(LogLevel.Info, "EraseKey", $"Erase key {key} successful from {Predecessor}");
+                                    else
+                                        Log(LogLevel.Error, "EraseKey", $"Erase key {key} unsuccessful from {Predecessor}");
+                                }
+                                else
+                                {
+                                    if (sucInstance.EraseKey(key))
+                                        Log(LogLevel.Info, "EraseKey", $"Erase key {key} successful from {Successor}");
+                                    else
+                                        Log(LogLevel.Error, "EraseKey", $"Erase key {key} unsuccessful from {Successor}");
+                                }
+                            }
                         }
                     }
                 }
@@ -395,7 +411,6 @@ namespace DHTChord.NodeInstance
 
                         if (!successorCacheHelped)
                         {
-                            Console.WriteLine("***********\n************\n************");
                             Log(LogLevel.Error, "StabilizeSuccessors", "Ring consistency error, Re-Joining Chord ring.");
 
                             if (Join(SeedNode))
@@ -575,11 +590,20 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    foreach (ulong key in this.db.Keys)
+                    foreach (var key in GetKeys())
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {                        
-                            ChordServer.CallReplicateKey(this.Successor, key, this.db[key]);
+                            ChordServer.CallReplicateKey(this.Successor, key, GetFromDB(key));
+                        }
+                    }
+
+                    var sucInstance = Instance(Successor);
+                    foreach (var key in sucInstance.GetKeys())
+                    {
+                        if(IsIdInRange(key, Predecessor.Id, Id))
+                        {
+                            ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDB(key));
                         }
                     }
                 }

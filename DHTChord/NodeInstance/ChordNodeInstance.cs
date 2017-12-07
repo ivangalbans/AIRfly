@@ -12,7 +12,7 @@ using static DHTChord.MathOperation.ChordMath;
 
 namespace DHTChord.NodeInstance
 {
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+    [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple,InstanceContextMode = InstanceContextMode.Single)]
     public class ChordNodeInstance : IChordNodeInstance
     {
         public string Host

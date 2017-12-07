@@ -42,14 +42,34 @@ namespace DHTChord.InitServices
                             return;
                         }
 
-                        case 'U':
+                        case 'A':
                         {
                                 for(int i = 0; i < 10; ++i)
                                 {
-                                    ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Wolrd {i}");
+                                    ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Abel {i}");
                                     Log(LogLevel.Info, "Add New Value", "Adding the value");
                                 }
                                 break;
+                        }
+
+                        case 'V':
+                        {
+                            for (int i = 0; i < 10; ++i)
+                            {
+                                ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Ivan {i}");
+                                Log(LogLevel.Info, "Add New Value", "Adding the value");
+                            }
+                            break;
+                        }
+
+                        case 'R':
+                        {
+                            for (int i = 0; i < 10; ++i)
+                            {
+                                ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Raydel {i}");
+                                Log(LogLevel.Info, "Add New Value", "Adding the value");
+                            }
+                            break;
                         }
 
                         case 'F':

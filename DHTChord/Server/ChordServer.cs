@@ -7,6 +7,7 @@ using System.Runtime.Serialization.Formatters;
 using System.Collections;
 using System.Security.Cryptography;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
 
@@ -197,12 +198,12 @@ namespace DHTChord.Server
             }
         }
 
-        public static IChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key)
+        public static ChordNode CallFindContainerKey(ChordNode remoteNode, ulong key)
         {
             return CallFindContainerKey(remoteNode, key, 3);
         }
 
-        public static IChordNodeInstance CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount)
+        public static ChordNode CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount)
         {
             var instance =Instance(remoteNode);
             try
@@ -286,7 +287,7 @@ namespace DHTChord.Server
                 NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
                 EndpointAddress address = new EndpointAddress($"net.tcp://{node.Host}:{node.Port}/chord");
                 ChannelFactory<IChordNodeInstance> channelFactory =
-                    new ChannelFactory<IChordNodeInstance>(binding, address);
+                    new ChannelFactory<IChordNodeInstance>(ChordServer.CreateStreamingBinding(), address);
                 var server = channelFactory.CreateChannel();
                 return server;
             }
@@ -353,6 +354,13 @@ namespace DHTChord.Server
             }
             return null;
         }
-
+        public static Binding CreateStreamingBinding()
+        {
+            TcpTransportBindingElement transport = new TcpTransportBindingElement();
+            transport.TransferMode = TransferMode.Streamed;
+            BinaryMessageEncodingBindingElement encoder = new BinaryMessageEncodingBindingElement();
+            CustomBinding binding = new CustomBinding(encoder, transport);
+            return binding;
+        }
     }
 }

@@ -55,7 +55,7 @@ namespace DHTChord.NodeInstance
         string GetFromDb(ulong key);
 
         [OperationContract]
-        IChordNodeInstance FindContainerKey(ulong key);
+        ChordNode FindContainerKey(ulong key);
 
         [OperationContract]
         void ReplicateKey(ulong key, string value);

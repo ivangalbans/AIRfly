@@ -7,6 +7,7 @@ namespace Tester1
     {
         static void Main(string[] args)
         {
+            if (args.Length == 0) args = new[] {"3030"};
             if(args.Length == 1)
                 StartServer.Start(int.Parse(args[0]));
             else

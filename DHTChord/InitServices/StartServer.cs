@@ -17,7 +17,7 @@ namespace DHTChord.InitServices
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))
             {
-                serviceHost.AddServiceEndpoint(typeof(IChordNodeInstance), binding, baseAddress);
+                serviceHost.AddServiceEndpoint(typeof(IChordNodeInstance), ChordServer.CreateStreamingBinding(), baseAddress);
                 serviceHost.Open();
 
 

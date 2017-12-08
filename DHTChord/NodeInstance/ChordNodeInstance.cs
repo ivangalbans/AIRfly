@@ -226,9 +226,9 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
-            _reJoin.DoWork += ReJoin;
-            _reJoin.WorkerSupportsCancellation = true;
-            _reJoin.RunWorkerAsync();
+            //_reJoin.DoWork += ReJoin;
+            //_reJoin.WorkerSupportsCancellation = true;
+            //_reJoin.RunWorkerAsync();
 
             _replicationStorage.DoWork += ReplicateStorage;
             _replicationStorage.WorkerSupportsCancellation = true;
@@ -382,7 +382,7 @@ namespace DHTChord.NodeInstance
 
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(10);
             }
         }
 
@@ -442,7 +442,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(10);
             }
         }
 
@@ -541,7 +541,7 @@ namespace DHTChord.NodeInstance
         {
 
             ulong key = ChordServer.GetHash(value);
-            ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key).AddDb(key, value);
+            ChordServer.Instance(ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key)).AddDb(key, value);
         }
 
         public void AddDb(ulong key, string value)
@@ -561,7 +561,7 @@ namespace DHTChord.NodeInstance
         {
             var tmp = FindContainerKey(key);
             nodeOut = new ChordNode(tmp.Host, tmp.Port);
-            return tmp.GetFromDb(key);
+            return ChordServer.Instance(tmp).GetFromDb(key);
         }
 
         public string GetFromDb(ulong key)
@@ -574,12 +574,12 @@ namespace DHTChord.NodeInstance
         /// </summary>
         /// <param name="key">The key to find</param>
         /// <returns>The node instance responsable of the key</returns>
-        public IChordNodeInstance FindContainerKey(ulong key)
+        public ChordNode FindContainerKey(ulong key)
         {
             ChordNode owningNode = ChordServer.CallFindSuccessor(key);
 
             if (owningNode.Equals(ChordServer.LocalNode))
-                return ChordServer.Instance(owningNode);
+                return owningNode;
             return ChordServer.CallFindContainerKey(owningNode, key);
         }
 

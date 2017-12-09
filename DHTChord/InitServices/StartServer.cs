@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.ServiceModel;
+using System.ServiceModel.Discovery;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
 using DHTChord.Server;
@@ -13,11 +14,12 @@ namespace DHTChord.InitServices
         public static void Start(int port, ChordNode seed = null)
         {
             ChordServer.LocalNode = new ChordNode(Dns.GetHostName(), port);
-            NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))
             {
-                serviceHost.AddServiceEndpoint(typeof(IChordNodeInstance), ChordServer.CreateStreamingBinding(), baseAddress);
+                serviceHost.AddServiceEndpoint(typeof(IChordNodeInstance), new NetTcpBinding(SecurityMode.None), baseAddress);
+                serviceHost.Description.Behaviors.Add(new ServiceDiscoveryBehavior());
+                serviceHost.AddServiceEndpoint(new UdpDiscoveryEndpoint());
                 serviceHost.Open();
 
 
@@ -108,7 +110,7 @@ namespace DHTChord.InitServices
             }
         }
 
-        static void PrintNodeInfo(IChordNodeInstance instance, bool extended)
+        static void PrintNodeInfo(ChordNodeInstanceClient instance, bool extended)
         {
             var successor = instance.Successor;
             var predecessor = instance.Predecessor;

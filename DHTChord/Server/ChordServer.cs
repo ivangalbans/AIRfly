@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -7,6 +8,7 @@ using System.Runtime.Serialization.Formatters;
 using System.Security.Cryptography;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.ServiceModel.Discovery;
 using System.Text;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
@@ -17,43 +19,7 @@ namespace DHTChord.Server
     public static class ChordServer
     {
         public static ChordNode LocalNode { get; set; }
-        private static TcpChannel Channel { get; set; }
-        public static bool RegisterService(int port)
-        {
-            try
-            {
-                if(Channel != null)
-                {
-                    UnregisterService();    
-                }
-                
-                Channel = new TcpChannel(
-                        new Hashtable { ["port"] = port },
-                        null,
-                        new BinaryServerFormatterSinkProvider { TypeFilterLevel = TypeFilterLevel.Full }
-                );
-
-                ChannelServices.RegisterChannel(Channel, false);
-                RemotingConfiguration.RegisterWellKnownServiceType(typeof(ChordNodeInstance), "chord", WellKnownObjectMode.Singleton);
-            }
-            catch (Exception e)
-            {
-                Log(LogLevel.Error, "Configuration", $"Unable to register Chord Service ({e.Message}).");
-                return false;
-            }
-            Log(LogLevel.Info, "Configuration", $"Chord Service registered on port {port}.");
-
-            return true;
-        }
-
-        public static void UnregisterService()
-        {
-            if(Channel != null)
-            {
-                ChannelServices.UnregisterChannel(Channel);
-                Channel = null;
-            }
-        }
+   
         public static ulong GetHash(string key)
         {
             var md5 = new MD5CryptoServiceProvider();
@@ -100,13 +66,17 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    return instance.FindSuccessor(id);
+                    var retVal= instance.FindSuccessor(id);
+                    instance.Close();
+                    return retVal;
                 }
                 catch (Exception e)
                 {
                     Log(LogLevel.Debug, "Remote Invoker", $"CallFindSuccessor error: {e.Message}");
                 }
+                
             }
+            instance.Close();
             return null;
         }
 
@@ -130,7 +100,7 @@ namespace DHTChord.Server
         /// <param name="retryCount">The number of retries to attempt.</param>
         public static void CallAddValue(ChordNode remoteNode, string value, int retryCount)
         {
-            var instance =Instance(remoteNode);
+            var instance = Instance(remoteNode);
 
             try
             {
@@ -148,6 +118,10 @@ namespace DHTChord.Server
                 {
                     Log(LogLevel.Debug, "Remote Invoker", $"CallAddKey failed - error: {ex.Message}");
                 }
+            }
+            finally
+            {
+                instance.Close();
             }
         }
 
@@ -191,6 +165,10 @@ namespace DHTChord.Server
                 nodeOut = null;
                 return string.Empty;
             }
+            finally
+            {
+                instance.Close();
+            }
         }
 
         public static ChordNode CallFindContainerKey(ChordNode remoteNode, ulong key)
@@ -203,8 +181,7 @@ namespace DHTChord.Server
             var instance =Instance(remoteNode);
             try
             {
-                var a =  instance.FindContainerKey(key);
-                return a;
+                return instance.FindContainerKey(key);
             }
             catch (Exception ex)
             {
@@ -217,6 +194,10 @@ namespace DHTChord.Server
                 }
                 Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
                 return null;
+            }
+            finally
+            {
+                instance.Close();
             }
         }
 
@@ -260,12 +241,16 @@ namespace DHTChord.Server
                     Log(LogLevel.Debug, "Remote Invoker", $"CallReplicateKey failed - error: {ex.Message}");
                 }
             }
+            finally
+            {
+                instance.Close();
+            }
         }
 
         #endregion
         private const int RetryCount = 6;
 
-        public static IChordNodeInstance Instance(ChordNode node)
+        public static ChordNodeInstanceClient Instance(ChordNode node)
         {
             if (node == null)
             {
@@ -275,13 +260,7 @@ namespace DHTChord.Server
 
             try
             {
-
-                NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
-                EndpointAddress address = new EndpointAddress($"net.tcp://{node.Host}:{node.Port}/chord");
-                ChannelFactory<IChordNodeInstance> channelFactory =
-                    new ChannelFactory<IChordNodeInstance>(CreateStreamingBinding(), address);
-                var server = channelFactory.CreateChannel();
-                return server;
+                return new ChordNodeInstanceClient(new NetTcpBinding(SecurityMode.None), new EndpointAddress($"net.tcp://{node.Host}:{node.Port}/chord"));
             }
             catch (Exception e)
             {
@@ -289,6 +268,55 @@ namespace DHTChord.Server
                 Log(LogLevel.Error, "Navigation",
                     $"Unable to activate remote server {node.Host}:{node.Port} ({e.Message}).");
                 return null;
+            }
+        }
+        public static ChordNodeInstanceClient Instance(EndpointAddress address)
+        {
+            if (address == null)
+            {
+                Log(LogLevel.Error, "Navigation", "Invalid address (Null Argument)");
+                return null;
+            }
+
+            try
+            {
+                return new ChordNodeInstanceClient(new NetTcpBinding(SecurityMode.None),address);
+            }
+            catch (Exception e)
+            {
+                // perhaps instead we should just pass on the error?
+                Log(LogLevel.Error, "Navigation",
+                    $"Unable to activate remote server {address.Uri} ({e.Message}).");
+                return null;
+            }
+        }
+
+        public static EndpointAddress FindServiceAddress()
+        {
+            var discoveryClient = new DiscoveryClient(new UdpDiscoveryEndpoint());
+            while (true)
+            {
+                Log(LogLevel.Warn, "Discovery", "Discovering ChordNode Instances");
+                try
+                {
+                    var endpoints = discoveryClient.Find(new FindCriteria(typeof(IChordNodeInstance))).Endpoints
+                        .Where(x => x.Address.Uri.AbsoluteUri.StartsWith("net.tcp")).ToList();
+
+                    if (endpoints.Count > 0)
+                    {
+                        Log(LogLevel.Info, "Discovery", $"{endpoints.Count} nodes found");
+                        return endpoints[0].Address;
+                    }
+                    else
+                    {
+                        Log(LogLevel.Error, "Discovery", "Nothing found");
+
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "Discovery", "Nothing found");
+                }
             }
         }
 
@@ -300,25 +328,29 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    return instance.Predecessor;
+                    var retVal = instance.Predecessor;
+                    instance.Close();
+                    return retVal;
                 }
                 catch (Exception e)
                 {
                     Log(LogLevel.Debug, "Remote Accessor", $"GetPredecessor error: {e.Message}");
                 }
             }
+            instance.Close();
             return null;
         }
 
         public static bool CallNotify(ChordNode remoteNode, ChordNode node, int retryCount = RetryCount)
         {
 
-            var state = Instance(remoteNode);
+            var instance = Instance(remoteNode);
             while (retryCount-- > 0)
             {
                 try
                 {
-                    state.Notify(node);
+                    instance.Notify(node);
+                    instance.Close();
                     return true; 
                 }
                 catch (Exception e)
@@ -326,6 +358,7 @@ namespace DHTChord.Server
                     Log(LogLevel.Debug, "Remote Invoker", $"CallNotify error: {e.Message}");
                 }
             }
+            instance.Close();
             return false;
         }
 
@@ -337,22 +370,25 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    return instance.SuccessorCache;
+                    var retVal = instance.SuccessorCache;
+                    instance.Close();
+                    return retVal;
                 }
                 catch (Exception ex)
                 {
                     Log(LogLevel.Debug, "Remote Accessor", $"GetSuccessorCache error: {ex.Message}");
                 }
             }
+            instance.Close();
             return null;
         }
-        public static Binding CreateStreamingBinding()
-        {
-            TcpTransportBindingElement transport = new TcpTransportBindingElement();
-            transport.TransferMode = TransferMode.Streamed;
-            BinaryMessageEncodingBindingElement encoder = new BinaryMessageEncodingBindingElement();
-            CustomBinding binding = new CustomBinding(encoder, transport);
-            return binding;
-        }
+        //public static Binding CreateStreamingBinding()
+        //{
+        //    TcpTransportBindingElement transport = new TcpTransportBindingElement();
+        //    transport.TransferMode = TransferMode.Streamed;
+        //    BinaryMessageEncodingBindingElement encoder = new BinaryMessageEncodingBindingElement();
+        //    CustomBinding binding = new CustomBinding(encoder, transport);
+        //    return binding;
+        //}
     }
 }

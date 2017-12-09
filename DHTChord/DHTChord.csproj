@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="InitServices\StartClient.cs" />
     <Compile Include="InitServices\StartServer.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="MathOperation\ChordMath.cs" />

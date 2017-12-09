@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Discovery;
@@ -6,6 +7,7 @@ using DHTChord.Node;
 using DHTChord.NodeInstance;
 using DHTChord.Server;
 using static DHTChord.Logger.Logger;
+using static DHTChord.InitServices.StartClient;
 
 namespace DHTChord.InitServices
 {
@@ -51,7 +53,12 @@ namespace DHTChord.InitServices
                         {
                                 for(int i = 0; i < 10; ++i)
                                 {
-                                    ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Abel {i}");
+                                    string a = "";
+                                    for (int j = 0; j < 100000; j++)
+                                    {
+                                        a += i;
+                                    }
+                                    ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Abel {a}");
                                     Log(LogLevel.Info, "Add New Value", "Adding the value");
                                 }
                                 break;
@@ -98,6 +105,15 @@ namespace DHTChord.InitServices
                         {
                                 instance.ViewDataBase();
                                 break;
+                        }
+                        case 'M':
+                        {
+                            var directorys = Directory.EnumerateFiles("D:\\toSend/");
+                            foreach (var file in directorys)
+                            {
+                                Send(file, ChordServer.LocalNode);
+                            }
+                            break;
                         }
 
                         default:

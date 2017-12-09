@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
@@ -541,6 +542,48 @@ namespace DHTChord.NodeInstance
             }
         }
 
+        private static Dictionary<string, byte[]> dic = new Dictionary<string, byte[]>();
+        public void AddValue2(string musicName, byte[] metaData)
+        {
+            ulong key = ChordServer.GetHash(musicName);
+            ChordServer.Instance(ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key)).AddNewMusic(key, musicName, metaData);
+        }
+
+        private static string path = "C:\\AIRfly\\";
+        private static string replication = path + "replication\\";
+        public void AddNewMusic(ulong key, string musicMame, byte[] metaData)
+        {
+            if (!_db.ContainsKey(key))
+            {
+                
+                FileStream Fs = new FileStream(path + musicMame, FileMode.OpenOrCreate, FileAccess.Write);
+                Fs.Write(metaData, 0, metaData.Length);
+                Fs.Close();               
+                Log(LogLevel.Info, "Recive Data", $"Recive {musicMame}");
+
+                dic.Add(musicMame, metaData);
+                _db.Add(key, musicMame);
+              
+            }
+        }
+
+        public void ReplicationMusic(ulong key, string musicName, byte[] metaData)
+        {
+            if (!this._db.ContainsKey(key))
+            {
+                FileStream Fs = new FileStream(replication + musicName, FileMode.OpenOrCreate, FileAccess.Write);
+                Fs.Write(metaData, 0, metaData.Length);
+                Fs.Close();
+                dic.Add(musicName, metaData);
+                _db.Add(key, musicName);
+            }
+        }
+
+        public byte[] GetBytes(string name)
+        {
+            return dic[name];
+        }
+
         #region Storage
 
         private readonly SortedList<ulong, string> _db = new SortedList<ulong, string>();
@@ -778,5 +821,24 @@ namespace DHTChord.NodeInstance
         public void ReplicateKey(ulong key, string value) => Channel.ReplicateKey(key, value);
 
         public void Depart() => Channel.Depart();
+        public void AddValue2(string musicName, byte[] metaData)
+        {
+            Channel.AddValue2(musicName, metaData);
+        }
+
+        public void AddNewMusic(ulong key, string musicMame, byte[] metaData)
+        {
+            Channel.AddNewMusic(key, musicMame, metaData);
+        }
+
+        public void ReplicationMusic(ulong key, string musicName, byte[] metaData)
+        {
+            Channel.ReplicationMusic(key, musicName, metaData);
+        }
+
+        public byte[] GetBytes(string name)
+        {
+            return Channel.GetBytes(name);
+        }
     }
 }

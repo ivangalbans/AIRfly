@@ -9,7 +9,7 @@ namespace Tester1
     {
         static void Main(string[] args)
         {
-            //if (args.Length == 0) args = new[] {"3030"};
+            if (args.Length == 0) args = new[] {"3030"};
             if (args.Length == 2)
             {
                 Console.WriteLine("Start auto");

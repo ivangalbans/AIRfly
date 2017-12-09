@@ -382,6 +382,35 @@ namespace DHTChord.Server
             instance.Close();
             return null;
         }
+
+        public static void CallAddMusic(ChordNode remoteNode, string musicName, byte[] metaData)
+        {
+            CallAddMusic(remoteNode, musicName, metaData, 1);
+        }
+
+        public static void CallAddMusic(ChordNode remoteNode, string musicName, byte[] metaData, int retryCount)
+        {
+            var instance = Instance(remoteNode);
+
+            try
+            {
+                instance.AddValue2(musicName, metaData);
+                return;
+            }
+            catch (System.Exception ex)
+            {
+                Log(LogLevel.Error, "Remote Invoker", $"CallAddKey error: {ex.Message}");
+
+                if (retryCount > 0)
+                {
+                    CallAddMusic(remoteNode, musicName, metaData, --retryCount);
+                }
+                else
+                {
+                    Log(LogLevel.Error, "Remote Invoker", $"CallAddKey failed - error: {ex.Message}");
+                }
+            }
+        }
         //public static Binding CreateStreamingBinding()
         //{
         //    TcpTransportBindingElement transport = new TcpTransportBindingElement();

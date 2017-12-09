@@ -65,16 +65,12 @@ namespace DHTChord.NodeInstance
         [OperationContract]
         void Depart();
 
-        [OperationContract]
-        void AddValue2(string musicName, byte[] metaData);
+        [OperationContract(IsOneWay = true)]
+        void UploadFile(FileUploadMessage request);
+        [OperationContract(IsOneWay = false)]
+        FileDownloadReturnMessage DownloadFile(FileDownloadMessage request);
 
         [OperationContract]
-        void AddNewMusic(ulong key, string musicMame, byte[] metaData);
-
-        [OperationContract]
-        void ReplicationMusic(ulong key, string musicName, byte[] metaData);
-
-        [OperationContract]
-        byte[] GetBytes(string name);
+        void AddNewFile(FileUploadMessage request);
     }
 }

@@ -19,7 +19,7 @@ namespace DHTChord.InitServices
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))
             {
-                serviceHost.AddServiceEndpoint(typeof(IChordNodeInstance), new NetTcpBinding(SecurityMode.None), baseAddress);
+                serviceHost.AddServiceEndpoint(typeof(IChordNodeInstance), ChordServer.CreategBinding(), baseAddress);
                 serviceHost.Description.Behaviors.Add(new ServiceDiscoveryBehavior());
                 serviceHost.AddServiceEndpoint(new UdpDiscoveryEndpoint());
                 serviceHost.Open();
@@ -30,7 +30,7 @@ namespace DHTChord.InitServices
 
                 while (true)
                 {
-                    switch (Char.ToUpperInvariant(Console.ReadKey(true).KeyChar))
+                    switch (char.ToUpperInvariant(Console.ReadKey(true).KeyChar))
                     {
                         case 'I':
                         {
@@ -108,10 +108,10 @@ namespace DHTChord.InitServices
                         }
                         case 'M':
                         {
-                            var directorys = Directory.EnumerateFiles("D:\\toSend/");
+                            var directorys = Directory.EnumerateFiles("G:\\media\\series\\Game of Thrones\\Season 7/");
                             foreach (var file in directorys)
                             {
-                                Send(file, ChordServer.LocalNode);
+                                ChordServer.CallSendFile(file, ChordServer.LocalNode);
                             }
                             break;
                         }

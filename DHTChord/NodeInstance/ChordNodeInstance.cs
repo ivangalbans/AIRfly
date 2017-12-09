@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.IO;
+using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
@@ -542,49 +544,13 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private static Dictionary<string, byte[]> dic = new Dictionary<string, byte[]>();
-        public void AddValue2(string musicName, byte[] metaData)
-        {
-            ulong key = ChordServer.GetHash(musicName);
-            ChordServer.Instance(ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key)).AddNewMusic(key, musicName, metaData);
-        }
-
         private static string path = "C:\\AIRfly\\";
         private static string replication = path + "replication\\";
-        public void AddNewMusic(ulong key, string musicMame, byte[] metaData)
-        {
-            if (!_db.ContainsKey(key))
-            {
-                
-                FileStream Fs = new FileStream(path + musicMame, FileMode.OpenOrCreate, FileAccess.Write);
-                Fs.Write(metaData, 0, metaData.Length);
-                Fs.Close();               
-                Log(LogLevel.Info, "Recive Data", $"Recive {musicMame}");
+        
 
-                dic.Add(musicMame, metaData);
-                _db.Add(key, musicMame);
-              
-            }
-        }
+        
 
-        public void ReplicationMusic(ulong key, string musicName, byte[] metaData)
-        {
-            if (!this._db.ContainsKey(key))
-            {
-                FileStream Fs = new FileStream(replication + musicName, FileMode.OpenOrCreate, FileAccess.Write);
-                Fs.Write(metaData, 0, metaData.Length);
-                Fs.Close();
-                dic.Add(musicName, metaData);
-                _db.Add(key, musicName);
-            }
-        }
-
-        public byte[] GetBytes(string name)
-        {
-            return dic[name];
-        }
-
-        #region Storage
+      
 
         private readonly SortedList<ulong, string> _db = new SortedList<ulong, string>();
 
@@ -670,6 +636,10 @@ namespace DHTChord.NodeInstance
             }
         }
 
+        public void ReplicateFile(ulong key, string path)
+        {
+            
+        }
         /// <summary>
         /// Replicate the local data store on a background thread.
         /// </summary>
@@ -687,7 +657,9 @@ namespace DHTChord.NodeInstance
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
-                            ChordServer.CallReplicateKey(Successor, key, GetFromDb(key));
+                            //ChordServer.CallReplicateKey(Successor, key, GetFromDb(key));
+                            ChordServer.CallReplicationFile(Successor, path + GetFromDb(key));
+
                         }
                     }
 
@@ -696,7 +668,8 @@ namespace DHTChord.NodeInstance
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
-                            ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
+                            //ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
+                            ChordServer.CallReplicationFile(ChordServer.LocalNode, path + sucInstance.GetFromDb(key));
                         }
                     }
                     sucInstance.Close();
@@ -711,13 +684,69 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        #endregion
+        public void AddNewFile(FileUploadMessage request)
+        {
+            ulong key = ChordServer.GetHash(request.Metadata.LocalFileName);
+            UploadFile(request);
+            AddDb(key, request.Metadata.RemoteFileName);
+            //if (!_db.ContainsKey(key))
+            //{
+            //    var instance = ChordServer.Instance(ChordServer.CallFindContainerKey(LocalNode, key));
+            //    instance.UploadFile(request);
+            //    instance.AddDb(key,request.Metadata.RemoteFileName);
+            //    instance.Close();
+            //}
+        }
 
-        #region Transmission
+        public void UploadFile(FileUploadMessage request)
+        {
+            string serverFileName = Path.Combine( path, request.Metadata.RemoteFileName);
+            try
+            {
+                Console.WriteLine($"***************** {serverFileName}");
+                using (FileStream outfile = new FileStream(serverFileName, FileMode.Create))
+                {
+                    Console.WriteLine("========================");
 
+                    const int bufferSize = 65536; // 64K
 
+                    byte[] buffer = new byte[bufferSize];
+                    int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
 
-        #endregion
+                    while (bytesRead > 0)
+                    {
+                        outfile.Write(buffer, 0, bytesRead);
+                        bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+                    }
+                }
+                Log(LogLevel.Info, "Data Recive", $"{Host} {Port} Recive Succefully {request.Metadata.LocalFileName}");
+
+            }
+            catch (IOException e)
+            {
+                Log(LogLevel.Error, "Recive Data", $"Error while Recive {serverFileName}");
+            }
+        }
+
+        public FileDownloadReturnMessage DownloadFile(FileDownloadMessage request)
+        {
+            // parameters validation omitted for clarity
+            string localFileName = request.FileMetaData.LocalFileName;
+
+            try
+            {
+                string basePath = ConfigurationSettings.AppSettings["FileTransferPath"];
+                string serverFileName = Path.Combine(path, request.FileMetaData.RemoteFileName);
+
+                Stream fs = new FileStream(serverFileName, FileMode.Open);
+
+                return new FileDownloadReturnMessage(new FileMetaData(localFileName, serverFileName), fs);
+            }
+            catch (IOException e)
+            {
+                throw new FaultException<IOException>(e);
+            }
+        }
 
     }
 
@@ -821,24 +850,76 @@ namespace DHTChord.NodeInstance
         public void ReplicateKey(ulong key, string value) => Channel.ReplicateKey(key, value);
 
         public void Depart() => Channel.Depart();
-        public void AddValue2(string musicName, byte[] metaData)
+       
+       
+
+        public void UploadFile(FileUploadMessage request)
         {
-            Channel.AddValue2(musicName, metaData);
+            Channel.UploadFile(request);
         }
 
-        public void AddNewMusic(ulong key, string musicMame, byte[] metaData)
+        public FileDownloadReturnMessage DownloadFile(FileDownloadMessage request)
         {
-            Channel.AddNewMusic(key, musicMame, metaData);
+            return Channel.DownloadFile(request);
         }
 
-        public void ReplicationMusic(ulong key, string musicName, byte[] metaData)
+        public void AddNewFile(FileUploadMessage request)
         {
-            Channel.ReplicationMusic(key, musicName, metaData);
-        }
-
-        public byte[] GetBytes(string name)
-        {
-            return Channel.GetBytes(name);
+            Channel.AddNewFile(request);
         }
     }
+
+  
+
+    [MessageContract]
+    public class FileUploadMessage
+    {
+        [MessageHeader(MustUnderstand = true)]
+        public FileMetaData Metadata;
+        [MessageBodyMember(Order = 1)]
+        public Stream FileByteStream;
+    }
+
+    [MessageContract]
+    public class FileDownloadMessage
+    {
+        [MessageHeader(MustUnderstand = true)]
+        public FileMetaData FileMetaData;
+    }
+
+    [MessageContract]
+    public class FileDownloadReturnMessage
+    {
+        public FileDownloadReturnMessage(FileMetaData metaData, Stream stream)
+        {
+            DownloadedFileMetadata = metaData;
+            FileByteStream = stream;
+        }
+
+        [MessageHeader(MustUnderstand = true)]
+        public FileMetaData DownloadedFileMetadata;
+        [MessageBodyMember(Order = 1)]
+        public Stream FileByteStream;
+    }
+
+    [DataContract]
+    public class FileMetaData
+    {
+        public FileMetaData(
+            string localFileName,
+            string remoteFileName)
+        {
+            LocalFileName = localFileName;
+            RemoteFileName = remoteFileName;
+        }
+
+        
+       [DataMember(Name = "localFilename", Order = 1, IsRequired = false)]
+        public string LocalFileName;
+        [DataMember(Name = "remoteFilename", Order = 2, IsRequired = false)]
+        public string RemoteFileName;
+    }
+
+  
+
 }

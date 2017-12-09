@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -33,20 +35,11 @@ namespace DHTChord.Server
         /// </summary>
         /// <param name="id"> The ID to look up (ChordServer.LocalNode is used as the remoteNode).</param>
         /// <returns>The Successor of ID, or NULL in case of error.</returns>
-        public static ChordNode CallFindSuccessor(UInt64 id)
+        private const int RetryCount = 3;
+        /// 
+        public static ChordNode CallFindSuccessor(ulong id)
         {
             return CallFindSuccessor(LocalNode, id);
-        }
-
-        /// <summary>
-        /// Calls FindSuccessor() remotely, using a default retry value of three
-        /// </summary>
-        /// <param name="remoteNode">The remote on which to call the method.</param>
-        /// <param name="id">The ID to look up.</param>
-        /// <returns>The Successor of ID, or NULL in case of error.</returns>
-        public static ChordNode CallFindSuccessor(ChordNode remoteNode, UInt64 id)
-        {
-            return CallFindSuccessor(remoteNode, id, 3);
         }
 
         /// <summary>
@@ -58,7 +51,7 @@ namespace DHTChord.Server
         /// <param name="hopCountIn">The known hopcount prior to calling FindSuccessor on this node.</param>
         /// <param name="hopCountOut">The total hopcount of this operation (either returned upwards, or reported for hopcount efficiency validation).</param>
         /// <returns>The Successor of ID, or NULL in case of error.</returns>
-        public static ChordNode CallFindSuccessor(ChordNode node, ulong id, int retryCount)
+        public static ChordNode CallFindSuccessor(ChordNode node, ulong id, int retryCount = RetryCount)
         {
             var instance =Instance(node);
 
@@ -83,22 +76,12 @@ namespace DHTChord.Server
         #region Storage
 
         /// <summary>
-        /// Calls AddKey() remotely, using a default retry value of three.
-        /// </summary>
-        /// <param name="remoteNode">The remote on which to call the method.</param>
-        /// <param name="value">The string value to add.</param>
-        public static void CallAddValue(ChordNode remoteNode, string value)
-        {
-            CallAddValue(remoteNode, value, 3);
-        }
-
-        /// <summary>
         /// Calls AddKey remotely.
         /// </summary>
         /// <param name="remoteNode">The remote node on which to call AddKey.</param>
         /// <param name="value">The string value to add.</param>
         /// <param name="retryCount">The number of retries to attempt.</param>
-        public static void CallAddValue(ChordNode remoteNode, string value, int retryCount)
+        public static void CallAddValue(ChordNode remoteNode, string value, int retryCount = RetryCount)
         {
             var instance = Instance(remoteNode);
 
@@ -126,18 +109,8 @@ namespace DHTChord.Server
         }
 
 
-        /// <summary>
-        /// Calls FindKey() remotely, using a default retry value of three.
-        /// </summary>
-        /// <param name="remoteNode">The remote on which to call the method.</param>
-        /// <param name="key">The key to look up.</param>
-        /// <returns>The value corresponding to the key, or empty string if not found.</returns>
-        public static string CallGetValue(ChordNode remoteNode, ulong key, out ChordNode nodeOut)
-        {
-            return CallGetValue(remoteNode, key, 3, out nodeOut);
-        }
-
-
+     
+      
         /// <summary>
         /// Calls FindKey remotely.
         /// </summary>
@@ -145,7 +118,7 @@ namespace DHTChord.Server
         /// <param name="key">The key to look up.</param>
         /// <param name="retryCount">The number of retries to attempt.</param>
         /// <returns>The value corresponding to the key, or empty string if not found.</returns>
-        public static string CallGetValue(ChordNode remoteNode, ulong key, int retryCount, out ChordNode nodeOut)
+        public static string CallGetValue(ChordNode remoteNode, ulong key, out ChordNode nodeOut, int retryCount = RetryCount)
         {
             var instance = Instance(remoteNode);
 
@@ -159,7 +132,7 @@ namespace DHTChord.Server
 
                 if (retryCount > 0)
                 {
-                    return CallGetValue(remoteNode, key, --retryCount, out nodeOut);
+                    return CallGetValue(remoteNode, key,  out nodeOut, --retryCount);
                 }
                 Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
                 nodeOut = null;
@@ -171,12 +144,7 @@ namespace DHTChord.Server
             }
         }
 
-        public static ChordNode CallFindContainerKey(ChordNode remoteNode, ulong key)
-        {
-            return CallFindContainerKey(remoteNode, key, 3);
-        }
-
-        public static ChordNode CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount)
+        public static ChordNode CallFindContainerKey(ChordNode remoteNode, ulong key, int retryCount = RetryCount)
         {
             var instance =Instance(remoteNode);
             try
@@ -203,24 +171,13 @@ namespace DHTChord.Server
 
 
         /// <summary>
-        /// Calls ReplicateKey() remotely, using a default retry value of three.
-        /// </summary>
-        /// <param name="remoteNode">The remote on which to call the method.</param>
-        /// <param name="key">The key to replicate.</param>
-        /// <param name="value">The string value to replicate.</param>
-        public static void CallReplicateKey(ChordNode remoteNode, ulong key, string value)
-        {
-            CallReplicateKey(remoteNode, key, value, 3);
-        }
-
-        /// <summary>
         /// Calls ReplicateKey remotely.
         /// </summary>
         /// <param name="remoteNode">The remote node on which to call ReplicateKey.</param>
         /// <param name="key">The key to replicate.</param>
         /// <param name="value">The string value to replicate.</param>
         /// <param name="retryCount">The number of retries to attempt.</param>
-        public static void CallReplicateKey(ChordNode remoteNode, ulong key, string value, int retryCount)
+        public static void CallReplicateKey(ChordNode remoteNode, ulong key, string value, int retryCount = RetryCount)
         {
             var instance = Instance(remoteNode);
 
@@ -248,7 +205,31 @@ namespace DHTChord.Server
         }
 
         #endregion
-        private const int RetryCount = 6;
+
+        public static void CallReplicationFile(ChordNode remoteNode, string fileName, 
+            int retryCount = RetryCount)
+        {
+
+            try
+            {
+                CallSendFile(fileName, remoteNode);
+                          
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Debug, "Remote Invoker", $"CallReplicateFile error: {ex.Message}");
+
+                if (retryCount > 0)
+                {
+                    CallReplicationFile(remoteNode, fileName, --retryCount);
+                }
+                else
+                {
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallReplicateFile failed - error: {ex.Message}");
+                }
+            }
+         
+        }
 
         public static ChordNodeInstanceClient Instance(ChordNode node)
         {
@@ -260,7 +241,7 @@ namespace DHTChord.Server
 
             try
             {
-                return new ChordNodeInstanceClient(new NetTcpBinding(SecurityMode.None), new EndpointAddress($"net.tcp://{node.Host}:{node.Port}/chord"));
+                return new ChordNodeInstanceClient(CreategBinding(), new EndpointAddress($"net.tcp://{node.Host}:{node.Port}/chord"));
             }
             catch (Exception e)
             {
@@ -280,7 +261,7 @@ namespace DHTChord.Server
 
             try
             {
-                return new ChordNodeInstanceClient(new NetTcpBinding(SecurityMode.None),address);
+                return new ChordNodeInstanceClient(CreategBinding(), address);
             }
             catch (Exception e)
             {
@@ -383,41 +364,57 @@ namespace DHTChord.Server
             return null;
         }
 
-        public static void CallAddMusic(ChordNode remoteNode, string musicName, byte[] metaData)
+     
+        public static Binding CreategBinding()
         {
-            CallAddMusic(remoteNode, musicName, metaData, 1);
+            return new NetTcpBinding(SecurityMode.None)
+            {
+                TransferMode = TransferMode.Streamed,
+                MaxBufferSize = 2147483647,
+                MaxReceivedMessageSize = 2147483647,
+                SendTimeout = TimeSpan.MaxValue,
+                OpenTimeout = TimeSpan.MaxValue,
+                CloseTimeout = TimeSpan.MaxValue,
+                ReceiveTimeout = TimeSpan.MaxValue
+            };
         }
 
-        public static void CallAddMusic(ChordNode remoteNode, string musicName, byte[] metaData, int retryCount)
+        public static void CallSendFile(string path, ChordNode remoteNode, int retryCount = RetryCount)
         {
-            var instance = Instance(remoteNode);
+            string remoteFileName = Path.GetFileName(path);
+            var key = GetHash(remoteFileName);
+            var instance = Instance(CallFindContainerKey(remoteNode, key));
 
             try
             {
-                instance.AddValue2(musicName, metaData);
-                return;
+                if (instance.ContainKey(key))
+                    return;
+                using (Stream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    var request = new FileUploadMessage();
+
+                    var fileMetadata = new FileMetaData(path, remoteFileName);
+                    request.Metadata = fileMetadata;
+                    request.FileByteStream = fileStream;
+                    Log(LogLevel.Info, "Sending File", $"Sending File {path} ...");
+                    instance.AddNewFile(request);
+                    Log(LogLevel.Info, "Finish Send", $"{path} Send Succesfully");
+                }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                Log(LogLevel.Error, "Remote Invoker", $"CallAddKey error: {ex.Message}");
+                Log(LogLevel.Error, "Remote Invoker", $"CallAddFile error: {ex.Message}");
 
                 if (retryCount > 0)
                 {
-                    CallAddMusic(remoteNode, musicName, metaData, --retryCount);
+                    CallSendFile(path, remoteNode,--retryCount);
                 }
                 else
                 {
-                    Log(LogLevel.Error, "Remote Invoker", $"CallAddKey failed - error: {ex.Message}");
+                    Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
                 }
             }
+           
         }
-        //public static Binding CreateStreamingBinding()
-        //{
-        //    TcpTransportBindingElement transport = new TcpTransportBindingElement();
-        //    transport.TransferMode = TransferMode.Streamed;
-        //    BinaryMessageEncodingBindingElement encoder = new BinaryMessageEncodingBindingElement();
-        //    CustomBinding binding = new CustomBinding(encoder, transport);
-        //    return binding;
-        //}
     }
 }

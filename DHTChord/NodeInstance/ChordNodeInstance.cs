@@ -1,20 +1,25 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ServiceModel;
 using System.Threading;
 using DHTChord.FTable;
 using DHTChord.Node;
 using DHTChord.Server;
-
 using static DHTChord.Logger.Logger;
 using static DHTChord.MathOperation.ChordMath;
 
 namespace DHTChord.NodeInstance
 {
-    [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple,InstanceContextMode = InstanceContextMode.Single)]
+    [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple, InstanceContextMode = InstanceContextMode.Single)]
     public class ChordNodeInstance : IChordNodeInstance
     {
+        public ChordNode LocalNode
+        {
+            get => ChordServer.LocalNode;
+            set { }
+        }
+
         public string Host
         {
             get => ChordServer.LocalNode.Host;
@@ -81,7 +86,7 @@ namespace DHTChord.NodeInstance
         {
             for (var i = FingerTable.Length - 1; i >= 0; --i)
             {
-                if (FingerTable.Successors[i] != null && FingerTable.Successors[i] != ChordServer.LocalNode)
+                if (FingerTable.Successors[i] != null && !Equals(FingerTable.Successors[i], ChordServer.LocalNode))
                 {
                     if (FingerInRange(FingerTable.Successors[i].Id, Id, id))
                     {
@@ -95,7 +100,7 @@ namespace DHTChord.NodeInstance
             }
             foreach (var t in SuccessorCache)
             {
-                if (t != null && t != ChordServer.LocalNode)
+                if (t != null && !Equals(t, ChordServer.LocalNode))
                 {
                     if (FingerInRange(t.Id, Id, id))
                     {
@@ -124,15 +129,7 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        //public void GetSeedCache()
-        //{
-        //    for (int i = 1; i < SeedCache.Length; i++)
-        //    {
-        //        SeedCache[i] = FindSuccessor(ChordServer.GetHash(Random.Next() + Random.Next().ToString()));
-        //    }
-        //}
 
-        public static Random Random = new Random(Environment.TickCount);
 
         public ChordNode FindSuccessor(ulong id)
         {
@@ -140,11 +137,8 @@ namespace DHTChord.NodeInstance
             {
                 return Successor;
             }
-            else
-            {
-                var predNode = FindClosestPrecedingFinger(id);
-                return ChordServer.CallFindSuccessor(predNode, id);
-            }
+            var predNode = FindClosestPrecedingFinger(id);
+            return ChordServer.CallFindSuccessor(predNode, id);
         }
 
         public static bool IsInstanceValid(IChordNodeInstance instance)
@@ -250,26 +244,26 @@ namespace DHTChord.NodeInstance
         }
 
 
-        private bool HasReJoin = false;
+        private bool _hasReJoin;
 
         public IEnumerable<ulong> GetKeys()
         {
-            return db.Keys;
+            return _db.Keys;
         }
 
         public bool EraseKey(ulong key)
         {
-            return db.Remove(key);
+            return _db.Remove(key);
         }
 
         public bool ContainKey(ulong key)
         {
-            return db.ContainsKey(key);
+            return _db.ContainsKey(key);
         }
 
         private void StabilizeDataBase(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker) sender;
+            BackgroundWorker me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -316,13 +310,13 @@ namespace DHTChord.NodeInstance
 
         private void ReJoin(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker) sender;
+            BackgroundWorker me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
                 try
                 {
-                    if (HasReJoin)
+                    if (_hasReJoin)
                     {
                         if (SeedNode != null)
                         {
@@ -330,7 +324,7 @@ namespace DHTChord.NodeInstance
                             {
                                 Console.WriteLine("RRRRRRRRREEEEEEEEEE");
                                 var instance = ChordServer.Instance(SeedNode);
-                                if (ChordNodeInstance.IsInstanceValid(instance))
+                                if (IsInstanceValid(instance))
                                 {
                                     Log(LogLevel.Debug, "ReJoin",
                                         $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
@@ -345,7 +339,7 @@ namespace DHTChord.NodeInstance
                     }
                     else
                     {
-                        this.HasReJoin = true;
+                        _hasReJoin = true;
                     }
                 }
                 catch (Exception e)
@@ -359,7 +353,7 @@ namespace DHTChord.NodeInstance
 
         private void StabilizePredecessors(object sender, DoWorkEventArgs ea)
         {
-            var me = (BackgroundWorker) sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -387,7 +381,7 @@ namespace DHTChord.NodeInstance
 
         private void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
         {
-            var me = (BackgroundWorker) sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -459,7 +453,7 @@ namespace DHTChord.NodeInstance
         private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
         {
 
-            var me = (BackgroundWorker) sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -518,13 +512,13 @@ namespace DHTChord.NodeInstance
 
         #region Storage
 
-        private SortedList<ulong, string> db = new SortedList<ulong, string>();
+        private readonly SortedList<ulong, string> _db = new SortedList<ulong, string>();
 
 
         public void ViewDataBase()
         {
-            Console.WriteLine($"Data Base details");
-            foreach (var item in db)
+            Console.WriteLine("Data Base details");
+            foreach (var item in _db)
             {
                 Console.WriteLine($"{item.Key} {item.Value}");
             }
@@ -546,8 +540,8 @@ namespace DHTChord.NodeInstance
         public void AddDb(ulong key, string value)
         {
 
-            db.Add(key, value);
-            Console.WriteLine(db.Count);
+            _db.Add(key, value);
+            Console.WriteLine(_db.Count);
         }
 
         /// <summary>
@@ -555,6 +549,7 @@ namespace DHTChord.NodeInstance
         /// key.
         /// </summary>
         /// <param name="key">The key whose value should be returned.</param>
+        /// <param name="nodeOut"></param>
         /// <returns>The string value for the given key, or an empty string if not found.</returns>
         public string GetValue(ulong key, out ChordNode nodeOut)
         {
@@ -565,7 +560,7 @@ namespace DHTChord.NodeInstance
 
         public string GetFromDb(ulong key)
         {
-            return db.ContainsKey(key) ? db[key] : string.Empty;
+            return _db.ContainsKey(key) ? _db[key] : string.Empty;
         }
 
         /// <summary>
@@ -589,10 +584,10 @@ namespace DHTChord.NodeInstance
         /// <param name="value">The value to replicate.</param>
         public void ReplicateKey(ulong key, string value)
         {
-            if (!this.db.ContainsKey(key))
+            if (!_db.ContainsKey(key))
             {
                 Log(LogLevel.Info, "Replication", $"Replication Key and Value {key} {value}");
-                this.db.Add(key, value);
+                _db.Add(key, value);
             }
         }
 
@@ -603,7 +598,7 @@ namespace DHTChord.NodeInstance
         /// <param name="ea">Args (ignored).</param>
         private void ReplicateStorage(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker) sender;
+            BackgroundWorker me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -613,7 +608,7 @@ namespace DHTChord.NodeInstance
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
-                            ChordServer.CallReplicateKey(this.Successor, key, GetFromDb(key));
+                            ChordServer.CallReplicateKey(Successor, key, GetFromDb(key));
                         }
                     }
 
@@ -644,5 +639,45 @@ namespace DHTChord.NodeInstance
 
         #endregion
 
+    }
+
+
+
+    public class ChordNodeInstanceClient : ClientBase<IChordNodeInstance>, IChordNodeInstance
+    {
+        public ChordNode LocalNode { get => Channel.LocalNode; set => Channel.LocalNode = value; }
+        public string Host { get => Channel.Host; set => Channel.Host = value; }
+        public int Port { get => Channel.Port; set => Channel.Port = value; }
+        public ulong Id { get => Channel.Id; set => Channel.Id = value; }
+        public ChordNode Successor { get => Channel.Successor; set => Channel.Successor = value; }
+        public ChordNode Predecessor { get => Channel.Predecessor; set => Channel.Predecessor = value; }
+        public ChordNode[] SuccessorCache { get => Channel.SuccessorCache; set => Channel.SuccessorCache = value; }
+        public ChordNode FindSuccessor(ulong id) => Channel.FindSuccessor(id);
+
+        public bool Join(ChordNode seed) => Channel.Join(seed);
+
+        public IEnumerable<ulong> GetKeys() => Channel.GetKeys();
+
+        public bool EraseKey(ulong key) => Channel.EraseKey(key);
+
+        public bool ContainKey(ulong key) => Channel.ContainKey(key);
+
+        public void Notify(ChordNode callingNode) => Channel.Notify(callingNode);
+
+        public void ViewDataBase() => Channel.ViewDataBase();
+
+        public void AddValue(string value) => Channel.AddValue(value);
+
+        public void AddDb(ulong key, string value) => Channel.AddDb(key, value);
+
+        public string GetValue(ulong key, out ChordNode nodeOut) => Channel.GetValue(key, out nodeOut);
+
+        public string GetFromDb(ulong key) => Channel.GetFromDb(key);
+
+        public ChordNode FindContainerKey(ulong key) => Channel.FindContainerKey(key);
+
+        public void ReplicateKey(ulong key, string value) => Channel.ReplicateKey(key, value);
+
+        public void Depart() => Channel.Depart();
     }
 }

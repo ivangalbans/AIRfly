@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Net;
 using System.ServiceModel;
-using DHTChord.Server;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
-
+using DHTChord.Server;
 using static DHTChord.Logger.Logger;
 
 namespace DHTChord.InitServices
@@ -12,7 +12,7 @@ namespace DHTChord.InitServices
     {
         public static void Start(int port, ChordNode seed = null)
         {
-            ChordServer.LocalNode = new ChordNode(System.Net.Dns.GetHostName(), port);
+            ChordServer.LocalNode = new ChordNode(Dns.GetHostName(), port);
             NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))

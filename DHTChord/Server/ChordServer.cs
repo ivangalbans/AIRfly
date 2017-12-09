@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Text;
+using System.Collections;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Serialization.Formatters;
-using System.Collections;
 using System.Security.Cryptography;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.Text;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
-
 using static DHTChord.Logger.Logger;
 
 namespace DHTChord.Server
@@ -31,7 +30,7 @@ namespace DHTChord.Server
                 Channel = new TcpChannel(
                         new Hashtable { ["port"] = port },
                         null,
-                        new BinaryServerFormatterSinkProvider() { TypeFilterLevel = TypeFilterLevel.Full }
+                        new BinaryServerFormatterSinkProvider { TypeFilterLevel = TypeFilterLevel.Full }
                 );
 
                 ChannelServices.RegisterChannel(Channel, false);
@@ -70,7 +69,7 @@ namespace DHTChord.Server
         /// <returns>The Successor of ID, or NULL in case of error.</returns>
         public static ChordNode CallFindSuccessor(UInt64 id)
         {
-            return CallFindSuccessor(ChordServer.LocalNode, id);
+            return CallFindSuccessor(LocalNode, id);
         }
 
         /// <summary>
@@ -136,9 +135,8 @@ namespace DHTChord.Server
             try
             {
                 instance.AddValue(value);
-                return;
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log(LogLevel.Debug, "Remote Invoker", $"CallAddKey error: {ex.Message}");
 
@@ -181,7 +179,7 @@ namespace DHTChord.Server
             {
                 return instance.GetValue(key, out nodeOut);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey error: {ex.Message}");
 
@@ -189,12 +187,9 @@ namespace DHTChord.Server
                 {
                     return CallGetValue(remoteNode, key, --retryCount, out nodeOut);
                 }
-                else
-                {
-                    Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
-                    nodeOut = null;
-                    return string.Empty;
-                }
+                Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
+                nodeOut = null;
+                return string.Empty;
             }
         }
 
@@ -211,7 +206,7 @@ namespace DHTChord.Server
                 var a =  instance.FindContainerKey(key);
                 return a;
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
 
                 Log(LogLevel.Error, "Remote Invoker", $"CallFindKey error: {ex.Message}");
@@ -220,11 +215,8 @@ namespace DHTChord.Server
                 {
                     return CallFindContainerKey(remoteNode, key, --retryCount);
                 }
-                else
-                {
-                    Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
-                    return null;
-                }
+                Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
+                return null;
             }
         }
 
@@ -287,7 +279,7 @@ namespace DHTChord.Server
                 NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
                 EndpointAddress address = new EndpointAddress($"net.tcp://{node.Host}:{node.Port}/chord");
                 ChannelFactory<IChordNodeInstance> channelFactory =
-                    new ChannelFactory<IChordNodeInstance>(ChordServer.CreateStreamingBinding(), address);
+                    new ChannelFactory<IChordNodeInstance>(CreateStreamingBinding(), address);
                 var server = channelFactory.CreateChannel();
                 return server;
             }

@@ -16,7 +16,7 @@ namespace DHTChord.Node
         [DataMember]
         public ulong Id
         {
-            get => ChordServer.GetHash(Host.ToUpper() + Port.ToString());
+            get => ChordServer.GetHash(Host.ToUpper() + Port);
             set { }
         }
 

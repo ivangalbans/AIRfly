@@ -226,9 +226,9 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
-            //_reJoin.DoWork += ReJoin;
-            //_reJoin.WorkerSupportsCancellation = true;
-            //_reJoin.RunWorkerAsync();
+            _reJoin.DoWork += ReJoin;
+            _reJoin.WorkerSupportsCancellation = true;
+            _reJoin.RunWorkerAsync();
 
             _replicationStorage.DoWork += ReplicateStorage;
             _replicationStorage.WorkerSupportsCancellation = true;
@@ -281,7 +281,7 @@ namespace DHTChord.NodeInstance
                     if (!Successor.Equals(Predecessor))
                     {
                         foreach (var key in GetKeys())
-                        {
+                        {//TODO: erase my own key if the keyis not in either range
                             if (preInstance.ContainKey(key) && sucInstance.ContainKey(key))
                             {
                                 if (IsIdInRange(key, preInstance.Id, Id))
@@ -326,10 +326,9 @@ namespace DHTChord.NodeInstance
                     {
                         if (SeedNode != null)
                         {
-                            ChordNode seedSuccessor = FindSuccessor(SeedNode.Id);
-
-                            if (seedSuccessor.Id != SeedNode.Id)
+                            if (Successor.Equals(ChordServer.LocalNode))
                             {
+                                Console.WriteLine("RRRRRRRRREEEEEEEEEE");
                                 var instance = ChordServer.Instance(SeedNode);
                                 if (ChordNodeInstance.IsInstanceValid(instance))
                                 {
@@ -354,7 +353,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during ReJoin ({e.Message})");
                 }
 
-                Thread.Sleep(3000);
+                Thread.Sleep(5000);
             }
         }
 
@@ -382,7 +381,7 @@ namespace DHTChord.NodeInstance
 
                 }
 
-                Thread.Sleep(10);
+                Thread.Sleep(100);
             }
         }
 
@@ -442,7 +441,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
                 }
 
-                Thread.Sleep(10);
+                Thread.Sleep(100);
             }
         }
 
@@ -484,7 +483,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(1000);
             }
         }
 

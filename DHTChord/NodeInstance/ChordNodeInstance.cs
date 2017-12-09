@@ -227,17 +227,17 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
-            _reJoin.DoWork += ReJoin;
-            _reJoin.WorkerSupportsCancellation = true;
-            _reJoin.RunWorkerAsync();
+            //_reJoin.DoWork += ReJoin;
+            //_reJoin.WorkerSupportsCancellation = true;
+            //_reJoin.RunWorkerAsync();
 
             _replicationStorage.DoWork += ReplicateStorage;
             _replicationStorage.WorkerSupportsCancellation = true;
             _replicationStorage.RunWorkerAsync();
 
-            _stabilizeDataBase.DoWork += StabilizeDataBase;
-            _stabilizeDataBase.WorkerSupportsCancellation = true;
-            _stabilizeDataBase.RunWorkerAsync();
+            //_stabilizeDataBase.DoWork += StabilizeDataBase;
+            //_stabilizeDataBase.WorkerSupportsCancellation = true;
+            //_stabilizeDataBase.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -339,7 +339,7 @@ namespace DHTChord.NodeInstance
                         {
                             if (Successor.Equals(ChordServer.LocalNode))
                             {
-                                Console.WriteLine("RRRRRRRRREEEEEEEEEE");
+                                //Console.WriteLine("RRRRRRRRREEEEEEEEEE");
                                 instance = ChordServer.Instance(SeedNode);
                                 if (IsInstanceValid(instance))
                                 {
@@ -544,8 +544,8 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private static string path = "C:\\AIRfly\\";
-        private static string replication = path + "replication\\";
+        private static string path = "C:\\AIRfly";
+        //private static string replication = path + "replication\\";
         
 
         
@@ -636,10 +636,7 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        public void ReplicateFile(ulong key, string path)
-        {
-            
-        }
+        
         /// <summary>
         /// Replicate the local data store on a background thread.
         /// </summary>
@@ -657,8 +654,9 @@ namespace DHTChord.NodeInstance
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
+                            //Console.WriteLine($"REPLICATION      {path + GetFromDb(key)}");
                             //ChordServer.CallReplicateKey(Successor, key, GetFromDb(key));
-                            ChordServer.CallReplicationFile(Successor, path + GetFromDb(key));
+                            ChordServer.CallReplicationFile(Successor, path+ "/" + GetFromDb(key));
 
                         }
                     }
@@ -669,7 +667,7 @@ namespace DHTChord.NodeInstance
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
                             //ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
-                            ChordServer.CallReplicationFile(ChordServer.LocalNode, path + sucInstance.GetFromDb(key));
+                            ChordServer.CallReplicationFile(ChordServer.LocalNode, path+ "/" + sucInstance.GetFromDb(key));
                         }
                     }
                     sucInstance.Close();
@@ -686,9 +684,10 @@ namespace DHTChord.NodeInstance
 
         public void AddNewFile(FileUploadMessage request)
         {
-            ulong key = ChordServer.GetHash(request.Metadata.LocalFileName);
-            UploadFile(request);
+            ulong key = ChordServer.GetHash(request.Metadata.RemoteFileName);
+            //Console.WriteLine($"ADD NEW FILE {key} {request.Metadata.RemoteFileName}");
             AddDb(key, request.Metadata.RemoteFileName);
+            UploadFile(request);
             //if (!_db.ContainsKey(key))
             //{
             //    var instance = ChordServer.Instance(ChordServer.CallFindContainerKey(LocalNode, key));
@@ -700,38 +699,44 @@ namespace DHTChord.NodeInstance
 
         public void UploadFile(FileUploadMessage request)
         {
-            string serverFileName = Path.Combine( path, request.Metadata.RemoteFileName);
+            string serverFileName = path + "/" +request.Metadata.RemoteFileName;
+            
+            FileStream outfile = null;
             try
             {
-                Console.WriteLine($"***************** {serverFileName}");
-                using (FileStream outfile = new FileStream(serverFileName, FileMode.Create))
+                //Console.WriteLine($"***************** {serverFileName}");
+                outfile = new FileStream(serverFileName, FileMode.Create);//TODO
+
+                //Console.WriteLine("========================");
+
+                const int bufferSize = 65536; // 64K
+
+                byte[] buffer = new byte[bufferSize];
+                int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+
+                while (bytesRead > 0)
                 {
-                    Console.WriteLine("========================");
-
-                    const int bufferSize = 65536; // 64K
-
-                    byte[] buffer = new byte[bufferSize];
-                    int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
-
-                    while (bytesRead > 0)
-                    {
-                        outfile.Write(buffer, 0, bytesRead);
-                        bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
-                    }
+                    outfile.Write(buffer, 0, bytesRead);
+                    bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
                 }
-                Log(LogLevel.Info, "Data Recive", $"{Host} {Port} Recive Succefully {request.Metadata.LocalFileName}");
+
+                Log(LogLevel.Info, "Data Recive", $"{Host} {Port} Recive Succefully {request.Metadata.RemoteFileName}");
 
             }
             catch (IOException e)
             {
                 Log(LogLevel.Error, "Recive Data", $"Error while Recive {serverFileName}");
             }
+            finally
+            {
+                outfile?.Close();
+            }
         }
 
         public FileDownloadReturnMessage DownloadFile(FileDownloadMessage request)
         {
             // parameters validation omitted for clarity
-            string localFileName = request.FileMetaData.LocalFileName;
+            //string localFileName = request.FileMetaData.LocalFileName;
 
             try
             {
@@ -740,7 +745,7 @@ namespace DHTChord.NodeInstance
 
                 Stream fs = new FileStream(serverFileName, FileMode.Open);
 
-                return new FileDownloadReturnMessage(new FileMetaData(localFileName, serverFileName), fs);
+                return new FileDownloadReturnMessage(new FileMetaData(serverFileName), fs);
             }
             catch (IOException e)
             {
@@ -906,16 +911,14 @@ namespace DHTChord.NodeInstance
     public class FileMetaData
     {
         public FileMetaData(
-            string localFileName,
             string remoteFileName)
         {
-            LocalFileName = localFileName;
+            
             RemoteFileName = remoteFileName;
         }
 
         
-       [DataMember(Name = "localFilename", Order = 1, IsRequired = false)]
-        public string LocalFileName;
+      
         [DataMember(Name = "remoteFilename", Order = 2, IsRequired = false)]
         public string RemoteFileName;
     }

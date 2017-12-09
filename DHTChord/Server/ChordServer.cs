@@ -383,23 +383,24 @@ namespace DHTChord.Server
         {
             string remoteFileName = Path.GetFileName(path);
             var key = GetHash(remoteFileName);
-            var instance = Instance(CallFindContainerKey(remoteNode, key));
 
+            var instance = Instance(CallFindContainerKey(remoteNode, key));
+            Stream fileStream = null;
             try
             {
                 if (instance.ContainKey(key))
                     return;
-                using (Stream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read))
-                {
+                 fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+                
                     var request = new FileUploadMessage();
 
-                    var fileMetadata = new FileMetaData(path, remoteFileName);
+                    var fileMetadata = new FileMetaData(remoteFileName);
                     request.Metadata = fileMetadata;
                     request.FileByteStream = fileStream;
                     Log(LogLevel.Info, "Sending File", $"Sending File {path} ...");
                     instance.AddNewFile(request);
                     Log(LogLevel.Info, "Finish Send", $"{path} Send Succesfully");
-                }
+                
             }
             catch (Exception ex)
             {
@@ -407,14 +408,19 @@ namespace DHTChord.Server
 
                 if (retryCount > 0)
                 {
-                    CallSendFile(path, remoteNode,--retryCount);
+                    CallSendFile(path, remoteNode, --retryCount);
                 }
                 else
                 {
                     Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
                 }
             }
-           
+            finally
+            {
+                instance?.Close();
+                fileStream?.Close();
+            }
+
         }
     }
 }

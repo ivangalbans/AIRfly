@@ -108,7 +108,7 @@ namespace DHTChord.InitServices
                         }
                         case 'M':
                         {
-                            var directorys = Directory.EnumerateFiles("G:\\media\\series\\Game of Thrones\\Season 7/");
+                            var directorys = Directory.EnumerateFiles("G:\\!!from adriano\\music from\\Imagine Dragons\\Discos\\[2013] Night Visions/");
                             foreach (var file in directorys)
                             {
                                 ChordServer.CallSendFile(file, ChordServer.LocalNode);

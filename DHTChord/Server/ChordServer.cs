@@ -384,7 +384,7 @@ namespace DHTChord.Server
             string remoteFileName = Path.GetFileName(path);
             var key = GetHash(remoteFileName);
 
-            var instance = Instance(CallFindContainerKey(remoteNode, key));
+            var instance = Instance(remoteNode);
             Stream fileStream = null;
             try
             {
@@ -421,6 +421,13 @@ namespace DHTChord.Server
                 fileStream?.Close();
             }
 
+        }
+
+        public static void AddFile(string file, ChordNode localNode)
+        {
+            string remoteFileName = Path.GetFileName(file);
+            var key = GetHash(remoteFileName);
+            CallSendFile(file,CallFindContainerKey(localNode,key));
         }
     }
 }

@@ -718,24 +718,38 @@ namespace DHTChord.NodeInstance
 
         public void SendFile(string remoteFileName, ChordNode remoteNode, string remotePath)
         {
-            if (remotePath is null)
-                remotePath = serverPath;
+            try
+            {
 
-            var instance = ChordServer.Instance(remoteNode);
 
-            var key = ChordServer.GetHash(remoteFileName);
-            if (instance.ContainKey(key))
-                return;
-            Stream fileStream = new FileStream(remotePath + remoteFileName, FileMode.Open, FileAccess.Read);
+                if (remotePath is null)
+                    remotePath = serverPath;
 
-            var request = new FileUploadMessage();
+                var instance = ChordServer.Instance(remoteNode);
 
-            var fileMetadata = new FileMetaData(remoteFileName);
-            request.Metadata = fileMetadata;
-            request.FileByteStream = fileStream;
-            Log(LogLevel.Info, "Sending File", $"Sending File {remotePath} ...");
-            instance.AddNewFile(request);
-            Log(LogLevel.Info, "Finish Send", $"{remotePath} Send Succesfully");
+                var key = ChordServer.GetHash(remoteFileName);
+                if (instance.ContainKey(key))
+                    return;
+                Stream fileStream = new FileStream(remotePath + remoteFileName, FileMode.Open, FileAccess.Read);
+
+                var request = new FileUploadMessage();
+
+                var fileMetadata = new FileMetaData(remoteFileName);
+                request.Metadata = fileMetadata;
+                request.FileByteStream = fileStream;
+                Log(LogLevel.Info, "Sending File", $"Sending File {remotePath} ...");
+                instance.AddNewFile(request);
+                Log(LogLevel.Info, "Finish Send", $"{remotePath} Send Succesfully");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("\n***********************************");
+                Console.WriteLine(remotePath);
+                Console.WriteLine(remoteFileName);
+                Console.WriteLine("***********************************\n");
+
+                throw;
+            }
         }
 
         public void UploadFile(FileUploadMessage request)

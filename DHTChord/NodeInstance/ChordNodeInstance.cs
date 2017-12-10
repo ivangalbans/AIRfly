@@ -296,33 +296,43 @@ namespace DHTChord.NodeInstance
                 ChordNodeInstanceClient preInstance = null;
                 try
                 {
-                    sucInstance = ChordServer.Instance(Successor);
                     preInstance = ChordServer.Instance(Predecessor);
+                    var prePrePredecessor = preInstance.Predecessor;
 
                     if (!Successor.Equals(Predecessor))
                     {
                         foreach (var key in GetKeys())
                         {
 //TODO: erase my own key if the keyis not in either range
-                            if (preInstance.ContainKey(key) && sucInstance.ContainKey(key))
+                            //if (preInstance.ContainKey(key) && sucInstance.ContainKey(key))
+                            //{
+                            //    if (IsIdInRange(key, preInstance.Id, Id))
+                            //    {
+                            //        if (preInstance.EraseFile(key))
+                            //            Log(LogLevel.Info, "EraseFile",
+                            //                $"Erase File {GetFromDb(key)} successful from {Predecessor}");
+                            //        else
+                            //            Log(LogLevel.Error, "EraseFile",
+                            //                $"Erase key {GetFromDb(key)} unsuccessful from {Predecessor}");
+                            //    }
+                            //    else
+                            //    {
+                            //        if (sucInstance.EraseFile(key))
+                            //            Log(LogLevel.Info, "EraseKey", $"Erase key {GetFromDb(key)} successful from {Successor}");
+                            //        else
+                            //            Log(LogLevel.Error, "EraseKey",
+                            //                $"Erase key {GetFromDb(key)} unsuccessful from {Successor}");
+                            //    }
+                            //}
+                            if (!IsIdInRange(key, prePrePredecessor.Id, Predecessor.Id) &&
+                                !IsIdInRange(key, Predecessor.Id, Id))
                             {
-                                if (IsIdInRange(key, preInstance.Id, Id))
-                                {
-                                    if (preInstance.EraseFile(key))
-                                        Log(LogLevel.Info, "EraseFile",
-                                            $"Erase File {GetFromDb(key)} successful from {Predecessor}");
-                                    else
-                                        Log(LogLevel.Error, "EraseFile",
-                                            $"Erase key {GetFromDb(key)} unsuccessful from {Predecessor}");
-                                }
+                                if (EraseFile(key))
+                                    Log(LogLevel.Info, "EraseFile",
+                                        $"Erase File {GetFromDb(key)} successful from {LocalNode}");
                                 else
-                                {
-                                    if (sucInstance.EraseFile(key))
-                                        Log(LogLevel.Info, "EraseKey", $"Erase key {GetFromDb(key)} successful from {Successor}");
-                                    else
-                                        Log(LogLevel.Error, "EraseKey",
-                                            $"Erase key {GetFromDb(key)} unsuccessful from {Successor}");
-                                }
+                                    Log(LogLevel.Error, "EraseFile",
+                                        $"Erase key {GetFromDb(key)} unsuccessful from {LocalNode}");
                             }
                         }
                     }

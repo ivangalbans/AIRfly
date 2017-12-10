@@ -390,7 +390,7 @@ namespace DHTChord.Server
             }
             catch (Exception ex)
             {
-                //Log(LogLevel.Error, "Remote Invoker", $"CallAddFile error: {ex.Message}");
+                Log(LogLevel.Error, "Remote Invoker", $"CallAddFile error: {ex.Message}");
 
                 if (retryCount > 0)
                 {
@@ -398,7 +398,7 @@ namespace DHTChord.Server
                 }
                 else
                 {
-                    //Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
+                    Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
                 }
             }
             finally

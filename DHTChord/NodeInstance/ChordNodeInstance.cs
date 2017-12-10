@@ -705,8 +705,9 @@ namespace DHTChord.NodeInstance
         {
             ulong key = ChordServer.GetHash(request.Metadata.RemoteFileName);
             //Console.WriteLine($"ADD NEW FILE {key} {request.Metadata.RemoteFileName}");
-            AddDb(key, request.Metadata.RemoteFileName);
             UploadFile(request);
+            AddDb(key, request.Metadata.RemoteFileName);
+
             //if (!_db.ContainsKey(key))
             //{
             //    var instance = ChordServer.Instance(ChordServer.CallFindContainerKey(LocalNode, key));
@@ -718,9 +719,7 @@ namespace DHTChord.NodeInstance
 
         public void SendFile(string remoteFileName, ChordNode remoteNode, string remotePath)
         {
-            try
-            {
-
+          
 
                 if (remotePath is null)
                     remotePath = serverPath;
@@ -740,16 +739,6 @@ namespace DHTChord.NodeInstance
                 Log(LogLevel.Info, "Sending File", $"Sending File {remotePath} ...");
                 instance.AddNewFile(request);
                 Log(LogLevel.Info, "Finish Send", $"{remotePath} Send Succesfully");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("\n***********************************");
-                Console.WriteLine(remotePath);
-                Console.WriteLine(remoteFileName);
-                Console.WriteLine("***********************************\n");
-
-                throw;
-            }
         }
 
         public void UploadFile(FileUploadMessage request)

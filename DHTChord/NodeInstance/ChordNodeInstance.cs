@@ -255,7 +255,8 @@ namespace DHTChord.NodeInstance
 
         public IEnumerable<ulong> GetKeys()
         {
-            return _db.Keys;
+            List<ulong> copy = new List<ulong>(_db.Keys);
+            return copy;
         }
 
         public bool EraseKey(ulong key)
@@ -544,7 +545,7 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private static string path = "C:\\AIRfly";
+        private static string path = "C:\\AIRfly\\";
         //private static string replication = path + "replication\\";
         
 
@@ -650,13 +651,14 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
+                    
                     foreach (var key in GetKeys())
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
                             //Console.WriteLine($"REPLICATION      {path + GetFromDb(key)}");
                             //ChordServer.CallReplicateKey(Successor, key, GetFromDb(key));
-                            ChordServer.CallReplicationFile(Successor, path+ "/" + GetFromDb(key));
+                            ChordServer.CallReplicationFile(Successor, path + GetFromDb(key));
 
                         }
                     }
@@ -667,7 +669,7 @@ namespace DHTChord.NodeInstance
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
                             //ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
-                            ChordServer.CallReplicationFile(ChordServer.LocalNode, path+ "/" + sucInstance.GetFromDb(key));
+                            ChordServer.CallReplicationFile(ChordServer.LocalNode, path + sucInstance.GetFromDb(key));
                         }
                     }
                     sucInstance.Close();

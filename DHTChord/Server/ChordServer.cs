@@ -383,11 +383,10 @@ namespace DHTChord.Server
         {
             
 
-            var instance = Instance(remoteNode);
+            var instance = Instance(LocalNode);
             try
             {
                 string remoteFileName = Path.GetFileName(path);
-
                 instance.SendFile(remoteFileName, remoteNode);
 
             }
@@ -408,7 +407,32 @@ namespace DHTChord.Server
             {
                 instance?.Close();
             }
+        }
+        public static void CallGetFile(string path, ChordNode remoteNode, int retryCount = RetryCount)
+        {
+            var instance = Instance(remoteNode);
+            try
+            {
+                string remoteFileName = Path.GetFileName(path);
+                instance.SendFile(remoteFileName, LocalNode);
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, "Remote Invoker", $"CallAddFile error: {ex.Message}");
 
+                if (retryCount > 0)
+                {
+                    CallSendFile(path, remoteNode, --retryCount);
+                }
+                else
+                {
+                    Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
+                }
+            }
+            finally
+            {
+                instance?.Close();
+            }
         }
 
         public static void AddFile(string file, ChordNode localNode)

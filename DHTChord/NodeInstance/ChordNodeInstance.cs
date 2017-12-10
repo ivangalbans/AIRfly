@@ -669,7 +669,7 @@ namespace DHTChord.NodeInstance
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
                             //ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
-                            ChordServer.CallReplicationFile(ChordServer.LocalNode, path + sucInstance.GetFromDb(key));
+                            sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode);
                         }
                     }
                     sucInstance.Close();

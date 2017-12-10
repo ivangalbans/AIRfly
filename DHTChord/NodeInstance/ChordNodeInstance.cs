@@ -85,6 +85,11 @@ namespace DHTChord.NodeInstance
         public FingerTable FingerTable { get; set; }
 
         public ChordNode[] SuccessorCache { get; set; }
+        public string serverPath
+        {
+            get => ChordServer.LocalNode.Path;
+            set => ChordServer.LocalNode.Path = value;
+        }
 
         public ChordNode FindClosestPrecedingFinger(ulong id)
         {
@@ -545,7 +550,7 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private  const string path = "C:\\AIRfly\\";
+        //public string path = "C:\\AIRfly\\";
         //private static string replication = path + "replication\\";
         
 
@@ -702,7 +707,7 @@ namespace DHTChord.NodeInstance
         public void SendFile(string remoteFileName, ChordNode remoteNode, string remotePath)
         {
             if (remotePath is null)
-                remotePath = path;
+                remotePath = serverPath;
 
             var instance = ChordServer.Instance(remoteNode);
 
@@ -723,7 +728,7 @@ namespace DHTChord.NodeInstance
 
         public void UploadFile(FileUploadMessage request)
         {
-            string serverFileName = path + "/" +request.Metadata.RemoteFileName;
+            string serverFileName = serverPath + "/" +request.Metadata.RemoteFileName;
             
             FileStream outfile = null;
             try
@@ -765,7 +770,7 @@ namespace DHTChord.NodeInstance
             try
             {
                 string basePath = ConfigurationSettings.AppSettings["FileTransferPath"];
-                string serverFileName = Path.Combine(path, request.FileMetaData.RemoteFileName);
+                string serverFileName = Path.Combine(serverPath, request.FileMetaData.RemoteFileName);
 
                 Stream fs = new FileStream(serverFileName, FileMode.Open);
 
@@ -850,6 +855,11 @@ namespace DHTChord.NodeInstance
         {
             get => Channel.SuccessorCache;
             set => Channel.SuccessorCache = value;
+        }
+        public string serverPath
+        {
+            get => Channel.serverPath;
+            set => Channel.serverPath = value;
         }
 
         public ChordNode FindSuccessor(ulong id) => Channel.FindSuccessor(id);

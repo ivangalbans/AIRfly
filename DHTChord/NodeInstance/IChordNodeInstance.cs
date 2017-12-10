@@ -15,6 +15,8 @@ namespace DHTChord.NodeInstance
 
         ulong Id { [OperationContract] get; [OperationContract] set; }
 
+        string serverPath { [OperationContract] get; [OperationContract]set; }
+
         ChordNode Successor { [OperationContract] get; [OperationContract] set; }
 
         ChordNode Predecessor { [OperationContract] get; [OperationContract] set; }

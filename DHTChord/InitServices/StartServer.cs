@@ -13,9 +13,10 @@ namespace DHTChord.InitServices
 {
     public static class StartServer
     {
-        public static void Start(int port, ChordNode seed = null)
+        public static void Start(int port, string Path, ChordNode seed = null)
         {
             ChordServer.LocalNode = new ChordNode(Dns.GetHostName(), port);
+            ChordServer.LocalNode.Path = Path;
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))
             {
@@ -25,7 +26,7 @@ namespace DHTChord.InitServices
                 serviceHost.Open();
 
 
-                var instance = ChordServer.Instance(ChordServer.LocalNode);
+                var instance = ChordServer.Instance(ChordServer.LocalNode);                
                 instance.Join(seed);
 
                 while (true)
@@ -108,13 +109,13 @@ namespace DHTChord.InitServices
                         }
                         case 'M':
                         {
-                            string path =
-                                "G:\\!!from adriano\\music from\\Imagine Dragons\\Discos\\[2013] Night Visions/";
-                            var directorys = Directory.EnumerateFiles(path);
-                            foreach (var file in directorys)
-                            {
-                                ChordServer.AddFile(Path.GetFileName(file), path, ChordServer.LocalNode);
-                            }
+                            //string path =
+                            //    "G:\\!!from adriano\\music from\\Imagine Dragons\\Discos\\[2013] Night Visions/";
+                            //var directorys = Directory.EnumerateFiles(path);
+                            //foreach (var file in directorys)
+                            //{
+                            //    ChordServer.AddFile(GetFileName(file), path, ChordServer.LocalNode);
+                            //}
                             break;
                         }
 

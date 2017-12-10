@@ -19,14 +19,19 @@ namespace DHTChord.Node
             get => ChordServer.GetHash(Host.ToUpper() + Port);
             set { }
         }
+        [DataMember]
+        public string Path
+        {
+            get;set;
+        }
+
 
         public ChordNode(string host, int port)
         {
             Host = host;
             Port = port;
-
         }
-    
+        
         public override string ToString()
         {
             return $"Host {Host}:{Port}";

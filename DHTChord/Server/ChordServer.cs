@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Runtime.Remoting;
-using System.Runtime.Remoting.Channels;
-using System.Runtime.Remoting.Channels.Tcp;
-using System.Runtime.Serialization.Formatters;
 using System.Security.Cryptography;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -381,8 +374,6 @@ namespace DHTChord.Server
 
         public static void CallSendFile(string file, string path, ChordNode remoteNode, int retryCount = RetryCount)
         {
-            
-
             var instance = Instance(LocalNode);
             try
             {
@@ -390,7 +381,7 @@ namespace DHTChord.Server
             }
             catch (Exception ex)
             {
-                Log(LogLevel.Error, "Remote Invoker", $"CallAddFile error: {ex.Message}");
+                Log(LogLevel.Debug, "Remote Invoker", $"CallAddFile error: {ex.Message}");
 
                 if (retryCount > 0)
                 {
@@ -398,7 +389,7 @@ namespace DHTChord.Server
                 }
                 else
                 {
-                    Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
+                    Log(LogLevel.Debug, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
                 }
             }
             finally
@@ -406,33 +397,7 @@ namespace DHTChord.Server
                 instance?.Close();
             }
         }
-        //public static void CallGetFile(string path, ChordNode remoteNode, int retryCount = RetryCount)
-        //{
-        //    var instance = Instance(remoteNode);
-        //    try
-        //    {
-        //        string remoteFileName = Path.GetFileName(path);
-        //        instance.SendFile(remoteFileName, LocalNode, );
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log(LogLevel.Error, "Remote Invoker", $"CallAddFile error: {ex.Message}");
-
-        //        if (retryCount > 0)
-        //        {
-        //            CallSendFile(path, remoteNode, --retryCount);
-        //        }
-        //        else
-        //        {
-        //            Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        instance?.Close();
-        //    }
-        //}
-
+       
         public static void AddFile(string file,string path, ChordNode localNode)
         {
             var key = GetHash(file);

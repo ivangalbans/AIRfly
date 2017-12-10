@@ -69,8 +69,6 @@ namespace DHTChord.NodeInstance
 
         [OperationContract(IsOneWay = true)]
         void UploadFile(FileUploadMessage request);
-        [OperationContract(IsOneWay = false)]
-        FileDownloadReturnMessage DownloadFile(FileDownloadMessage request);
 
         [OperationContract]
         void AddNewFile(FileUploadMessage request);

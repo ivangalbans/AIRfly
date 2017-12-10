@@ -1,5 +1,4 @@
-﻿using System;
-using DHTChord.InitServices;
+﻿using DHTChord.InitServices;
 using DHTChord.Node;
 using DHTChord.Server;
 using System.IO;

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Discovery;
@@ -7,7 +6,6 @@ using DHTChord.Node;
 using DHTChord.NodeInstance;
 using DHTChord.Server;
 using static DHTChord.Logger.Logger;
-using static DHTChord.InitServices.StartClient;
 
 namespace DHTChord.InitServices
 {

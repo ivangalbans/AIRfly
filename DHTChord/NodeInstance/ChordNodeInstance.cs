@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.IO;
 using System.Runtime.Serialization;
 using System.ServiceModel;
@@ -170,7 +169,6 @@ namespace DHTChord.NodeInstance
             SeedNode = seed;
             FingerTable = new FingerTable(ChordServer.LocalNode);
             SuccessorCache = new ChordNode[8];
-            // SeedCache = new ChordNode[8];
 
             for (var i = 0; i < SuccessorCache.Length; i++)
             {
@@ -292,7 +290,6 @@ namespace DHTChord.NodeInstance
 
             while (!me.CancellationPending)
             {
-                ChordNodeInstanceClient sucInstance = null;
                 ChordNodeInstanceClient preInstance = null;
                 try
                 {
@@ -303,27 +300,6 @@ namespace DHTChord.NodeInstance
                     {
                         foreach (var key in GetKeys())
                         {
-//TODO: erase my own key if the keyis not in either range
-                            //if (preInstance.ContainKey(key) && sucInstance.ContainKey(key))
-                            //{
-                            //    if (IsIdInRange(key, preInstance.Id, Id))
-                            //    {
-                            //        if (preInstance.EraseFile(key))
-                            //            Log(LogLevel.Info, "EraseFile",
-                            //                $"Erase File {GetFromDb(key)} successful from {Predecessor}");
-                            //        else
-                            //            Log(LogLevel.Error, "EraseFile",
-                            //                $"Erase key {GetFromDb(key)} unsuccessful from {Predecessor}");
-                            //    }
-                            //    else
-                            //    {
-                            //        if (sucInstance.EraseFile(key))
-                            //            Log(LogLevel.Info, "EraseKey", $"Erase key {GetFromDb(key)} successful from {Successor}");
-                            //        else
-                            //            Log(LogLevel.Error, "EraseKey",
-                            //                $"Erase key {GetFromDb(key)} unsuccessful from {Successor}");
-                            //    }
-                            //}
                             if (!IsIdInRange(key, prePrePredecessor.Id, Predecessor.Id) &&
                                 !IsIdInRange(key, Predecessor.Id, Id))
                             {
@@ -343,8 +319,6 @@ namespace DHTChord.NodeInstance
                 }
                 finally
                 {
-                    if (sucInstance != null && sucInstance.State != CommunicationState.Closed)
-                        sucInstance.Close();
                     if (preInstance != null && preInstance.State != CommunicationState.Closed)
                         preInstance.Close();
                 }
@@ -367,7 +341,6 @@ namespace DHTChord.NodeInstance
                         {
                             if (Successor.Equals(ChordServer.LocalNode))
                             {
-                                //Console.WriteLine("RRRRRRRRREEEEEEEEEE");
                                 instance = ChordServer.Instance(SeedNode);
                                 if (IsInstanceValid(instance))
                                 {
@@ -683,8 +656,6 @@ namespace DHTChord.NodeInstance
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
-                            //Console.WriteLine($"REPLICATION      {path + GetFromDb(key)}");
-                            //ChordServer.CallReplicateKey(Successor, key, GetFromDb(key));
                             ChordServer.CallReplicationFile(Successor, GetFromDb(key));
 
                         }
@@ -695,7 +666,6 @@ namespace DHTChord.NodeInstance
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
-                            //ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
                             sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode, null);
                         }
                     }
@@ -706,7 +676,6 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during ReplicateStorage ({e.Message})");
                 }
 
-                // TODO: make this configurable via config file or passed in as an argument
                 Thread.Sleep(3000);
             }
         }
@@ -714,17 +683,8 @@ namespace DHTChord.NodeInstance
         public void AddNewFile(FileUploadMessage request)
         {
             ulong key = ChordServer.GetHash(request.Metadata.RemoteFileName);
-            //Console.WriteLine($"ADD NEW FILE {key} {request.Metadata.RemoteFileName}");
             UploadFile(request);
             AddDb(key, request.Metadata.RemoteFileName);
-
-            //if (!_db.ContainsKey(key))
-            //{
-            //    var instance = ChordServer.Instance(ChordServer.CallFindContainerKey(LocalNode, key));
-            //    instance.UploadFile(request);
-            //    instance.AddDb(key,request.Metadata.RemoteFileName);
-            //    instance.Close();
-            //}
         }
 
         public void SendFile(string remoteFileName, ChordNode remoteNode, string remotePath)
@@ -758,10 +718,8 @@ namespace DHTChord.NodeInstance
             FileStream outfile = null;
             try
             {
-                //Console.WriteLine($"***************** {serverFileName}");
-                outfile = new FileStream(serverFileName, FileMode.Create);//TODO
+                outfile = new FileStream(serverFileName, FileMode.Create);
 
-                //Console.WriteLine("========================");
 
                 const int bufferSize = 65536; // 64K
 
@@ -779,31 +737,11 @@ namespace DHTChord.NodeInstance
             }
             catch (IOException e)
             {
-                Log(LogLevel.Error, "Recive Data", $"Error while Recive {serverFileName}");
+                Log(LogLevel.Error, "Recive Data", $"Error while Recive {serverFileName}:   {e}");
             }
             finally
             {
                 outfile?.Close();
-            }
-        }
-
-        public FileDownloadReturnMessage DownloadFile(FileDownloadMessage request)
-        {
-            // parameters validation omitted for clarity
-            //string localFileName = request.FileMetaData.LocalFileName;
-
-            try
-            {
-                string basePath = ConfigurationSettings.AppSettings["FileTransferPath"];
-                string serverFileName = Path.Combine(serverPath, request.FileMetaData.RemoteFileName);
-
-                Stream fs = new FileStream(serverFileName, FileMode.Open);
-
-                return new FileDownloadReturnMessage(new FileMetaData(serverFileName), fs);
-            }
-            catch (IOException e)
-            {
-                throw new FaultException<IOException>(e);
             }
         }
 
@@ -920,11 +858,6 @@ namespace DHTChord.NodeInstance
         public void UploadFile(FileUploadMessage request)
         {
             Channel.UploadFile(request);
-        }
-
-        public FileDownloadReturnMessage DownloadFile(FileDownloadMessage request)
-        {
-            return Channel.DownloadFile(request);
         }
 
         public void AddNewFile(FileUploadMessage request)

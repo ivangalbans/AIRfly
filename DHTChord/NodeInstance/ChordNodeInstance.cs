@@ -699,6 +699,25 @@ namespace DHTChord.NodeInstance
             //}
         }
 
+        public void SendFile(string remoteFileName, ChordNode remoteNode)
+        {
+            var instance = ChordServer.Instance(remoteNode);
+
+            var key = ChordServer.GetHash(remoteFileName);
+            if (instance.ContainKey(key))
+                return;
+            Stream fileStream = new FileStream(path+"/"+remoteFileName, FileMode.Open, FileAccess.Read);
+
+            var request = new FileUploadMessage();
+
+            var fileMetadata = new FileMetaData(remoteFileName);
+            request.Metadata = fileMetadata;
+            request.FileByteStream = fileStream;
+            Log(LogLevel.Info, "Sending File", $"Sending File {path} ...");
+            instance.AddNewFile(request);
+            Log(LogLevel.Info, "Finish Send", $"{path} Send Succesfully");
+        }
+
         public void UploadFile(FileUploadMessage request)
         {
             string serverFileName = path + "/" +request.Metadata.RemoteFileName;
@@ -873,6 +892,11 @@ namespace DHTChord.NodeInstance
         public void AddNewFile(FileUploadMessage request)
         {
             Channel.AddNewFile(request);
+        }
+
+        public void SendFile(string remoteFileName, ChordNode remoteNode)
+        {
+            Channel.SendFile(remoteFileName, remoteNode);
         }
     }
 

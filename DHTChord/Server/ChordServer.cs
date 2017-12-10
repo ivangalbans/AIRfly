@@ -381,26 +381,15 @@ namespace DHTChord.Server
 
         public static void CallSendFile(string path, ChordNode remoteNode, int retryCount = RetryCount)
         {
-            string remoteFileName = Path.GetFileName(path);
-            var key = GetHash(remoteFileName);
+            
 
             var instance = Instance(remoteNode);
-            Stream fileStream = null;
             try
             {
-                if (instance.ContainKey(key))
-                    return;
-                 fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-                
-                    var request = new FileUploadMessage();
+                string remoteFileName = Path.GetFileName(path);
 
-                    var fileMetadata = new FileMetaData(remoteFileName);
-                    request.Metadata = fileMetadata;
-                    request.FileByteStream = fileStream;
-                    Log(LogLevel.Info, "Sending File", $"Sending File {path} ...");
-                    instance.AddNewFile(request);
-                    Log(LogLevel.Info, "Finish Send", $"{path} Send Succesfully");
-                
+                instance.SendFile(remoteFileName, remoteNode);
+
             }
             catch (Exception ex)
             {
@@ -418,7 +407,6 @@ namespace DHTChord.Server
             finally
             {
                 instance?.Close();
-                fileStream?.Close();
             }
 
         }

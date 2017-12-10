@@ -72,5 +72,7 @@ namespace DHTChord.NodeInstance
 
         [OperationContract]
         void AddNewFile(FileUploadMessage request);
+        [OperationContract]
+        void SendFile(string remoteFileName, ChordNode remoteNode);
     }
 }

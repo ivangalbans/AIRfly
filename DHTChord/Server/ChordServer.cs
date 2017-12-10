@@ -69,42 +69,6 @@ namespace DHTChord.Server
         #region Storage
 
         /// <summary>
-        /// Calls AddKey remotely.
-        /// </summary>
-        /// <param name="remoteNode">The remote node on which to call AddKey.</param>
-        /// <param name="value">The string value to add.</param>
-        /// <param name="retryCount">The number of retries to attempt.</param>
-        public static void CallAddValue(ChordNode remoteNode, string value, int retryCount = RetryCount)
-        {
-            var instance = Instance(remoteNode);
-
-            try
-            {
-                instance.AddValue(value);
-            }
-            catch (Exception ex)
-            {
-                Log(LogLevel.Debug, "Remote Invoker", $"CallAddKey error: {ex.Message}");
-
-                if (retryCount > 0)
-                {
-                    CallAddValue(remoteNode, value, --retryCount);
-                }
-                else
-                {
-                    Log(LogLevel.Debug, "Remote Invoker", $"CallAddKey failed - error: {ex.Message}");
-                }
-            }
-            finally
-            {
-                instance.Close();
-            }
-        }
-
-
-     
-      
-        /// <summary>
         /// Calls FindKey remotely.
         /// </summary>
         /// <param name="remoteNode">The remote node on which to call FindKey.</param>
@@ -162,40 +126,6 @@ namespace DHTChord.Server
             }
         }
 
-
-        /// <summary>
-        /// Calls ReplicateKey remotely.
-        /// </summary>
-        /// <param name="remoteNode">The remote node on which to call ReplicateKey.</param>
-        /// <param name="key">The key to replicate.</param>
-        /// <param name="value">The string value to replicate.</param>
-        /// <param name="retryCount">The number of retries to attempt.</param>
-        public static void CallReplicateKey(ChordNode remoteNode, ulong key, string value, int retryCount = RetryCount)
-        {
-            var instance = Instance(remoteNode);
-
-            try
-            {
-                instance.ReplicateKey(key, value);
-            }
-            catch (Exception ex)
-            {
-                Log(LogLevel.Debug, "Remote Invoker", $"CallReplicateKey error: {ex.Message}");
-
-                if (retryCount > 0)
-                {
-                    CallReplicateKey(remoteNode, key, value, --retryCount);
-                }
-                else
-                {
-                    Log(LogLevel.Debug, "Remote Invoker", $"CallReplicateKey failed - error: {ex.Message}");
-                }
-            }
-            finally
-            {
-                instance.Close();
-            }
-        }
 
         #endregion
 
@@ -315,7 +245,7 @@ namespace DHTChord.Server
             return null;
         }
 
-        public static bool CallNotify(ChordNode remoteNode, ChordNode node, int retryCount = RetryCount)
+        public static void CallNotify(ChordNode remoteNode, ChordNode node, int retryCount = RetryCount)
         {
 
             var instance = Instance(remoteNode);
@@ -325,7 +255,7 @@ namespace DHTChord.Server
                 {
                     instance.Notify(node);
                     instance.Close();
-                    return true; 
+                    return;
                 }
                 catch (Exception e)
                 {
@@ -333,7 +263,6 @@ namespace DHTChord.Server
                 }
             }
             instance.Close();
-            return false;
         }
 
         public static ChordNode[] GetSuccessorCache(ChordNode node, int retryCount = RetryCount)

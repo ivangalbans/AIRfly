@@ -10,40 +10,40 @@ namespace Tester1
     {
         static void Main(string[] args)
         {
-            if (args.Length == 0) args = new string[] { "Client", "Send", "D:\\toSend/", "localhost", "5050" };
+            if (args.Length == 0) args = new[] { "Client", "Send", "D:\\toSend/", "localhost", "5050" };
             if(args[0] == "Server")
             {
                 if(args.Length == 3)//seed Node
                 {
                     int port = int.Parse(args[1]);
-                    string Path = args[2];
+                    string path = args[2];
 
-                    StartServer.Start(port,Path);
+                    StartServer.Start(port,path);
                 }
                 else//join to existing ring
                 {
                     int port1 = int.Parse(args[1]);
-                    string Host = args[2];
+                    string host = args[2];
                     int portHost = int.Parse(args[3]);
-                    string Path = args[4];
+                    string path = args[4];
 
-                    StartServer.Start(port1, Path, new ChordNode(Host, portHost));
+                    StartServer.Start(port1, path, new ChordNode(host, portHost));
                 }
             }
             if(args[0] == "Client")
             {
                 if(args[1] == "Send")
                 {
-                    string Path = args[2];
-                    string Host = args[3];
+                    string path = args[2];
+                    string host = args[3];
                     int portHost = int.Parse(args[4]);
 
                     
-                    var directorys = Directory.EnumerateFiles(Path);
-                    ChordServer.LocalNode = new ChordNode(Host, portHost);
+                    var directorys = Directory.EnumerateFiles(path);
+                    ChordServer.LocalNode = new ChordNode(host, portHost);
                     foreach (var file in directorys)
                     {                        
-                        ChordServer.AddFile(GetFileName(file), Path, ChordServer.LocalNode);
+                        ChordServer.AddFile(GetFileName(file), path, ChordServer.LocalNode);
                     }
                 }
             }

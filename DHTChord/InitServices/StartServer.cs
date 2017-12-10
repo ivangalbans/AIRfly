@@ -11,10 +11,9 @@ namespace DHTChord.InitServices
 {
     public static class StartServer
     {
-        public static void Start(int port, string Path, ChordNode seed = null)
+        public static void Start(int port, string path, ChordNode seed = null)
         {
-            ChordServer.LocalNode = new ChordNode(Dns.GetHostName(), port);
-            ChordServer.LocalNode.Path = Path;
+            ChordServer.LocalNode = new ChordNode(Dns.GetHostName(), port) {Path = path};
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))
             {
@@ -33,12 +32,12 @@ namespace DHTChord.InitServices
                     {
                         case 'I':
                         {
-                            PrintNodeInfo(instance, false);
+                            PrintNodeInfo(instance);
                             break;
                         }
                         case 'X':
                         {
-                            PrintNodeInfo(instance, true);
+                            PrintNodeInfo(instance);
                             break;
                         }
 
@@ -46,41 +45,6 @@ namespace DHTChord.InitServices
                         {
                             instance.Depart();
                             return;
-                        }
-
-                        case 'A':
-                        {
-                                for(int i = 0; i < 10; ++i)
-                                {
-                                    string a = "";
-                                    for (int j = 0; j < 100000; j++)
-                                    {
-                                        a += i;
-                                    }
-                                    ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Abel {a}");
-                                    Log(LogLevel.Info, "Add New Value", "Adding the value");
-                                }
-                                break;
-                        }
-
-                        case 'V':
-                        {
-                            for (int i = 0; i < 10; ++i)
-                            {
-                                ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Ivan {i}");
-                                Log(LogLevel.Info, "Add New Value", "Adding the value");
-                            }
-                            break;
-                        }
-
-                        case 'R':
-                        {
-                            for (int i = 0; i < 10; ++i)
-                            {
-                                ChordServer.CallAddValue(ChordServer.LocalNode, $"Hello Raydel {i}");
-                                Log(LogLevel.Info, "Add New Value", "Adding the value");
-                            }
-                            break;
                         }
 
                         case 'F':
@@ -127,7 +91,7 @@ namespace DHTChord.InitServices
             }
         }
 
-        static void PrintNodeInfo(ChordNodeInstanceClient instance, bool extended)
+        static void PrintNodeInfo(ChordNodeInstanceClient instance)
         {
             var successor = instance.Successor;
             var predecessor = instance.Predecessor;
@@ -143,7 +107,7 @@ namespace DHTChord.InitServices
             Console.WriteLine($"LocalNode: {ChordServer.LocalNode?.ToString() ?? "NULL"}");
             Console.WriteLine($"Successor: {successor?.ToString() ?? "NULL"}");
             //Console.WriteLine($"Seed: {seed?.ToString() ?? "NULL"}");
-            Console.WriteLine($"\nSUCCESSOR CACHE:");
+            Console.WriteLine("\nSUCCESSOR CACHE:");
 
             for (var i = 0; i < successorCache.Length; i++)
                 Console.WriteLine($"{i}: {successorCache[i]?.ToString()??"NULL"} ");

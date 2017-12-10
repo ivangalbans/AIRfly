@@ -15,7 +15,7 @@ namespace DHTChord.NodeInstance
 
         ulong Id { [OperationContract] get; [OperationContract] set; }
 
-        string serverPath { [OperationContract] get; [OperationContract]set; }
+        string ServerPath { [OperationContract] get; [OperationContract]set; }
 
         ChordNode Successor { [OperationContract] get; [OperationContract] set; }
 
@@ -47,9 +47,6 @@ namespace DHTChord.NodeInstance
         void ViewDataBase();
 
         [OperationContract]
-        void AddValue(string value);
-
-        [OperationContract]
         void AddDb(ulong key, string value);
 
         [OperationContract]
@@ -60,9 +57,6 @@ namespace DHTChord.NodeInstance
 
         [OperationContract]
         ChordNode FindContainerKey(ulong key);
-
-        [OperationContract]
-        void ReplicateKey(ulong key, string value);
 
         [OperationContract]
         void Depart();

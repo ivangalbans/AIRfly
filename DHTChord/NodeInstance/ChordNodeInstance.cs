@@ -84,7 +84,7 @@ namespace DHTChord.NodeInstance
         public FingerTable FingerTable { get; set; }
 
         public ChordNode[] SuccessorCache { get; set; }
-        public string serverPath
+        public string ServerPath
         {
             get => ChordServer.LocalNode.Path;
             set => ChordServer.LocalNode.Path = value;
@@ -270,10 +270,10 @@ namespace DHTChord.NodeInstance
         public bool EraseFile(ulong key)
         {
             var fileName = GetFromDb(key);
-            if(File.Exists(serverPath + fileName))
+            if(File.Exists(ServerPath + fileName))
             {
                 _db.Remove(key);
-                File.Delete(serverPath + fileName);
+                File.Delete(ServerPath + fileName);
                 return true;
             }
             return false;
@@ -567,22 +567,8 @@ namespace DHTChord.NodeInstance
             Console.WriteLine();
         }
 
-        /// <summary>
-        /// Add a key-value pair into database
-        /// </summary>
-        /// <param name="value">The value to add.</param>
-        public void AddValue(string value)
-        {
-
-            ulong key = ChordServer.GetHash(value);
-            var instance = ChordServer.Instance(ChordServer.CallFindContainerKey(new ChordNode(Host, Port), key));
-            instance.AddDb(key, value);
-            instance.Close();
-        }
-
         public void AddDb(ulong key, string value)
         {
-
             _db.Add(key, value);
             Console.WriteLine(_db.Count);
         }
@@ -623,21 +609,6 @@ namespace DHTChord.NodeInstance
             return ChordServer.CallFindContainerKey(owningNode, key);
         }
 
-        /// <summary>
-        /// Add the given key/value pair as replicas to the local store.
-        /// </summary>
-        /// <param name="key">The key to replicate.</param>
-        /// <param name="value">The value to replicate.</param>
-        public void ReplicateKey(ulong key, string value)
-        {
-            if (!_db.ContainsKey(key))
-            {
-                Log(LogLevel.Info, "Replication", $"Replication Key and Value {key} {value}");
-                _db.Add(key, value);
-            }
-        }
-
-        
         /// <summary>
         /// Replicate the local data store on a background thread.
         /// </summary>
@@ -692,7 +663,7 @@ namespace DHTChord.NodeInstance
           
 
                 if (remotePath is null)
-                    remotePath = serverPath;
+                    remotePath = ServerPath;
 
                 var instance = ChordServer.Instance(remoteNode);
 
@@ -713,7 +684,7 @@ namespace DHTChord.NodeInstance
 
         public void UploadFile(FileUploadMessage request)
         {
-            string serverFileName = serverPath + request.Metadata.RemoteFileName;
+            string serverFileName = ServerPath + request.Metadata.RemoteFileName;
             
             FileStream outfile = null;
             try
@@ -819,10 +790,10 @@ namespace DHTChord.NodeInstance
             get => Channel.SuccessorCache;
             set => Channel.SuccessorCache = value;
         }
-        public string serverPath
+        public string ServerPath
         {
-            get => Channel.serverPath;
-            set => Channel.serverPath = value;
+            get => Channel.ServerPath;
+            set => Channel.ServerPath = value;
         }
 
         public ChordNode FindSuccessor(ulong id) => Channel.FindSuccessor(id);
@@ -839,7 +810,6 @@ namespace DHTChord.NodeInstance
 
         public void ViewDataBase() => Channel.ViewDataBase();
 
-        public void AddValue(string value) => Channel.AddValue(value);
 
         public void AddDb(ulong key, string value) => Channel.AddDb(key, value);
 
@@ -848,8 +818,6 @@ namespace DHTChord.NodeInstance
         public string GetFromDb(ulong key) => Channel.GetFromDb(key);
 
         public ChordNode FindContainerKey(ulong key) => Channel.FindContainerKey(key);
-
-        public void ReplicateKey(ulong key, string value) => Channel.ReplicateKey(key, value);
 
         public void Depart() => Channel.Depart();
        
@@ -887,27 +855,7 @@ namespace DHTChord.NodeInstance
         public Stream FileByteStream;
     }
 
-    [MessageContract]
-    public class FileDownloadMessage
-    {
-        [MessageHeader(MustUnderstand = true)]
-        public FileMetaData FileMetaData;
-    }
-
-    [MessageContract]
-    public class FileDownloadReturnMessage
-    {
-        public FileDownloadReturnMessage(FileMetaData metaData, Stream stream)
-        {
-            DownloadedFileMetadata = metaData;
-            FileByteStream = stream;
-        }
-
-        [MessageHeader(MustUnderstand = true)]
-        public FileMetaData DownloadedFileMetadata;
-        [MessageBodyMember(Order = 1)]
-        public Stream FileByteStream;
-    }
+    
 
     [DataContract]
     public class FileMetaData
@@ -918,8 +866,6 @@ namespace DHTChord.NodeInstance
             
             RemoteFileName = remoteFileName;
         }
-
-        
       
         [DataMember(Name = "remoteFilename", Order = 2, IsRequired = false)]
         public string RemoteFileName;

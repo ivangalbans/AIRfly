@@ -240,9 +240,9 @@ namespace DHTChord.NodeInstance
             _replicationStorage.WorkerSupportsCancellation = true;
             _replicationStorage.RunWorkerAsync();
 
-            //_stabilizeDataBase.DoWork += StabilizeDataBase;
-            //_stabilizeDataBase.WorkerSupportsCancellation = true;
-            //_stabilizeDataBase.RunWorkerAsync();
+            _stabilizeDataBase.DoWork += StabilizeDataBase;
+            _stabilizeDataBase.WorkerSupportsCancellation = true;
+            _stabilizeDataBase.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -267,6 +267,18 @@ namespace DHTChord.NodeInstance
         public bool EraseKey(ulong key)
         {
             return _db.Remove(key);
+        }
+
+        public bool EraseFile(ulong key)
+        {
+            var fileName = GetFromDb(key);
+            if(File.Exists(serverPath + fileName))
+            {
+                _db.Remove(key);
+                File.Delete(serverPath + fileName);
+                return true;
+            }
+            return false;
         }
 
         public bool ContainKey(ulong key)
@@ -296,20 +308,20 @@ namespace DHTChord.NodeInstance
                             {
                                 if (IsIdInRange(key, preInstance.Id, Id))
                                 {
-                                    if (preInstance.EraseKey(key))
-                                        Log(LogLevel.Info, "EraseKey",
-                                            $"Erase key {key} successful from {Predecessor}");
+                                    if (preInstance.EraseFile(key))
+                                        Log(LogLevel.Info, "EraseFile",
+                                            $"Erase File {GetFromDb(key)} successful from {Predecessor}");
                                     else
-                                        Log(LogLevel.Error, "EraseKey",
-                                            $"Erase key {key} unsuccessful from {Predecessor}");
+                                        Log(LogLevel.Error, "EraseFile",
+                                            $"Erase key {GetFromDb(key)} unsuccessful from {Predecessor}");
                                 }
                                 else
                                 {
-                                    if (sucInstance.EraseKey(key))
-                                        Log(LogLevel.Info, "EraseKey", $"Erase key {key} successful from {Successor}");
+                                    if (sucInstance.EraseFile(key))
+                                        Log(LogLevel.Info, "EraseKey", $"Erase key {GetFromDb(key)} successful from {Successor}");
                                     else
                                         Log(LogLevel.Error, "EraseKey",
-                                            $"Erase key {key} unsuccessful from {Successor}");
+                                            $"Erase key {GetFromDb(key)} unsuccessful from {Successor}");
                                 }
                             }
                         }
@@ -910,6 +922,11 @@ namespace DHTChord.NodeInstance
         public void SendFile(string remoteFileName, ChordNode remoteNode, string path)
         {
             Channel.SendFile(remoteFileName, remoteNode, path);
+        }
+
+        public bool EraseFile(ulong key)
+        {
+            return Channel.EraseFile(key);
         }
     }
 

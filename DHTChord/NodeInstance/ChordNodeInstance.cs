@@ -545,7 +545,7 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private static string path = "C:\\AIRfly\\";
+        private  const string path = "C:\\AIRfly\\";
         //private static string replication = path + "replication\\";
         
 
@@ -651,14 +651,14 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    
+
                     foreach (var key in GetKeys())
                     {
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
                             //Console.WriteLine($"REPLICATION      {path + GetFromDb(key)}");
                             //ChordServer.CallReplicateKey(Successor, key, GetFromDb(key));
-                            ChordServer.CallReplicationFile(Successor, path + GetFromDb(key));
+                            ChordServer.CallReplicationFile(Successor, GetFromDb(key));
 
                         }
                     }
@@ -669,7 +669,7 @@ namespace DHTChord.NodeInstance
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
                             //ChordServer.CallReplicateKey(ChordServer.LocalNode, key, sucInstance.GetFromDb(key));
-                            sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode);
+                            sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode, null);
                         }
                     }
                     sucInstance.Close();
@@ -699,23 +699,26 @@ namespace DHTChord.NodeInstance
             //}
         }
 
-        public void SendFile(string remoteFileName, ChordNode remoteNode)
+        public void SendFile(string remoteFileName, ChordNode remoteNode, string remotePath)
         {
+            if (remotePath is null)
+                remotePath = path;
+
             var instance = ChordServer.Instance(remoteNode);
 
             var key = ChordServer.GetHash(remoteFileName);
             if (instance.ContainKey(key))
                 return;
-            Stream fileStream = new FileStream(path+"/"+remoteFileName, FileMode.Open, FileAccess.Read);
+            Stream fileStream = new FileStream(remotePath + remoteFileName, FileMode.Open, FileAccess.Read);
 
             var request = new FileUploadMessage();
 
             var fileMetadata = new FileMetaData(remoteFileName);
             request.Metadata = fileMetadata;
             request.FileByteStream = fileStream;
-            Log(LogLevel.Info, "Sending File", $"Sending File {path} ...");
+            Log(LogLevel.Info, "Sending File", $"Sending File {remotePath} ...");
             instance.AddNewFile(request);
-            Log(LogLevel.Info, "Finish Send", $"{path} Send Succesfully");
+            Log(LogLevel.Info, "Finish Send", $"{remotePath} Send Succesfully");
         }
 
         public void UploadFile(FileUploadMessage request)
@@ -894,9 +897,9 @@ namespace DHTChord.NodeInstance
             Channel.AddNewFile(request);
         }
 
-        public void SendFile(string remoteFileName, ChordNode remoteNode)
+        public void SendFile(string remoteFileName, ChordNode remoteNode, string path)
         {
-            Channel.SendFile(remoteFileName, remoteNode);
+            Channel.SendFile(remoteFileName, remoteNode, path);
         }
     }
 

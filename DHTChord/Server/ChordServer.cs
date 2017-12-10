@@ -212,7 +212,7 @@ namespace DHTChord.Server
 
             try
             {
-                CallSendFile(fileName, remoteNode);
+                CallSendFile(fileName,null, remoteNode);
                           
             }
             catch (Exception ex)
@@ -379,16 +379,14 @@ namespace DHTChord.Server
             };
         }
 
-        public static void CallSendFile(string path, ChordNode remoteNode, int retryCount = RetryCount)
+        public static void CallSendFile(string file, string path, ChordNode remoteNode, int retryCount = RetryCount)
         {
             
 
             var instance = Instance(LocalNode);
             try
             {
-                string remoteFileName = Path.GetFileName(path);
-                instance.SendFile(remoteFileName, remoteNode);
-
+                instance.SendFile(file, remoteNode, path);
             }
             catch (Exception ex)
             {
@@ -396,7 +394,7 @@ namespace DHTChord.Server
 
                 if (retryCount > 0)
                 {
-                    CallSendFile(path, remoteNode, --retryCount);
+                    CallSendFile(file,path, remoteNode, --retryCount);
                 }
                 else
                 {
@@ -408,38 +406,37 @@ namespace DHTChord.Server
                 instance?.Close();
             }
         }
-        public static void CallGetFile(string path, ChordNode remoteNode, int retryCount = RetryCount)
-        {
-            var instance = Instance(remoteNode);
-            try
-            {
-                string remoteFileName = Path.GetFileName(path);
-                instance.SendFile(remoteFileName, LocalNode);
-            }
-            catch (Exception ex)
-            {
-                Log(LogLevel.Error, "Remote Invoker", $"CallAddFile error: {ex.Message}");
+        //public static void CallGetFile(string path, ChordNode remoteNode, int retryCount = RetryCount)
+        //{
+        //    var instance = Instance(remoteNode);
+        //    try
+        //    {
+        //        string remoteFileName = Path.GetFileName(path);
+        //        instance.SendFile(remoteFileName, LocalNode, );
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log(LogLevel.Error, "Remote Invoker", $"CallAddFile error: {ex.Message}");
 
-                if (retryCount > 0)
-                {
-                    CallSendFile(path, remoteNode, --retryCount);
-                }
-                else
-                {
-                    Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
-                }
-            }
-            finally
-            {
-                instance?.Close();
-            }
-        }
+        //        if (retryCount > 0)
+        //        {
+        //            CallSendFile(path, remoteNode, --retryCount);
+        //        }
+        //        else
+        //        {
+        //            Log(LogLevel.Error, "Remote Invoker", $"CallAddValue failed - error: {ex.Message}");
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        instance?.Close();
+        //    }
+        //}
 
-        public static void AddFile(string file, ChordNode localNode)
+        public static void AddFile(string file,string path, ChordNode localNode)
         {
-            string remoteFileName = Path.GetFileName(file);
-            var key = GetHash(remoteFileName);
-            CallSendFile(file,CallFindContainerKey(localNode,key));
+            var key = GetHash(file);
+            CallSendFile(file,path,CallFindContainerKey(localNode,key));
         }
     }
 }

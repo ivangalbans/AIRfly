@@ -108,10 +108,12 @@ namespace DHTChord.InitServices
                         }
                         case 'M':
                         {
-                            var directorys = Directory.EnumerateFiles("G:\\!!from adriano\\music from\\Imagine Dragons\\Discos\\[2013] Night Visions/");
+                            string path =
+                                "G:\\!!from adriano\\music from\\Imagine Dragons\\Discos\\[2013] Night Visions/";
+                            var directorys = Directory.EnumerateFiles(path);
                             foreach (var file in directorys)
                             {
-                                ChordServer.AddFile(file, ChordServer.LocalNode);
+                                ChordServer.AddFile(Path.GetFileName(file), path, ChordServer.LocalNode);
                             }
                             break;
                         }

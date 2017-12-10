@@ -740,7 +740,7 @@ namespace DHTChord.NodeInstance
 
         public void UploadFile(FileUploadMessage request)
         {
-            string serverFileName = serverPath + "/" +request.Metadata.RemoteFileName;
+            string serverFileName = serverPath + request.Metadata.RemoteFileName;
             
             FileStream outfile = null;
             try

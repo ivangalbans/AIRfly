@@ -38,11 +38,9 @@ namespace DHTChord.Server
         /// <summary>
         /// Calls FindSuccessor() remotely, using a default retry value of three.
         /// </summary>
-        /// <param name="remoteNode">The remote node on which to call FindSuccessor().</param>
+        /// <param name="node">The remote node on which to call FindSuccessor().</param>
         /// <param name="id">The ID to look up.</param>
         /// <param name="retryCount">The number of times to retry the operation in case of error.</param>
-        /// <param name="hopCountIn">The known hopcount prior to calling FindSuccessor on this node.</param>
-        /// <param name="hopCountOut">The total hopcount of this operation (either returned upwards, or reported for hopcount efficiency validation).</param>
         /// <returns>The Successor of ID, or NULL in case of error.</returns>
         public static ChordNode CallFindSuccessor(ChordNode node, ulong id, int retryCount = RetryCount)
         {

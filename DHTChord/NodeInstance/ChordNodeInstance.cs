@@ -150,7 +150,7 @@ namespace DHTChord.NodeInstance
                 return Successor;
             }
             var predNode = FindClosestPrecedingFinger(id);
-            var s= ChordServer.CallFindSuccessor(predNode, id);
+            var s = ChordServer.CallFindSuccessor(predNode, id);
             return s;
         }
 
@@ -343,7 +343,16 @@ namespace DHTChord.NodeInstance
                     {
                         if (SeedNode != null)
                         {
-                            if (Successor.Equals(ChordServer.LocalNode))
+                            //ChordNode seedSuccessor = FindSuccessor(SeedNode.Id);
+                            ChordNode node = FindContainerKey(SeedNode.Id);
+
+                            Console.WriteLine("****************************************************************");
+                            Console.WriteLine("seedSuc" + " " + node);
+                            Console.WriteLine("seedNod" + " " + SeedNode);
+                            Console.WriteLine("****************************************************************");
+
+
+                            if (!SeedNode.Equals(node))
                             {
                                 instance = ChordServer.Instance(SeedNode);
                                 if (IsInstanceValid(instance, "REJOIN"))
@@ -371,7 +380,7 @@ namespace DHTChord.NodeInstance
                 {
                     if (instance != null && instance.State != CommunicationState.Closed) instance.Close();
                 }
-                Thread.Sleep(5000);
+                Thread.Sleep(50000);
             }
         }
 
@@ -418,6 +427,22 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
+                    if(SeedNode != null)
+                    {
+                        Console.WriteLine("***************************************");
+                        var node = LocalNode;
+                        var nodee = FindContainerKey(node.Id);
+
+                        Console.WriteLine(node);
+                        Console.WriteLine(nodee);
+
+                        Console.WriteLine("---------------------");
+                        Console.WriteLine(SeedNode);
+                        Console.WriteLine(FindContainerKey(SeedNode.Id));
+
+                        Console.WriteLine("***************************************");
+                    }
+
                     var succPredNode = ChordServer.GetPredecessor(Successor);
                     if (succPredNode != null)
                     {
@@ -604,10 +629,10 @@ namespace DHTChord.NodeInstance
         public ChordNode FindContainerKey(ulong key)
         {
             ChordNode owningNode = ChordServer.CallFindSuccessor(key);
-
-            if (owningNode.Equals(ChordServer.LocalNode))
-                return owningNode;
-            return ChordServer.CallFindContainerKey(owningNode, key);
+            return owningNode;
+            //if (owningNode.Equals(ChordServer.LocalNode))
+                //return owningNode;
+            //return ChordServer.CallFindContainerKey(owningNode, key);
         }
 
         /// <summary>

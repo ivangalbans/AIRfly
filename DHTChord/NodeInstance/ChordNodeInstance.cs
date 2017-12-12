@@ -474,7 +474,6 @@ namespace DHTChord.NodeInstance
 
         public void Notify(ChordNode callingNode)
         {
-            Console.WriteLine("NOOOOOOTTTTTTTIIIIIIFFFFFFFFFFYYYYYY");
             if (Predecessor == null || IsIdInRange(callingNode.Id, Predecessor.Id, Id))
             {
                 Predecessor = callingNode;

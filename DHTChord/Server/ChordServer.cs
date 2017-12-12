@@ -52,9 +52,12 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    var retVal= instance.FindSuccessor(id);
-                    instance.Close();
-                    return retVal;
+                    if (ChordNodeInstance.IsInstanceValid(instance))
+                    {
+                        var retVal = instance.FindSuccessor(id);
+                        instance.Close();
+                        return retVal;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -62,7 +65,10 @@ namespace DHTChord.Server
                 }
                 
             }
-            instance.Close();
+            if (ChordNodeInstance.IsInstanceValid(instance))
+            {
+                instance.Close();
+            }
             return null;
         }
 
@@ -232,16 +238,22 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    var retVal = instance.Predecessor;
-                    instance.Close();
-                    return retVal;
+                    if (ChordNodeInstance.IsInstanceValid(instance))
+                    {
+                        var retVal = instance.Predecessor;
+                        instance.Close();
+                        return retVal;
+                    }
                 }
                 catch (Exception e)
                 {
                     Log(LogLevel.Debug, "Remote Accessor", $"GetPredecessor error: {e.Message}");
                 }
             }
-            instance.Close();
+            if (ChordNodeInstance.IsInstanceValid(instance) && instance.State!=CommunicationState.Closed)
+            {
+                instance.Close();
+            }
             return null;
         }
 
@@ -253,16 +265,20 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    instance.Notify(node);
-                    instance.Close();
-                    return;
+                    if (ChordNodeInstance.IsInstanceValid(instance))
+                    {
+                        instance.Notify(node);
+                        instance.Close();
+                        return;
+                    }
                 }
                 catch (Exception e)
                 {
                     Log(LogLevel.Debug, "Remote Invoker", $"CallNotify error: {e.Message}");
                 }
             }
-            instance.Close();
+            if (ChordNodeInstance.IsInstanceValid(instance) && instance.State!=CommunicationState.Closed)
+                instance.Close();
         }
 
         public static ChordNode[] GetSuccessorCache(ChordNode node, int retryCount = RetryCount)

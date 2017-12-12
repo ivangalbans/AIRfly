@@ -234,13 +234,13 @@ namespace DHTChord.NodeInstance
             //_reJoin.WorkerSupportsCancellation = true;
             //_reJoin.RunWorkerAsync();
 
-            _replicationStorage.DoWork += ReplicateStorage;
-            _replicationStorage.WorkerSupportsCancellation = true;
-            _replicationStorage.RunWorkerAsync();
+            //_replicationStorage.DoWork += ReplicateStorage;
+            //_replicationStorage.WorkerSupportsCancellation = true;
+            //_replicationStorage.RunWorkerAsync();
 
-            _stabilizeDataBase.DoWork += StabilizeDataBase;
-            _stabilizeDataBase.WorkerSupportsCancellation = true;
-            _stabilizeDataBase.RunWorkerAsync();
+            //_stabilizeDataBase.DoWork += StabilizeDataBase;
+            //_stabilizeDataBase.WorkerSupportsCancellation = true;
+            //_stabilizeDataBase.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -270,7 +270,7 @@ namespace DHTChord.NodeInstance
         public bool EraseFile(ulong key)
         {
             var fileName = GetFromDb(key);
-            if(File.Exists(ServerPath + fileName))
+            if (File.Exists(ServerPath + fileName))
             {
                 _db.Remove(key);
                 File.Delete(ServerPath + fileName);
@@ -286,7 +286,7 @@ namespace DHTChord.NodeInstance
 
         private void StabilizeDataBase(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker) sender;
+            BackgroundWorker me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -328,7 +328,7 @@ namespace DHTChord.NodeInstance
 
         private void ReJoin(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker) sender;
+            BackgroundWorker me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -373,7 +373,7 @@ namespace DHTChord.NodeInstance
 
         private void StabilizePredecessors(object sender, DoWorkEventArgs ea)
         {
-            var me = (BackgroundWorker) sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -408,7 +408,7 @@ namespace DHTChord.NodeInstance
 
         private void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
         {
-            var me = (BackgroundWorker) sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -430,11 +430,12 @@ namespace DHTChord.NodeInstance
                         var successorCacheHelped = false;
                         foreach (var entry in SuccessorCache)
                         {
+                            Console.WriteLine("FOREACH");
                             var instance = ChordServer.Instance(entry);
 
                             if (IsInstanceValid(instance))
                             {
-
+                                Console.WriteLine("VALID");
                                 Successor = entry;
                                 ChordServer.CallNotify(Successor, ChordServer.LocalNode);
 
@@ -444,11 +445,10 @@ namespace DHTChord.NodeInstance
                                 instance.Close();
                                 break;
                             }
-                            else if (instance != null && instance.State != CommunicationState.Closed)
+                            if (instance != null &&instance.State != CommunicationState.Closed)
                             {
                                 instance.Close();
                             }
-
                         }
 
                         if (!successorCacheHelped)
@@ -474,7 +474,7 @@ namespace DHTChord.NodeInstance
 
         public void Notify(ChordNode callingNode)
         {
-
+            Console.WriteLine("NOOOOOOTTTTTTTIIIIIIFFFFFFFFFFYYYYYY");
             if (Predecessor == null || IsIdInRange(callingNode.Id, Predecessor.Id, Id))
             {
                 Predecessor = callingNode;
@@ -486,7 +486,7 @@ namespace DHTChord.NodeInstance
         private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
         {
 
-            var me = (BackgroundWorker) sender;
+            var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -547,11 +547,11 @@ namespace DHTChord.NodeInstance
 
         //public string path = "C:\\AIRfly\\";
         //private static string replication = path + "replication\\";
-        
 
-        
 
-      
+
+
+
 
         private readonly SortedList<ulong, string> _db = new SortedList<ulong, string>();
 
@@ -616,7 +616,7 @@ namespace DHTChord.NodeInstance
         /// <param name="ea">Args (ignored).</param>
         private void ReplicateStorage(object sender, DoWorkEventArgs ea)
         {
-            BackgroundWorker me = (BackgroundWorker) sender;
+            BackgroundWorker me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
@@ -660,32 +660,32 @@ namespace DHTChord.NodeInstance
 
         public void SendFile(string remoteFileName, ChordNode remoteNode, string remotePath)
         {
-          
 
-                if (remotePath is null)
-                    remotePath = ServerPath;
 
-                var instance = ChordServer.Instance(remoteNode);
+            if (remotePath is null)
+                remotePath = ServerPath;
 
-                var key = ChordServer.GetHash(remoteFileName);
-                if (instance.ContainKey(key))
-                    return;
-                Stream fileStream = new FileStream(remotePath + remoteFileName, FileMode.Open, FileAccess.Read);
+            var instance = ChordServer.Instance(remoteNode);
 
-                var request = new FileUploadMessage();
+            var key = ChordServer.GetHash(remoteFileName);
+            if (instance.ContainKey(key))
+                return;
+            Stream fileStream = new FileStream(remotePath + remoteFileName, FileMode.Open, FileAccess.Read);
 
-                var fileMetadata = new FileMetaData(remoteFileName);
-                request.Metadata = fileMetadata;
-                request.FileByteStream = fileStream;
-                Log(LogLevel.Info, "Sending File", $"Sending File {remotePath} ...");
-                instance.AddNewFile(request);
-                Log(LogLevel.Info, "Finish Send", $"{remotePath} Send Succesfully");
+            var request = new FileUploadMessage();
+
+            var fileMetadata = new FileMetaData(remoteFileName);
+            request.Metadata = fileMetadata;
+            request.FileByteStream = fileStream;
+            Log(LogLevel.Info, "Sending File", $"Sending File {remotePath} ...");
+            instance.AddNewFile(request);
+            Log(LogLevel.Info, "Finish Send", $"{remotePath} Send Succesfully");
         }
 
         public void UploadFile(FileUploadMessage request)
         {
             string serverFileName = ServerPath + request.Metadata.RemoteFileName;
-            
+
             FileStream outfile = null;
             try
             {
@@ -820,8 +820,8 @@ namespace DHTChord.NodeInstance
         public ChordNode FindContainerKey(ulong key) => Channel.FindContainerKey(key);
 
         public void Depart() => Channel.Depart();
-       
-       
+
+
 
         public void UploadFile(FileUploadMessage request)
         {
@@ -844,7 +844,7 @@ namespace DHTChord.NodeInstance
         }
     }
 
-  
+
 
     [MessageContract]
     public class FileUploadMessage
@@ -855,7 +855,7 @@ namespace DHTChord.NodeInstance
         public Stream FileByteStream;
     }
 
-    
+
 
     [DataContract]
     public class FileMetaData
@@ -863,14 +863,14 @@ namespace DHTChord.NodeInstance
         public FileMetaData(
             string remoteFileName)
         {
-            
+
             RemoteFileName = remoteFileName;
         }
-      
+
         [DataMember(Name = "remoteFilename", Order = 2, IsRequired = false)]
         public string RemoteFileName;
     }
 
-  
+
 
 }

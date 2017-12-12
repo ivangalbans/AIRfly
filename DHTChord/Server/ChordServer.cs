@@ -52,7 +52,7 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    if (ChordNodeInstance.IsInstanceValid(instance))
+                    if (ChordNodeInstance.IsInstanceValid(instance, "CallFindSuccessor111111111"))
                     {
                         var retVal = instance.FindSuccessor(id);
                         instance.Close();
@@ -65,7 +65,7 @@ namespace DHTChord.Server
                 }
                 
             }
-            if (ChordNodeInstance.IsInstanceValid(instance))
+            if (ChordNodeInstance.IsInstanceValid(instance, "CallFindSuccessor222222222222"))
             {
                 instance.Close();
             }
@@ -238,7 +238,7 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    if (ChordNodeInstance.IsInstanceValid(instance))
+                    if (ChordNodeInstance.IsInstanceValid(instance, "GetPredecessor111111111111"))
                     {
                         var retVal = instance.Predecessor;
                         instance.Close();
@@ -250,7 +250,7 @@ namespace DHTChord.Server
                     Log(LogLevel.Debug, "Remote Accessor", $"GetPredecessor error: {e.Message}");
                 }
             }
-            if (ChordNodeInstance.IsInstanceValid(instance) && instance.State!=CommunicationState.Closed)
+            if (ChordNodeInstance.IsInstanceValid(instance, "GetPredecessor222222222222222") && instance.State!=CommunicationState.Closed)
             {
                 instance.Close();
             }
@@ -265,7 +265,7 @@ namespace DHTChord.Server
             {
                 try
                 {
-                    if (ChordNodeInstance.IsInstanceValid(instance))
+                    if (ChordNodeInstance.IsInstanceValid(instance, "CallNotify1111111111111111111"))
                     {
                         instance.Notify(node);
                         instance.Close();
@@ -277,7 +277,7 @@ namespace DHTChord.Server
                     Log(LogLevel.Debug, "Remote Invoker", $"CallNotify error: {e.Message}");
                 }
             }
-            if (ChordNodeInstance.IsInstanceValid(instance) && instance.State!=CommunicationState.Closed)
+            if (ChordNodeInstance.IsInstanceValid(instance, "CallNotify2222222222222222") && instance.State!=CommunicationState.Closed)
                 instance.Close();
         }
 

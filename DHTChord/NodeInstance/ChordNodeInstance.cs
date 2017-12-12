@@ -99,7 +99,7 @@ namespace DHTChord.NodeInstance
                     if (FingerInRange(FingerTable.Successors[i].Id, Id, id))
                     {
                         var nodeInstance = ChordServer.Instance(FingerTable.Successors[i]);
-                        if (IsInstanceValid(nodeInstance))
+                        if (IsInstanceValid(nodeInstance, "FindClosestPrecedingFinger111111111111111111111"))
                         {
                             return FingerTable.Successors[i];
                         }
@@ -114,7 +114,7 @@ namespace DHTChord.NodeInstance
                     if (FingerInRange(t.Id, Id, id))
                     {
                         var instance = ChordServer.Instance(t);
-                        if (IsInstanceValid(instance))
+                        if (IsInstanceValid(instance, "FindClosestPrecedingFinger2222222222222222"))
                         {
                             return t;
                         }
@@ -128,6 +128,7 @@ namespace DHTChord.NodeInstance
 
         public void GetSuccessorCache(ChordNode remoteNode)
         {
+            //TODO
             var remoteSuccessorCache = ChordServer.GetSuccessorCache(remoteNode);
             if (remoteSuccessorCache != null)
             {
@@ -137,6 +138,7 @@ namespace DHTChord.NodeInstance
                     SuccessorCache[i] = remoteSuccessorCache[i - 1];
                 }
             }
+
         }
 
 
@@ -148,10 +150,11 @@ namespace DHTChord.NodeInstance
                 return Successor;
             }
             var predNode = FindClosestPrecedingFinger(id);
-            return ChordServer.CallFindSuccessor(predNode, id);
+            var s= ChordServer.CallFindSuccessor(predNode, id);
+            return s;
         }
 
-        public static bool IsInstanceValid(ChordNodeInstanceClient instance)
+        public static bool IsInstanceValid(ChordNodeInstanceClient instance, string message)
         {
             try
             {
@@ -159,7 +162,8 @@ namespace DHTChord.NodeInstance
             }
             catch (Exception e)
             {
-                Log(LogLevel.Debug, "Instance", $"Incoming instance was not valid: ({e.Message}).");
+                
+                Log(LogLevel.Debug, "Instance", $" {message}  Incoming instance was not valid: ({e.Message}).");
                 return false;
             }
         }
@@ -179,7 +183,7 @@ namespace DHTChord.NodeInstance
             {
                 Log(LogLevel.Info, "Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
                 var nodeInstance = ChordServer.Instance(seed);
-                if (IsInstanceValid(nodeInstance))
+                if (IsInstanceValid(nodeInstance, "JOIN"))
                 {
                     try
                     {
@@ -342,7 +346,7 @@ namespace DHTChord.NodeInstance
                             if (Successor.Equals(ChordServer.LocalNode))
                             {
                                 instance = ChordServer.Instance(SeedNode);
-                                if (IsInstanceValid(instance))
+                                if (IsInstanceValid(instance, "REJOIN"))
                                 {
                                     Log(LogLevel.Debug, "ReJoin",
                                         $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
@@ -383,7 +387,7 @@ namespace DHTChord.NodeInstance
                     try
                     {
                         nodeInstance = ChordServer.Instance(Predecessor);
-                        if (!IsInstanceValid(nodeInstance))
+                        if (!IsInstanceValid(nodeInstance, "StabilizePredecessors"))
                         {
                             Predecessor = null;
                         }
@@ -430,12 +434,10 @@ namespace DHTChord.NodeInstance
                         var successorCacheHelped = false;
                         foreach (var entry in SuccessorCache)
                         {
-                            Console.WriteLine("FOREACH");
                             var instance = ChordServer.Instance(entry);
 
-                            if (IsInstanceValid(instance))
+                            if (IsInstanceValid(instance, "StabilizeSuccessors"))
                             {
-                                Console.WriteLine("VALID");
                                 Successor = entry;
                                 ChordServer.CallNotify(Successor, ChordServer.LocalNode);
 
@@ -484,7 +486,7 @@ namespace DHTChord.NodeInstance
 
         private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
         {
-
+            //TODO
             var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
@@ -509,7 +511,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
             }
         }
 

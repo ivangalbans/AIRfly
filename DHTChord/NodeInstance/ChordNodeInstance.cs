@@ -344,23 +344,16 @@ namespace DHTChord.NodeInstance
                     {
                         if (SeedNode != null)
                         {
-                            //ChordNode seedSuccessor = FindSuccessor(SeedNode.Id);
-                            ChordNode node = FindContainerKey(SeedNode.Id);
+                            ChordNode responsableSeedNode = FindContainerKey(SeedNode.Id);
 
-                            Console.WriteLine("****************************************************************");
-                            Console.WriteLine("seedSuc" + " " + node);
-                            Console.WriteLine("seedNod" + " " + SeedNode);
-                            Console.WriteLine("****************************************************************");
-
-
-                            if (!SeedNode.Equals(node))
+                            if (!SeedNode.Equals(responsableSeedNode))
                             {
                                 instance = ChordServer.Instance(SeedNode);
                                 if (IsInstanceValid(instance, "REJOIN"))
                                 {
                                     Log(LogLevel.Debug, "ReJoin",
                                         $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                    instance.Join(node);
+                                    Join(SeedNode);
                                 }
                                 //!!!!!!!!!!!!!!!TODO!!!!!!!!!!!!!!!!!!!!!!!!!!
                                 // otherwise, in the future, there will be a cache of seed nodes to check/join from...

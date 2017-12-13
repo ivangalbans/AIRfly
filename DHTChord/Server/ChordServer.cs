@@ -115,13 +115,13 @@ namespace DHTChord.Server
             catch (Exception ex)
             {
 
-                Log(LogLevel.Error, "Remote Invoker", $"CallFindKey error: {ex.Message}");
+                Log(LogLevel.Debug, "Remote Invoker", $"CallFindContainerKey error: {ex.Message}");
 
                 if (retryCount > 0)
                 {
                     return CallFindContainerKey(remoteNode, key, --retryCount);
                 }
-                Log(LogLevel.Debug, "Remote Invoker", $"CallFindKey failed - error: {ex.Message}");
+                Log(LogLevel.Debug, "Remote Invoker", $"CallFindContainerKey failed - error: {ex.Message}");
                 return null;
             }
             finally

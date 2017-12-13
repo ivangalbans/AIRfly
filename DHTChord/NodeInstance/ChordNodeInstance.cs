@@ -183,6 +183,7 @@ namespace DHTChord.NodeInstance
             {
                 Log(LogLevel.Info, "Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
                 var nodeInstance = ChordServer.Instance(seed);
+
                 if (IsInstanceValid(nodeInstance, "JOIN"))
                 {
                     try
@@ -427,7 +428,7 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    if(SeedNode != null)
+                    if (SeedNode != null)
                     {
                         Console.WriteLine("***************************************");
                         var node = LocalNode;

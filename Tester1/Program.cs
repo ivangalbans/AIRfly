@@ -2,6 +2,7 @@
 using DHTChord.Node;
 using DHTChord.Server;
 using System.IO;
+using System.Net;
 using static System.IO.Path;
 
 namespace Tester1
@@ -23,9 +24,15 @@ namespace Tester1
                 else//join to existing ring
                 {
                     int port1 = int.Parse(args[1]);
-                    string host = args[2];
+                    string host = Dns.GetHostEntry(args[2]).HostName;
                     int portHost = int.Parse(args[3]);
                     string path = args[4];
+
+
+                    ///System.Console.WriteLine("?????????????????????????????");
+                    //System.Console.WriteLine(System.Net.Dns.GetHostEntry(host).HostName);
+                    //System.Console.WriteLine("?????????????????????????????");
+
 
                     StartServer.Start(port1, path, new ChordNode(host, portHost));
                 }

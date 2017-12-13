@@ -33,18 +33,25 @@ namespace Client
         public static bool Find(string fileName, ChordNode node)
         {
 
-            //var key = ChordServer.GetHash(fileName);
+            var key = ChordServer.GetHash(fileName);
 
-            //var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
+            var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
 
 
-            //if(conteinerNodeInstance.ContainKey(key))
-            //{
-            //    var request = conteinerNodeInstance.GetRequest(fileName);
+            if(conteinerNodeInstance.ContainKey(key))
+            {
+                var fileStream = conteinerNodeInstance.GetRequest(fileName);
 
-            //    ChordServer.Instance(node).AddCacheFile(request);
-            //    return true;
-            //}
+                var request = new FileUploadMessage();
+
+
+                var fileMetadata = new FileMetaData(fileName);
+                request.Metadata = fileMetadata;
+                request.FileByteStream = fileStream;
+
+                ChordServer.Instance(node).AddCacheFile(request);
+                return true;
+            }
 
             return false;
         }

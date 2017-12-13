@@ -45,21 +45,21 @@ namespace Client
             }
             if(args[0] == "Find")
             {
-                //string host = Dns.GetHostEntry(args[1]).HostName;
-                //int port = int.Parse(args[2]);
-                //var node = new ChordNode(host, port);
-                ////TODO: node = discovery
+                string host = Dns.GetHostEntry(args[1]).HostName;
+                int port = int.Parse(args[2]);
+                var node = new ChordNode(host, port);
+                //TODO: node = discovery
 
-                //string fileName = args[3];
+                string fileName = args[3];
 
-                //if(ClientSide.Find(fileName, node))
-                //{
-                //    Console.WriteLine($"Find Succefully {fileName}");
-                //}
-                //else
-                //{
-                //    Console.WriteLine($"{fileName} not found");
-                //}
+                if (ClientSide.Find(fileName, node))
+                {
+                    Console.WriteLine($"Find Succefully {fileName}");
+                }
+                else
+                {
+                    Console.WriteLine($"{fileName} not found");
+                }
             }
         }
     }

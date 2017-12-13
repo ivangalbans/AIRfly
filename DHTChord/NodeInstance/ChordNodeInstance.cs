@@ -756,18 +756,11 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        public FileUploadMessage GetRequest(string file)
+        public Stream GetRequest(string file)
         {
             Stream fileStream = new FileStream(ServerPath + file, FileMode.Open, FileAccess.Read);
 
-            var request = new FileUploadMessage();
-
-
-            var fileMetadata = new FileMetaData(file);
-            request.Metadata = fileMetadata;
-            request.FileByteStream = fileStream;
-
-            return request;
+            return fileStream;            
         }
 
         private readonly Queue<string> _cache = new Queue<string>();
@@ -939,10 +932,10 @@ namespace DHTChord.NodeInstance
             return Channel.EraseFile(key);
         }
 
-        //public FileUploadMessage GetRequest(string file)
-        //{
-        //    //return Channel.GetRequest(file);
-        //}
+        public Stream GetRequest(string file)
+        {
+            return Channel.GetRequest(file);
+        }
 
         public void AddCacheFile(FileUploadMessage request)
         {

@@ -6,6 +6,7 @@ using DHTChord.Node;
 using DHTChord.NodeInstance;
 using DHTChord.Server;
 using static DHTChord.Logger.Logger;
+using System.IO;
 
 namespace DHTChord.InitServices
 {
@@ -13,6 +14,11 @@ namespace DHTChord.InitServices
     {
         public static void Start(int port, string path, ChordNode seed = null)
         {
+            if(!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+                Directory.CreateDirectory(path + "Cache\\");
+            }
             ChordServer.LocalNode = new ChordNode(Dns.GetHostName(), port) {Path = path};
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))

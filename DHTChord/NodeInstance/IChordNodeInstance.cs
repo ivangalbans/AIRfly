@@ -71,8 +71,8 @@ namespace DHTChord.NodeInstance
         void SendFile(string remoteFileName, ChordNode remoteNode, string path);
         [OperationContract]
         bool EraseFile(ulong key);
-        //[OperationContract]
-        //FileUploadMessage GetRequest(string file);
+        [OperationContract]
+        Stream GetRequest(string file);
         [OperationContract]
         void AddCacheFile(FileUploadMessage request);
         [OperationContract]

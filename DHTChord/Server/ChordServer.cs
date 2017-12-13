@@ -202,39 +202,37 @@ namespace DHTChord.Server
         public static List<ChordNode> FindServiceAddress()
         {
             var discoveryClient = new DiscoveryClient(new UdpDiscoveryEndpoint());
-            while (true)
+
+            Log(LogLevel.Debug, "Discovery", "Discovering ChordNode Instances");
+            try
             {
-                Log(LogLevel.Warn, "Discovery", "Discovering ChordNode Instances");
-                try
+                var endpoints = discoveryClient.Find(new FindCriteria(typeof(IChordNodeInstance))).Endpoints
+                    .Where(x => x.Address.Uri.AbsoluteUri.StartsWith("net.tcp")).ToList();
+
+                if (endpoints.Count > 0)
                 {
-                    var endpoints = discoveryClient.Find(new FindCriteria(typeof(IChordNodeInstance))).Endpoints
-                        .Where(x => x.Address.Uri.AbsoluteUri.StartsWith("net.tcp")).ToList();
-
-                    if (endpoints.Count > 0)
-                    {
-                        Log(LogLevel.Info, "Discovery", $"{endpoints.Count} nodes found");
-                        return endpoints.Select(x => {
-                            var inst = Instance(x.Address);
-                            ChordNode ret = null;
-                            if (ChordNodeInstance.IsInstanceValid(inst, "from FindServiceAddress"))
-                            {
-                                ret = inst.LocalNode != ChordServer.LocalNode ? inst.LocalNode : null;
-                                inst.Close();
-                            }
-                            return ret;
-                        }).Where(x => x != null).ToList();
-                    }
-                    else
-                    {
-                        Log(LogLevel.Error, "Discovery", "Nothing found");
-
-                    }
+                    Log(LogLevel.Info, "Discovery", $"{endpoints.Count} nodes found");
+                    return endpoints.Select(x => {
+                        var inst = Instance(x.Address);
+                        ChordNode ret = null;
+                        if (ChordNodeInstance.IsInstanceValid(inst, "from FindServiceAddress"))
+                        {
+                            ret = !inst.LocalNode.Equals(ChordServer.LocalNode) ? inst.LocalNode : null;
+                            inst.Close();
+                        }
+                        return ret;
+                    }).Where(x => x != null).ToList();
                 }
-                catch (Exception e)
+                else
                 {
                     Log(LogLevel.Error, "Discovery", "Nothing found");
                 }
             }
+            catch (Exception e)
+            {
+                Log(LogLevel.Error, "Discovery", "Nothing found");
+            }
+            return new List<ChordNode>();
         }
 
         public static ChordNode GetPredecessor(ChordNode node, int retryCount = RetryCount)

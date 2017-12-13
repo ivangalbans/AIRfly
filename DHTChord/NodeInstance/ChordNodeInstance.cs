@@ -43,7 +43,7 @@ namespace DHTChord.NodeInstance
 
         public ChordNode SeedNode { get; set; }
 
-        public List<ChordNode> SeedChache { get; set; }
+        public List<ChordNode> SeedChache { get; set; } = new List<ChordNode>();
 
         public ChordNode Successor
         {
@@ -222,6 +222,7 @@ namespace DHTChord.NodeInstance
         private readonly BackgroundWorker _reJoin = new BackgroundWorker();
         private readonly BackgroundWorker _replicationStorage = new BackgroundWorker();
         private readonly BackgroundWorker _stabilizeDataBase = new BackgroundWorker();
+        private readonly BackgroundWorker _updateSeedCache = new BackgroundWorker();
 
         public void StartMaintenance()
         {
@@ -248,6 +249,10 @@ namespace DHTChord.NodeInstance
             //_stabilizeDataBase.DoWork += StabilizeDataBase;
             //_stabilizeDataBase.WorkerSupportsCancellation = true;
             //_stabilizeDataBase.RunWorkerAsync();
+
+            _updateSeedCache.DoWork += UpdateSeedCache;
+            _updateSeedCache.WorkerSupportsCancellation = true;
+            _updateSeedCache.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -339,31 +344,15 @@ namespace DHTChord.NodeInstance
 
             while (!me.CancellationPending)
             {
-                ChordNodeInstanceClient instance = null;
                 try
                 {
                     if (_hasReJoin)
                     {
-                        if (SeedNode != null)
+                        foreach (var nodeCache in SeedChache)
                         {
-                            ChordNode responsableSeedNode = FindContainerKey(SeedNode.Id);
-                            instance = ChordServer.Instance(SeedNode);
-
-                            if (IsInstanceValid(instance, "REJOIN") && !ChordServer.SameRing(SeedNode, responsableSeedNode))
-                            {
-                                Log(LogLevel.Debug, "ReJoin",
-                                    $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                Join(SeedNode);
-                            }
-                            else
-                            {
-                                foreach (var nodeCache in SeedChache)
-                                {
-                                    var responsableNodeCache = FindContainerKey(nodeCache.Id);
-                                    if (!ChordServer.SameRing(nodeCache, responsableNodeCache) && Join(nodeCache))
-                                        break;
-                                }
-                            }
+                            var responsableNodeCache = FindContainerKey(nodeCache.Id);
+                            if (!ChordServer.SameRing(nodeCache, responsableNodeCache) && Join(nodeCache))
+                                break;
                         }
                     }
                     else
@@ -375,11 +364,7 @@ namespace DHTChord.NodeInstance
                 {
                     Log(LogLevel.Error, "Maintenance", $"Error occured during ReJoin ({e.Message})");
                 }
-                finally
-                {
-                    if (instance != null && instance.State != CommunicationState.Closed) instance.Close();
-                }
-                Thread.Sleep(10000);
+                Thread.Sleep(5000);
             }
         }
 
@@ -496,6 +481,30 @@ namespace DHTChord.NodeInstance
 
                 Thread.Sleep(100);
             }
+        }
+
+        private void UpdateSeedCache(object sender, DoWorkEventArgs ea)
+        {
+            var me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+                    SeedChache = ChordServer.FindServiceAddress();
+                    Console.WriteLine("******************************");
+                    foreach (var item in SeedChache)
+                    {
+                        Console.WriteLine(item);
+                    }
+                    Console.WriteLine("******************************");
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "UpdateSeedCache", $"Update Seed Cache error: {e.Message}");
+                }
+            }
+            Thread.Sleep(5000);
         }
 
         public void Notify(ChordNode callingNode)

@@ -50,12 +50,12 @@ namespace DHTChord.NodeInstance
             {
                 if (value == null && SuccessorCache[0] != null)
                 {
-                    Log(LogLevel.Info, "Navigation", "Setting successor to null.");
+                    Log(LogLevel.Info, "Navigation", $"Setting by {LocalNode} successor to null.");
                 }
                 else if (value != null &&
                          (SuccessorCache[0] == null || SuccessorCache[0].Id != value.Id))
                 {
-                    Log(LogLevel.Info, "Navigation", $"New Successor {value}.");
+                    Log(LogLevel.Info, "Navigation", $"New Successor by {LocalNode} {value}.");
                 }
                 SuccessorCache[0] = value;
             }
@@ -70,12 +70,12 @@ namespace DHTChord.NodeInstance
             {
                 if (value == null && null != _predecessorNode)
                 {
-                    Log(LogLevel.Info, "Navigation", "Setting predecessor to null.");
+                    Log(LogLevel.Info, "Navigation", $"Setting predecessor by {LocalNode} to null.");
                 }
                 else if (value != null &&
                          (_predecessorNode == null || _predecessorNode.Id != value.Id))
                 {
-                    Log(LogLevel.Info, "Navigation", $"New Predecessor {value}.");
+                    Log(LogLevel.Info, "Navigation", $"New Predecessor {LocalNode} {value}.");
                 }
                 _predecessorNode = value;
             }
@@ -235,9 +235,9 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
-            //_reJoin.DoWork += ReJoin;
-            //_reJoin.WorkerSupportsCancellation = true;
-            //_reJoin.RunWorkerAsync();
+            _reJoin.DoWork += ReJoin;
+            _reJoin.WorkerSupportsCancellation = true;
+            _reJoin.RunWorkerAsync();
 
             //_replicationStorage.DoWork += ReplicateStorage;
             //_replicationStorage.WorkerSupportsCancellation = true;
@@ -381,7 +381,7 @@ namespace DHTChord.NodeInstance
                 {
                     if (instance != null && instance.State != CommunicationState.Closed) instance.Close();
                 }
-                Thread.Sleep(50000);
+                Thread.Sleep(10000);
             }
         }
 
@@ -428,21 +428,21 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    if (SeedNode != null)
-                    {
-                        Console.WriteLine("***************************************");
-                        var node = LocalNode;
-                        var nodee = FindContainerKey(node.Id);
+                    //if (SeedNode != null)
+                    //{
+                    //    Console.WriteLine("***************************************");
+                    //    var node = LocalNode;
+                    //    var nodee = FindContainerKey(node.Id);
 
-                        Console.WriteLine(node);
-                        Console.WriteLine(nodee);
+                    //    Console.WriteLine(node);
+                    //    Console.WriteLine(nodee);
 
-                        Console.WriteLine("---------------------");
-                        Console.WriteLine(SeedNode);
-                        Console.WriteLine(FindContainerKey(SeedNode.Id));
+                    //    Console.WriteLine("---------------------");
+                    //    Console.WriteLine(SeedNode);
+                    //    Console.WriteLine(FindContainerKey(SeedNode.Id));
 
-                        Console.WriteLine("***************************************");
-                    }
+                    //    Console.WriteLine("***************************************");
+                    //}
 
                     var succPredNode = ChordServer.GetPredecessor(Successor);
                     if (succPredNode != null)
@@ -630,10 +630,10 @@ namespace DHTChord.NodeInstance
         public ChordNode FindContainerKey(ulong key)
         {
             ChordNode owningNode = ChordServer.CallFindSuccessor(key);
-            return owningNode;
-            //if (owningNode.Equals(ChordServer.LocalNode))
-                //return owningNode;
-            //return ChordServer.CallFindContainerKey(owningNode, key);
+            //return owningNode;
+            if (owningNode.Equals(ChordServer.LocalNode))
+                return owningNode;
+            return ChordServer.CallFindContainerKey(owningNode, key);
         }
 
         /// <summary>

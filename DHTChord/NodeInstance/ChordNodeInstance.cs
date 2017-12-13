@@ -75,7 +75,7 @@ namespace DHTChord.NodeInstance
                 else if (value != null &&
                          (_predecessorNode == null || _predecessorNode.Id != value.Id))
                 {
-                    Log(LogLevel.Info, "Navigation", $"New Predecessor {LocalNode} {value}.");
+                    Log(LogLevel.Info, "Navigation", $"New Predecessor {value} by {LocalNode}.");
                 }
                 _predecessorNode = value;
             }
@@ -360,7 +360,7 @@ namespace DHTChord.NodeInstance
                                 {
                                     Log(LogLevel.Debug, "ReJoin",
                                         $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                    Join(SeedNode);
+                                    instance.Join(node);
                                 }
                                 //!!!!!!!!!!!!!!!TODO!!!!!!!!!!!!!!!!!!!!!!!!!!
                                 // otherwise, in the future, there will be a cache of seed nodes to check/join from...

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ServiceModel;
 using DHTChord.Node;
+using System.IO;
 
 namespace DHTChord.NodeInstance
 {
@@ -70,5 +71,13 @@ namespace DHTChord.NodeInstance
         void SendFile(string remoteFileName, ChordNode remoteNode, string path);
         [OperationContract]
         bool EraseFile(ulong key);
+        //[OperationContract]
+        //FileUploadMessage GetRequest(string file);
+        [OperationContract]
+        void AddCacheFile(FileUploadMessage request);
+        [OperationContract]
+        void AddCache(string value);
+        [OperationContract]
+        void SaveInCache(FileUploadMessage request);
     }
 }

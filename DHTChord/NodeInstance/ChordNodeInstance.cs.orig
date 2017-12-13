@@ -1,338 +1,353 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using System.IO;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.Threading;
-
+using DHTChord.FTable;
 using DHTChord.Node;
 using DHTChord.Server;
-using static DHTChord.MathOperation.ChordMath;
 using static DHTChord.Logger.Logger;
-using DHTChord.FTable;
+using static DHTChord.MathOperation.ChordMath;
 
 namespace DHTChord.NodeInstance
 {
-    public class ChordNodeInstance : MarshalByRefObject
+    [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple, InstanceContextMode = InstanceContextMode.Single)]
+    public class ChordNodeInstance : IChordNodeInstance
     {
-        private ChordNode SeedNode { get; set; }
+        public ChordNode LocalNode
+        {
+            get => ChordServer.LocalNode;
+            set { }
+        }
+
+        public string Host
+        {
+            get => ChordServer.LocalNode.Host;
+            set { }
+        }
+
+        public int Port
+        {
+            get => ChordServer.LocalNode.Port;
+            set { }
+        }
+
+        public ulong Id
+        {
+            get => ChordServer.LocalNode.Id;
+            set { }
+        }
+
+        public ChordNode SeedNode { get; set; }
+
+        public List<ChordNode> SeedChache { get; set; } = new List<ChordNode>();
 
         public ChordNode Successor
         {
             get => SuccessorCache[0];
-            set => SuccessorCache[0] = value;
+            set
+            {
+                if (value == null && SuccessorCache[0] != null)
+                {
+                    Log(LogLevel.Info, "Navigation", $"Setting by {LocalNode} successor to null.");
+                }
+                else if (value != null &&
+                         (SuccessorCache[0] == null || SuccessorCache[0].Id != value.Id))
+                {
+                    Log(LogLevel.Info, "Navigation", $"New Successor by {LocalNode} {value}.");
+                }
+                SuccessorCache[0] = value;
+            }
         }
-        public ChordNode Predecessor { get; set; }
+
+        private ChordNode _predecessorNode;
+
+        public ChordNode Predecessor
+        {
+            get => _predecessorNode;
+            set
+            {
+                if (value == null && null != _predecessorNode)
+                {
+                    Log(LogLevel.Info, "Navigation", $"Setting predecessor by {LocalNode} to null.");
+                }
+                else if (value != null &&
+                         (_predecessorNode == null || _predecessorNode.Id != value.Id))
+                {
+                    Log(LogLevel.Info, "Navigation", $"New Predecessor {value} by {LocalNode}.");
+                }
+                _predecessorNode = value;
+            }
+        }
+
         public FingerTable FingerTable { get; set; }
 
         public ChordNode[] SuccessorCache { get; set; }
-        public ChordNode[] SeedCache { get; set; }
-
-        private ChordNode FindClosestPrecedingFinger(ulong id)
+        public string ServerPath
         {
-            for (int i = FingerTable.Length - 1; i >= 0; --i)
+            get => ChordServer.LocalNode.Path;
+            set => ChordServer.LocalNode.Path = value;
+        }
+
+        public ChordNode FindClosestPrecedingFinger(ulong id)
+        {
+            for (var i = FingerTable.Length - 1; i >= 0; --i)
             {
-                if (FingerTable.Successors[i] != null && FingerTable.Successors[i] != ChordServer.LocalNode)
+                if (FingerTable.Successors[i] != null && !Equals(FingerTable.Successors[i], ChordServer.LocalNode))
                 {
-                    if (FingerInRange(FingerTable.Successors[i].Id, ChordServer.LocalNode.Id, id))
+                    if (FingerInRange(FingerTable.Successors[i].Id, Id, id))
                     {
-                        ChordNodeInstance nodeInstance = FingerTable.Successors[i].GetNodeInstance();
-                        if (nodeInstance.IsStateValid())
+                        var nodeInstance = ChordServer.Instance(FingerTable.Successors[i]);
+                        if (IsInstanceValid(nodeInstance, "FindClosestPrecedingFinger111111111111111111111"))
                         {
                             return FingerTable.Successors[i];
                         }
+                        nodeInstance.Close();
                     }
                 }
             }
             foreach (var t in SuccessorCache)
             {
-                if (t != null && t != ChordServer.LocalNode)
+                if (t != null && !Equals(t, ChordServer.LocalNode))
                 {
-                    if (FingerInRange(t.Id,ChordServer.LocalNode.Id, id))
+                    if (FingerInRange(t.Id, Id, id))
                     {
-                        if (t.GetState().IsStateValid())
+                        var instance = ChordServer.Instance(t);
+                        if (IsInstanceValid(instance, "FindClosestPrecedingFinger2222222222222222"))
                         {
                             return t;
                         }
+                        instance.Close();
                     }
                 }
             }
 
-
             return ChordServer.LocalNode;
         }
 
-        private void GetSuccessorCache(ChordNode remoteNode)
+        public void GetSuccessorCache(ChordNode remoteNode)
         {
-            var remoteSuccessorCache = remoteNode.GetSuccessorCache();
+            //TODO
+            var remoteSuccessorCache = ChordServer.GetSuccessorCache(remoteNode);
             if (remoteSuccessorCache != null)
             {
                 SuccessorCache[0] = remoteNode;
-                for (int i = 1; i < SuccessorCache.Length; i++)
+                for (var i = 1; i < SuccessorCache.Length; i++)
                 {
                     SuccessorCache[i] = remoteSuccessorCache[i - 1];
                 }
             }
-        }
 
-        private static Random _random = new Random(Environment.TickCount);
-        private void GetSeedCache()
-        {
-            for (int i = 1; i < SuccessorCache.Length; i++)
-            {
-                SeedCache[i] = SuccessorCache[i - 1].GetState().SeedNode;
-            }
-            for (int i = SuccessorCache.Length; i < SeedCache.Length; i++)
-            {
-                SeedCache[i] = FindSuccessor(ChordServer.GetHash(
-                    _random.Next().ToString() + _random.Next()));
-            }
         }
 
 
-        private ChordNode FindPredecessor(ulong id)
-        {
-            var currentNode = ChordServer.LocalNode;
-<<<<<<< HEAD
-            var currentNodeInstance = currentNode.GetState();
-            while (!IsIdInRange(id, currentNode.Id, currentNodeInstance.Successor.Id))
-=======
-            var currentNodeInstance = currentNode.GetNodeInstance();
-            while (!IsIdInRange(id, currentNode.ID, currentNodeInstance.Successor.ID))
->>>>>>> 5ef537702ce2093720850d230ab78424dd809504
-            {
-                currentNode = currentNodeInstance.FindClosestPrecedingFinger(id);
-                currentNodeInstance = currentNode.GetNodeInstance();
-            }
-            return currentNode;
-        }
 
         public ChordNode FindSuccessor(ulong id)
         {
-            return FindPredecessor(id).GetSuccessor();
+            if (IsIdInRange(id, Id, Successor.Id))
+            {
+                return Successor;
+            }
+            var predNode = FindClosestPrecedingFinger(id);
+            var s = ChordServer.CallFindSuccessor(predNode, id);
+            return s;
         }
 
-        private bool IsStateValid()
+        public static bool IsInstanceValid(ChordNodeInstanceClient instance, string message)
         {
             try
             {
-                if (ChordServer.LocalNode.Port > 0 && Successor != null)
-                    return true;
+                return instance.Port > 0 && instance.Successor != null;
             }
             catch (Exception e)
             {
-                Log("Incoming instance was not valid", e.Message);
-                throw e;
+                
+                Log(LogLevel.Debug, "Instance", $" {message}  Incoming instance was not valid: ({e.Message}).");
+                return false;
             }
-            return false;
         }
 
         public bool Join(ChordNode seed)
         {
             SeedNode = seed;
             FingerTable = new FingerTable(ChordServer.LocalNode);
-            
             SuccessorCache = new ChordNode[8];
-            SeedCache = new ChordNode[16];
 
-            for (int i = 0; i < SuccessorCache.Length; i++)
+            for (var i = 0; i < SuccessorCache.Length; i++)
             {
                 SuccessorCache[i] = ChordServer.LocalNode;
-            }
-            for (int i = 0; i < SeedCache.Length; i++)
-            {
-                SeedCache[i] = seed;
             }
 
             if (seed != null)
             {
-                Log("Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
-                ChordNodeInstance nodeInstance = seed.GetNodeInstance();
-                if (nodeInstance.IsStateValid())
+                Log(LogLevel.Info, "Navigation", $"Joining ring @ {seed.Host}:{seed.Port}");
+                var nodeInstance = ChordServer.Instance(seed);
+
+                if (IsInstanceValid(nodeInstance, "JOIN"))
                 {
                     try
                     {
-                        Successor = nodeInstance.FindSuccessor(ChordServer.LocalNode.Id);
+                        Successor = nodeInstance.FindSuccessor(Id);
+                        GetSuccessorCache(Successor);
                     }
                     catch (Exception e)
                     {
-                        Log("Navigation", $"Error setting  Successor Node {e.Message}");
+                        Log(LogLevel.Error, "Navigation", $"Error setting  Successor Node {e.Message}");
                         return false;
                     }
                 }
                 else
                 {
-                    Log("Navigation", "Invalid node seed");
+                    Log(LogLevel.Error, "Navigation", "Invalid node seed");
                     return false;
                 }
+                nodeInstance.Close();
             }
             else
             {
-                Log("Navigation", $"Sarting ring @ {ChordServer.LocalNode.Host}:{ChordServer.LocalNode.Port}");
+                Log(LogLevel.Info, "Navigation", $"Sarting ring @ {Host}:{Port}");
             }
 
             StartMaintenance();
 
             return true;
-
         }
 
-        private readonly BackgroundWorker _mStabilizeSuccessors = new BackgroundWorker();
-        private readonly BackgroundWorker _mStabilizePredecessors = new BackgroundWorker();
-        private readonly BackgroundWorker _mUpdateFingerTable = new BackgroundWorker();
-        private readonly BackgroundWorker _mRejoin = new BackgroundWorker();
+        private readonly BackgroundWorker _stabilizeSuccessors = new BackgroundWorker();
+        private readonly BackgroundWorker _stabilizePredecessors = new BackgroundWorker();
+        private readonly BackgroundWorker _updateFingerTable = new BackgroundWorker();
+        private readonly BackgroundWorker _reJoin = new BackgroundWorker();
+        private readonly BackgroundWorker _replicationStorage = new BackgroundWorker();
+        private readonly BackgroundWorker _stabilizeDataBase = new BackgroundWorker();
+        private readonly BackgroundWorker _updateSeedCache = new BackgroundWorker();
 
-        private void StartMaintenance()
+        public void StartMaintenance()
         {
-            _mStabilizeSuccessors.DoWork += StabilizeSuccessors;
-            _mStabilizeSuccessors.WorkerSupportsCancellation = true;
-            _mStabilizeSuccessors.RunWorkerAsync();
+            _stabilizeSuccessors.DoWork += StabilizeSuccessors;
+            _stabilizeSuccessors.WorkerSupportsCancellation = true;
+            _stabilizeSuccessors.RunWorkerAsync();
 
-            _mStabilizePredecessors.DoWork += StabilizePredecessors;
-            _mStabilizePredecessors.WorkerSupportsCancellation = true;
-            _mStabilizePredecessors.RunWorkerAsync();
+            _stabilizePredecessors.DoWork += StabilizePredecessors;
+            _stabilizePredecessors.WorkerSupportsCancellation = true;
+            _stabilizePredecessors.RunWorkerAsync();
 
-            _mUpdateFingerTable.DoWork += UpdateFingerTable;
-            _mUpdateFingerTable.WorkerSupportsCancellation = true;
-            _mUpdateFingerTable.RunWorkerAsync();
+            _updateFingerTable.DoWork += UpdateFingerTable;
+            _updateFingerTable.WorkerSupportsCancellation = true;
+            _updateFingerTable.RunWorkerAsync();
 
-            _mRejoin.DoWork += ReJoin;
-            _mRejoin.WorkerSupportsCancellation = true;
-            _mRejoin.RunWorkerAsync();
+            _reJoin.DoWork += ReJoin;
+            _reJoin.WorkerSupportsCancellation = true;
+            _reJoin.RunWorkerAsync();
+
+            _replicationStorage.DoWork += ReplicateStorage;
+            _replicationStorage.WorkerSupportsCancellation = true;
+            _replicationStorage.RunWorkerAsync();
+
+<<<<<<< HEAD
+            //_stabilizeDataBase.DoWork += StabilizeDataBase;
+            //_stabilizeDataBase.WorkerSupportsCancellation = true;
+            //_stabilizeDataBase.RunWorkerAsync();
+
+            _updateSeedCache.DoWork += UpdateSeedCache;
+            _updateSeedCache.WorkerSupportsCancellation = true;
+            _updateSeedCache.RunWorkerAsync();
+=======
+            _stabilizeDataBase.DoWork += StabilizeDataBase;
+            _stabilizeDataBase.WorkerSupportsCancellation = true;
+            _stabilizeDataBase.RunWorkerAsync();
+>>>>>>> sending files from any PC
         }
 
-        private void StopMaintenance()
+        public void StopMaintenance()
         {
-            _mStabilizeSuccessors.CancelAsync();
-            _mStabilizePredecessors.CancelAsync();
-            _mUpdateFingerTable.CancelAsync();
-            _mRejoin.CancelAsync();
+            _stabilizeSuccessors.CancelAsync();
+            _stabilizePredecessors.CancelAsync();
+            _updateFingerTable.CancelAsync();
+            _reJoin.CancelAsync();
+            _replicationStorage.CancelAsync();
+            _stabilizeDataBase.CancelAsync();
         }
 
-        private void StabilizePredecessors(object sender, DoWorkEventArgs ea)
-        {
-            BackgroundWorker me = (BackgroundWorker)sender;
 
-            while (!me.CancellationPending)
+        private bool _hasReJoin;
+
+        public IEnumerable<ulong> GetKeys()
+        {
+            List<ulong> copy = new List<ulong>(_db.Keys);
+            return copy;
+        }
+
+        public bool EraseKey(ulong key)
+        {
+            return _db.Remove(key);
+        }
+
+        public bool EraseFile(ulong key)
+        {
+            var fileName = GetFromDb(key);
+            if (File.Exists(ServerPath + fileName))
             {
-                if (Predecessor != null)
-                {
-                    try
-                    {
-                        ChordNodeInstance nodeInstance = Predecessor.GetNodeInstance();
-                        if (!nodeInstance.IsStateValid())
-                        {
-                            Predecessor = null;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Log("StabilizePredecessors", $"StabilizePredecessors error: {e.Message}");
-                        Predecessor = null;
-                        throw e;
-                    }
-
-                }
-
-                Thread.Sleep(5000);
+                _db.Remove(key);
+                File.Delete(ServerPath + fileName);
+                return true;
             }
+            return false;
         }
 
-        private void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
+        public bool ContainKey(ulong key)
+        {
+            return _db.ContainsKey(key);
+        }
+
+        private void StabilizeDataBase(object sender, DoWorkEventArgs ea)
         {
             BackgroundWorker me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
             {
+                ChordNodeInstanceClient preInstance = null;
                 try
                 {
-
-                    var succPredNode = Successor.GetPredecessor();
-                    if (succPredNode != null)
+                    preInstance = ChordServer.Instance(Predecessor);
+                    if (IsInstanceValid(preInstance, "StabilizeDataBase"))
                     {
-                        if (IsIdInRange(succPredNode.Id, ChordServer.LocalNode.Id, Successor.Id))
-                        {
-                            Successor = succPredNode;
-                        }
-                        Successor.CallNotify(ChordServer.LocalNode);
-                        GetSuccessorCache(Successor);
-                        GetSeedCache();
-                    }
-                    else
-                    {
-                        bool successorCacheHelped = false;
-                        foreach (ChordNode entry in SuccessorCache)
-                        {
-                            var instance = entry.GetState();
-                            if (instance.IsStateValid())
-                            {
-                                Successor = entry;
-                                Successor.CallNotify(ChordServer.LocalNode);
-                                GetSuccessorCache(Successor);
-                                GetSeedCache();
-                                successorCacheHelped = true;
-                                break;
-                            }
-                        }
 
-                        if (!successorCacheHelped)
+                        var prePrePredecessor = preInstance.Predecessor;
+
+                        if (!Successor.Equals(Predecessor))
                         {
-                            if (SeedCache.Any(Join))
+                            foreach (var key in GetKeys())
                             {
-                                return;
+                                if (!IsIdInRange(key, prePrePredecessor.Id, Predecessor.Id) &&
+                                    !IsIdInRange(key, Predecessor.Id, Id))
+                                {
+                                    if (EraseFile(key))
+                                        Log(LogLevel.Info, "EraseFile",
+                                            $"Erase File {GetFromDb(key)} successful from {LocalNode}");
+                                    else
+                                        Log(LogLevel.Error, "EraseFile",
+                                            $"Erase key {GetFromDb(key)} unsuccessful from {LocalNode}");
+                                }
                             }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    //ChordServer.Log(LogLevel.Error, "Maintenance", "Error occured during StabilizeSuccessors ({0})", e.Message);
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizaDataBase ({e.Message})");
                 }
-
-                // TODO: this could be tweaked and/or made configurable elsewhere or passed in as arguments
-                Thread.Sleep(5000);
-            }
-        }
-
-        public void Notify(ChordNode callingNode)
-        {
-            if (Predecessor == null || IsIdInRange(callingNode.Id, Predecessor.Id, ChordServer.LocalNode.Id))
-            {
-                Predecessor = callingNode;
-                return;
-            }
-        }
-
-        static int _currentTableInput = 0;
-        private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
-        {
-            
-            BackgroundWorker me = (BackgroundWorker)sender;
-
-            while (!me.CancellationPending)
-            {
-                try
+                finally
                 {
-                    try
-                    {
-                        FingerTable.Successors[_currentTableInput] = FindSuccessor(FingerTable.StartValues[_currentTableInput]);
-                    }
-                    catch (Exception e)
-                    {
-                        Log("Navigation", $"Unable to update Successor for start value {FingerTable.StartValues[_currentTableInput]} ({e.Message}).");
-                    }
-
-                    _currentTableInput = (_currentTableInput + 1) % FingerTable.Length;
+                    if (preInstance != null && preInstance.State != CommunicationState.Closed)
+                        preInstance.Close();
                 }
-                catch (Exception e)
-                {
-                    Log("Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
-                }
-
-                // TODO: make this configurable via config file or passed in as an argument
-                Thread.Sleep(1000);
+                Thread.Sleep(3000);
             }
         }
 
-        private bool _mHasReJoinRun = false;
         private void ReJoin(object sender, DoWorkEventArgs ea)
         {
             BackgroundWorker me = (BackgroundWorker)sender;
@@ -341,42 +356,643 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    if (_mHasReJoinRun)
+                    if (_hasReJoin)
                     {
-                        // first find the successor for the seed node
-                        if (SeedNode != null)
+                        foreach (var nodeCache in SeedChache)
                         {
-                            ChordNode seedSuccessor = FindSuccessor(SeedNode.Id);
-
-                            // if the successor is not equal to the seed node, something is fishy
-                            if (seedSuccessor.Id != SeedNode.Id)
-                            {
-                                // if the seed node is still active, re-join the ring to the seed node
-                                ChordNodeInstance nodeInstance = SeedNode.GetNodeInstance();
-                                if (nodeInstance.IsStateValid())
-                                {
-                                    Log( "ReJoin", $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                    Join(SeedNode);
-                                }
-
-                                // otherwise, in the future, there will be a cache of seed nodes to check/join from...
-                                // as it may be the case that the seed node simply has disconnected from the network.
-                            }
+                            var responsableNodeCache = FindContainerKey(nodeCache.Id);
+                            if (!ChordServer.SameRing(nodeCache, responsableNodeCache) && Join(nodeCache))
+                                break;
                         }
                     }
                     else
                     {
-                       
-                        _mHasReJoinRun = true;
+                        _hasReJoin = true;
                     }
                 }
                 catch (Exception e)
                 {
-                    Log( "Maintenance", $"Error occured during ReJoin ({e.Message})");
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during ReJoin ({e.Message})");
+                }
+                Thread.Sleep(5000);
+            }
+        }
+
+        private void StabilizePredecessors(object sender, DoWorkEventArgs ea)
+        {
+            var me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                if (Predecessor != null)
+                {
+                    ChordNodeInstanceClient nodeInstance = null;
+                    try
+                    {
+                        nodeInstance = ChordServer.Instance(Predecessor);
+                        if (!IsInstanceValid(nodeInstance, "StabilizePredecessors"))
+                        {
+                            Predecessor = null;
+                        }
+                        nodeInstance.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Log(LogLevel.Error, "StabilizePredecessors", $"StabilizePredecessors error: {e.Message}");
+                        Predecessor = null;
+                    }
+                    finally
+                    {
+                        if (nodeInstance != null && nodeInstance.State != CommunicationState.Closed)
+                            nodeInstance.Close();
+                    }
+
                 }
 
-                Thread.Sleep(30000);
+                Thread.Sleep(100);
+            }
+        }
+
+        private void StabilizeSuccessors(object sender, DoWorkEventArgs ea)
+        {
+            var me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+                    //if (SeedNode != null)
+                    //{
+                    //    Console.WriteLine("***************************************");
+                    //    var node = LocalNode;
+                    //    var nodee = FindContainerKey(node.Id);
+
+                    //    Console.WriteLine(node);
+                    //    Console.WriteLine(nodee);
+
+                    //    Console.WriteLine("---------------------");
+                    //    Console.WriteLine(SeedNode);
+                    //    Console.WriteLine(FindContainerKey(SeedNode.Id));
+
+                    //    Console.WriteLine("***************************************");
+                    //}
+
+                    var succPredNode = ChordServer.GetPredecessor(Successor);
+                    if (succPredNode != null)
+                    {
+                        if (IsIdInRange(succPredNode.Id, Id, Successor.Id))
+                        {
+                            Successor = succPredNode;
+                        }
+                        ChordServer.CallNotify(Successor, ChordServer.LocalNode);
+
+                        GetSuccessorCache(Successor);
+                    }
+                    else
+                    {
+                        var successorCacheHelped = false;
+                        foreach (var entry in SuccessorCache)
+                        {
+                            var instance = ChordServer.Instance(entry);
+
+                            if (IsInstanceValid(instance, "StabilizeSuccessors"))
+                            {
+                                Successor = entry;
+                                ChordServer.CallNotify(Successor, ChordServer.LocalNode);
+
+                                GetSuccessorCache(Successor);
+
+                                successorCacheHelped = true;
+                                instance.Close();
+                                break;
+                            }
+                            if (instance != null &&instance.State != CommunicationState.Closed)
+                            {
+                                instance.Close();
+                            }
+                        }
+
+                        if (!successorCacheHelped)
+                        {
+                            Log(LogLevel.Error, "StabilizeSuccessors",
+                                "Ring consistency error, Re-Joining Chord ring.");
+
+                            if (Join(SeedNode))
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
+                }
+
+                Thread.Sleep(100);
+            }
+        }
+
+        private void UpdateSeedCache(object sender, DoWorkEventArgs ea)
+        {
+            var me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+                    SeedChache = ChordServer.FindServiceAddress();
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "UpdateSeedCache", $"Update Seed Cache error: {e.Message}");
+                }
+            }
+            Thread.Sleep(5000);
+        }
+
+        public void Notify(ChordNode callingNode)
+        {
+            if (Predecessor == null || IsIdInRange(callingNode.Id, Predecessor.Id, Id))
+            {
+                Predecessor = callingNode;
+            }
+        }
+
+        private static int _currentTableInput;
+
+        private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
+        {
+            //TODO
+            var me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+                    try
+                    {
+                        FingerTable.Successors[_currentTableInput] =
+                            FindSuccessor(FingerTable.StartValues[_currentTableInput]);
+                    }
+                    catch (Exception e)
+                    {
+                        Log(LogLevel.Error, "Navigation",
+                            $"Unable to update Successor for start value {FingerTable.StartValues[_currentTableInput]} ({e.Message}).");
+                    }
+
+                    _currentTableInput = (_currentTableInput + 1) % FingerTable.Length;
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
+                }
+
+                Thread.Sleep(100);
+            }
+        }
+
+        public void Depart()
+        {
+            StopMaintenance();
+            ChordNodeInstanceClient instance = null;
+            try
+            {
+                instance = ChordServer.Instance(Successor);
+                instance.Predecessor = Predecessor;
+
+                instance = ChordServer.Instance(Predecessor);
+                instance.Successor = Successor;
+            }
+            catch (Exception e)
+            {
+                Log(LogLevel.Error, "Navigation", $"Error on Depart ({e.Message}).");
+            }
+            finally
+            {
+                SeedNode = ChordServer.LocalNode;
+                Successor = ChordServer.LocalNode;
+                Predecessor = ChordServer.LocalNode;
+                FingerTable = new FingerTable(ChordServer.LocalNode);
+                for (var i = 0; i < SuccessorCache.Length; i++)
+                {
+                    SuccessorCache[i] = ChordServer.LocalNode;
+                }
+                if (instance != null && instance.State != CommunicationState.Closed)
+                    instance.Close();
+            }
+        }
+
+        //public string path = "C:\\AIRfly\\";
+        //private static string replication = path + "replication\\";
+
+
+
+
+
+
+        private readonly SortedList<ulong, string> _db = new SortedList<ulong, string>();
+
+
+        public void ViewDataBase()
+        {
+            Console.WriteLine("Data Base details");
+            foreach (var item in _db)
+            {
+                Console.WriteLine($"{item.Key} {item.Value}");
+            }
+            Console.WriteLine("*************************************");
+            Console.WriteLine();
+        }
+
+        public void AddDb(ulong key, string value)
+        {
+            _db.Add(key, value);
+            Console.WriteLine(_db.Count);
+        }
+
+        public void AddCache(string value)
+        {
+            _cache.Enqueue(value);
+        }
+
+        /// <summary>
+        /// Retrieve the string value for a given ulong
+        /// key.
+        /// </summary>
+        /// <param name="key">The key whose value should be returned.</param>
+        /// <param name="nodeOut"></param>
+        /// <returns>The string value for the given key, or an empty string if not found.</returns>
+        public string GetValue(ulong key, out ChordNode nodeOut)
+        {
+            var tmp = FindContainerKey(key);
+            nodeOut = LocalNode;
+            var instance = ChordServer.Instance(tmp);
+            var str = instance.GetFromDb(key);
+            instance.Close();
+            return str;
+        }
+
+        public string GetFromDb(ulong key)
+        {
+            return _db.ContainsKey(key) ? _db[key] : string.Empty;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key">The key to find</param>
+        /// <returns>The node instance responsable of the key</returns>
+        public ChordNode FindContainerKey(ulong key)
+        {
+            ChordNode owningNode = ChordServer.CallFindSuccessor(key);
+            //return owningNode;
+            if (owningNode.Equals(ChordServer.LocalNode))
+                return owningNode;
+            return ChordServer.CallFindContainerKey(owningNode, key);
+        }
+
+        /// <summary>
+        /// Replicate the local data store on a background thread.
+        /// </summary>
+        /// <param name="sender">The background worker thread this task is running on.</param>
+        /// <param name="ea">Args (ignored).</param>
+        private void ReplicateStorage(object sender, DoWorkEventArgs ea)
+        {
+            BackgroundWorker me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+
+                    foreach (var key in GetKeys())
+                    {
+                        if (IsIdInRange(key, Predecessor.Id, Id))
+                        {
+                            ChordServer.CallReplicationFile(Successor, GetFromDb(key));
+
+                        }
+                    }
+
+                    var sucInstance = ChordServer.Instance(Successor);
+                    if(IsInstanceValid(sucInstance, "ReplicationFile"))
+                    {
+                        foreach (var key in sucInstance.GetKeys())
+                        {
+                            if (IsIdInRange(key, Predecessor.Id, Id))
+                            {
+                                sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode, null);
+                            }
+                        }
+                        sucInstance.Close();
+                    }                    
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during ReplicateStorage ({e.Message})");
+                }
+
+                Thread.Sleep(3000);
+            }
+        }
+
+        public void AddNewFile(FileUploadMessage request)
+        {
+            ulong key = ChordServer.GetHash(request.Metadata.RemoteFileName);
+            UploadFile(request);
+            AddDb(key, request.Metadata.RemoteFileName);
+        }
+
+        public void SendFile(string remoteFileName, ChordNode remoteNode, string remotePath)
+        {
+
+
+            if (remotePath is null)
+                remotePath = ServerPath;
+
+            var instance = ChordServer.Instance(remoteNode);
+
+            var key = ChordServer.GetHash(remoteFileName);
+            if (instance.ContainKey(key))
+                return;
+            Stream fileStream = new FileStream(remotePath + remoteFileName, FileMode.Open, FileAccess.Read);
+
+            var request = new FileUploadMessage();
+
+            var fileMetadata = new FileMetaData(remoteFileName);
+            request.Metadata = fileMetadata;
+            request.FileByteStream = fileStream;
+            Log(LogLevel.Info, "Sending File", $"Sending File {remotePath} ...");
+            instance.AddNewFile(request);
+            Log(LogLevel.Info, "Finish Send", $"{remotePath} Send Succesfully");
+        }
+
+        public void UploadFile(FileUploadMessage request)
+        {
+            string serverFileName = ServerPath + request.Metadata.RemoteFileName;
+
+            FileStream outfile = null;
+            try
+            {
+                outfile = new FileStream(serverFileName, FileMode.Create);
+
+
+                const int bufferSize = 65536; // 64K
+
+                byte[] buffer = new byte[bufferSize];
+                int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+
+                while (bytesRead > 0)
+                {
+                    outfile.Write(buffer, 0, bytesRead);
+                    bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+                }
+
+                Log(LogLevel.Info, "Data Recive", $"{Host} {Port} Recive Succefully {request.Metadata.RemoteFileName}");
+
+            }
+            catch (IOException e)
+            {
+                Log(LogLevel.Error, "Recive Data", $"Error while Recive {serverFileName}:   {e}");
+            }
+            finally
+            {
+                outfile?.Close();
+            }
+        }
+
+        public FileUploadMessage GetRequest(string file)
+        {
+            Stream fileStream = new FileStream(ServerPath + file, FileMode.Open, FileAccess.Read);
+
+            var request = new FileUploadMessage();
+
+
+            var fileMetadata = new FileMetaData(file);
+            request.Metadata = fileMetadata;
+            request.FileByteStream = fileStream;
+
+            return request;
+        }
+
+        private readonly Queue<string> _cache = new Queue<string>();
+
+
+        public void AddCacheFile(FileUploadMessage request)
+        {            
+            AddCache(request.Metadata.RemoteFileName);
+            SaveInCache(request);
+        }
+        public void SaveInCache(FileUploadMessage request)
+        {
+            //TODO:Lo mismo que UploadFile
+            string serverFileName = ServerPath + "Cache\\" + request.Metadata.RemoteFileName;
+
+            FileStream outfile = null;
+            try
+            {
+                outfile = new FileStream(serverFileName, FileMode.Create);
+
+
+                const int bufferSize = 65536; // 64K
+
+                byte[] buffer = new byte[bufferSize];
+                int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+
+                while (bytesRead > 0)
+                {
+                    outfile.Write(buffer, 0, bytesRead);
+                    bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+                }
+
+                Log(LogLevel.Info, "Caching Data", $"{Host} {Port} Recive Succefully {request.Metadata.RemoteFileName}");
+
+            }
+            catch (IOException e)
+            {
+                Log(LogLevel.Error, "Cachin Data", $"Error while Recive {serverFileName}:   {e}");
+            }
+            finally
+            {
+                outfile?.Close();
             }
         }
     }
+
+
+
+    public class ChordNodeInstanceClient : ClientBase<IChordNodeInstance>, IChordNodeInstance
+    {
+        public ChordNodeInstanceClient()
+        {
+        }
+
+        public ChordNodeInstanceClient(string endpointConfigurationName) :
+            base(endpointConfigurationName)
+        {
+        }
+
+        public ChordNodeInstanceClient(string endpointConfigurationName, string remoteAddress) :
+            base(endpointConfigurationName, remoteAddress)
+        {
+        }
+
+        public ChordNodeInstanceClient(string endpointConfigurationName,
+            EndpointAddress remoteAddress) :
+            base(endpointConfigurationName, remoteAddress)
+        {
+        }
+
+        public ChordNodeInstanceClient(Binding binding,
+            EndpointAddress remoteAddress) :
+            base(binding, remoteAddress)
+        {
+        }
+
+
+        public ChordNode LocalNode
+        {
+            get => Channel.LocalNode;
+            set => Channel.LocalNode = value;
+        }
+
+        public string Host
+        {
+            get => Channel.Host;
+            set => Channel.Host = value;
+        }
+
+        public int Port
+        {
+            get => Channel.Port;
+            set => Channel.Port = value;
+        }
+
+        public ulong Id
+        {
+            get => Channel.Id;
+            set => Channel.Id = value;
+        }
+
+        public ChordNode Successor
+        {
+            get => Channel.Successor;
+            set => Channel.Successor = value;
+        }
+
+        public ChordNode Predecessor
+        {
+            get => Channel.Predecessor;
+            set => Channel.Predecessor = value;
+        }
+
+        public ChordNode[] SuccessorCache
+        {
+            get => Channel.SuccessorCache;
+            set => Channel.SuccessorCache = value;
+        }
+        public string ServerPath
+        {
+            get => Channel.ServerPath;
+            set => Channel.ServerPath = value;
+        }
+
+        public ChordNode FindSuccessor(ulong id) => Channel.FindSuccessor(id);
+
+        public bool Join(ChordNode seed) => Channel.Join(seed);
+
+        public IEnumerable<ulong> GetKeys() => Channel.GetKeys();
+
+        public bool EraseKey(ulong key) => Channel.EraseKey(key);
+
+        public bool ContainKey(ulong key) => Channel.ContainKey(key);
+
+        public void Notify(ChordNode callingNode) => Channel.Notify(callingNode);
+
+        public void ViewDataBase() => Channel.ViewDataBase();
+
+
+        public void AddDb(ulong key, string value) => Channel.AddDb(key, value);
+
+        public string GetValue(ulong key, out ChordNode nodeOut) => Channel.GetValue(key, out nodeOut);
+
+        public string GetFromDb(ulong key) => Channel.GetFromDb(key);
+
+        public ChordNode FindContainerKey(ulong key) => Channel.FindContainerKey(key);
+
+        public void Depart() => Channel.Depart();
+
+
+
+        public void UploadFile(FileUploadMessage request)
+        {
+            Channel.UploadFile(request);
+        }
+
+        public void AddNewFile(FileUploadMessage request)
+        {
+            Channel.AddNewFile(request);
+        }
+
+        public void SendFile(string remoteFileName, ChordNode remoteNode, string path)
+        {
+            Channel.SendFile(remoteFileName, remoteNode, path);
+        }
+
+        public bool EraseFile(ulong key)
+        {
+            return Channel.EraseFile(key);
+        }
+
+        //public FileUploadMessage GetRequest(string file)
+        //{
+        //    //return Channel.GetRequest(file);
+        //}
+
+        public void AddCacheFile(FileUploadMessage request)
+        {
+            Channel.AddCacheFile(request);
+        }
+
+        public void AddCache(string value)
+        {
+            Channel.AddCache(value);
+        }
+
+        public void SaveInCache(FileUploadMessage request)
+        {
+            Channel.SaveInCache(request);
+        }
+    }
+
+
+
+    [MessageContract]
+    public class FileUploadMessage
+    {
+        [MessageHeader(MustUnderstand = true)]
+        public FileMetaData Metadata;
+        [MessageBodyMember(Order = 1)]
+        public Stream FileByteStream;
+    }
+
+
+
+    [DataContract]
+    public class FileMetaData
+    {
+        public FileMetaData(
+            string remoteFileName)
+        {
+
+            RemoteFileName = remoteFileName;
+        }
+
+        [DataMember(Name = "remoteFilename", Order = 2, IsRequired = false)]
+        public string RemoteFileName;
+    }
+
+
+
 }

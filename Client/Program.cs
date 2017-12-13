@@ -14,7 +14,7 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            if (args.Length == 0) args = new string[] { "Send", "localhost", "7070" };
+            if (args.Length == 0) args = new string[] { "Send", "localhost", "7777" };
             if(args[0] == "Send")
             {
                 string host = Dns.GetHostEntry(args[1]).HostName;
@@ -32,7 +32,7 @@ namespace Client
                     {
                         string fileName = Path.GetFileName(f);
 
-                        ClientSide.Send(fileName, path, node);
+                        ClientSide.Send(fileName, f, node);
                     }
                 }
                 if(input[0] == "2")//a single file
@@ -45,7 +45,21 @@ namespace Client
             }
             if(args[0] == "Find")
             {
+                //string host = Dns.GetHostEntry(args[1]).HostName;
+                //int port = int.Parse(args[2]);
+                //var node = new ChordNode(host, port);
+                ////TODO: node = discovery
 
+                //string fileName = args[3];
+
+                //if(ClientSide.Find(fileName, node))
+                //{
+                //    Console.WriteLine($"Find Succefully {fileName}");
+                //}
+                //else
+                //{
+                //    Console.WriteLine($"{fileName} not found");
+                //}
             }
         }
     }

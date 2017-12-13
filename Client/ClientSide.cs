@@ -27,8 +27,26 @@ namespace Client
 
             var conteinerNode = ChordServer.CallFindContainerKey(node,key);
 
-            ChordServer.Instance(conteinerNode).AddNewFile(request);
-            
+            ChordServer.Instance(conteinerNode).AddNewFile(request);            
+        }
+
+        public static bool Find(string fileName, ChordNode node)
+        {
+
+            //var key = ChordServer.GetHash(fileName);
+
+            //var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
+
+
+            //if(conteinerNodeInstance.ContainKey(key))
+            //{
+            //    var request = conteinerNodeInstance.GetRequest(fileName);
+
+            //    ChordServer.Instance(node).AddCacheFile(request);
+            //    return true;
+            //}
+
+            return false;
         }
     }
 }

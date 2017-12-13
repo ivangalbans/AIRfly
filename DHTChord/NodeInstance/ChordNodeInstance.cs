@@ -242,13 +242,13 @@ namespace DHTChord.NodeInstance
             _reJoin.WorkerSupportsCancellation = true;
             _reJoin.RunWorkerAsync();
 
-            //_replicationStorage.DoWork += ReplicateStorage;
-            //_replicationStorage.WorkerSupportsCancellation = true;
-            //_replicationStorage.RunWorkerAsync();
+            _replicationStorage.DoWork += ReplicateStorage;
+            _replicationStorage.WorkerSupportsCancellation = true;
+            _replicationStorage.RunWorkerAsync();
 
-            //_stabilizeDataBase.DoWork += StabilizeDataBase;
-            //_stabilizeDataBase.WorkerSupportsCancellation = true;
-            //_stabilizeDataBase.RunWorkerAsync();
+            _stabilizeDataBase.DoWork += StabilizeDataBase;
+            _stabilizeDataBase.WorkerSupportsCancellation = true;
+            _stabilizeDataBase.RunWorkerAsync();
 
             _updateSeedCache.DoWork += UpdateSeedCache;
             _updateSeedCache.WorkerSupportsCancellation = true;
@@ -306,21 +306,25 @@ namespace DHTChord.NodeInstance
                 try
                 {
                     preInstance = ChordServer.Instance(Predecessor);
-                    var prePrePredecessor = preInstance.Predecessor;
-
-                    if (!Successor.Equals(Predecessor))
+                    if (IsInstanceValid(preInstance, "StabilizeDataBase"))
                     {
-                        foreach (var key in GetKeys())
+
+                        var prePrePredecessor = preInstance.Predecessor;
+
+                        if (!Successor.Equals(Predecessor))
                         {
-                            if (!IsIdInRange(key, prePrePredecessor.Id, Predecessor.Id) &&
-                                !IsIdInRange(key, Predecessor.Id, Id))
+                            foreach (var key in GetKeys())
                             {
-                                if (EraseFile(key))
-                                    Log(LogLevel.Info, "EraseFile",
-                                        $"Erase File {GetFromDb(key)} successful from {LocalNode}");
-                                else
-                                    Log(LogLevel.Error, "EraseFile",
-                                        $"Erase key {GetFromDb(key)} unsuccessful from {LocalNode}");
+                                if (!IsIdInRange(key, prePrePredecessor.Id, Predecessor.Id) &&
+                                    !IsIdInRange(key, Predecessor.Id, Id))
+                                {
+                                    if (EraseFile(key))
+                                        Log(LogLevel.Info, "EraseFile",
+                                            $"Erase File {GetFromDb(key)} successful from {LocalNode}");
+                                    else
+                                        Log(LogLevel.Error, "EraseFile",
+                                            $"Erase key {GetFromDb(key)} unsuccessful from {LocalNode}");
+                                }
                             }
                         }
                     }
@@ -601,6 +605,11 @@ namespace DHTChord.NodeInstance
             Console.WriteLine(_db.Count);
         }
 
+        public void AddCache(string value)
+        {
+            _cache.Enqueue(value);
+        }
+
         /// <summary>
         /// Retrieve the string value for a given ulong
         /// key.
@@ -661,14 +670,17 @@ namespace DHTChord.NodeInstance
                     }
 
                     var sucInstance = ChordServer.Instance(Successor);
-                    foreach (var key in sucInstance.GetKeys())
+                    if(IsInstanceValid(sucInstance, "ReplicationFile"))
                     {
-                        if (IsIdInRange(key, Predecessor.Id, Id))
+                        foreach (var key in sucInstance.GetKeys())
                         {
-                            sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode, null);
+                            if (IsIdInRange(key, Predecessor.Id, Id))
+                            {
+                                sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode, null);
+                            }
                         }
-                    }
-                    sucInstance.Close();
+                        sucInstance.Close();
+                    }                    
                 }
                 catch (Exception e)
                 {
@@ -744,6 +756,62 @@ namespace DHTChord.NodeInstance
             }
         }
 
+        public FileUploadMessage GetRequest(string file)
+        {
+            Stream fileStream = new FileStream(ServerPath + file, FileMode.Open, FileAccess.Read);
+
+            var request = new FileUploadMessage();
+
+
+            var fileMetadata = new FileMetaData(file);
+            request.Metadata = fileMetadata;
+            request.FileByteStream = fileStream;
+
+            return request;
+        }
+
+        private readonly Queue<string> _cache = new Queue<string>();
+
+
+        public void AddCacheFile(FileUploadMessage request)
+        {            
+            AddCache(request.Metadata.RemoteFileName);
+            SaveInCache(request);
+        }
+        public void SaveInCache(FileUploadMessage request)
+        {
+            //TODO:Lo mismo que UploadFile
+            string serverFileName = ServerPath + "Cache\\" + request.Metadata.RemoteFileName;
+
+            FileStream outfile = null;
+            try
+            {
+                outfile = new FileStream(serverFileName, FileMode.Create);
+
+
+                const int bufferSize = 65536; // 64K
+
+                byte[] buffer = new byte[bufferSize];
+                int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+
+                while (bytesRead > 0)
+                {
+                    outfile.Write(buffer, 0, bytesRead);
+                    bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+                }
+
+                Log(LogLevel.Info, "Caching Data", $"{Host} {Port} Recive Succefully {request.Metadata.RemoteFileName}");
+
+            }
+            catch (IOException e)
+            {
+                Log(LogLevel.Error, "Cachin Data", $"Error while Recive {serverFileName}:   {e}");
+            }
+            finally
+            {
+                outfile?.Close();
+            }
+        }
     }
 
 
@@ -869,6 +937,26 @@ namespace DHTChord.NodeInstance
         public bool EraseFile(ulong key)
         {
             return Channel.EraseFile(key);
+        }
+
+        //public FileUploadMessage GetRequest(string file)
+        //{
+        //    //return Channel.GetRequest(file);
+        //}
+
+        public void AddCacheFile(FileUploadMessage request)
+        {
+            Channel.AddCacheFile(request);
+        }
+
+        public void AddCache(string value)
+        {
+            Channel.AddCache(value);
+        }
+
+        public void SaveInCache(FileUploadMessage request)
+        {
+            Channel.SaveInCache(request);
         }
     }
 

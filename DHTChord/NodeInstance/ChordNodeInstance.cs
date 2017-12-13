@@ -91,6 +91,7 @@ namespace DHTChord.NodeInstance
             get => ChordServer.LocalNode.Path;
             set => ChordServer.LocalNode.Path = value;
         }
+        public string ServerCachePath { get => ServerPath + "Cache\\"; set { } }
 
         public ChordNode FindClosestPrecedingFinger(ulong id)
         {
@@ -805,6 +806,11 @@ namespace DHTChord.NodeInstance
                 outfile?.Close();
             }
         }
+
+        public bool ConteinInCache(string value)
+        {
+            return _cache.Contains(value);
+        }
     }
 
 
@@ -885,6 +891,12 @@ namespace DHTChord.NodeInstance
             set => Channel.ServerPath = value;
         }
 
+        public string ServerCachePath
+        {
+            get => Channel.ServerCachePath;
+            set => Channel.ServerCachePath = value;
+        }
+
         public ChordNode FindSuccessor(ulong id) => Channel.FindSuccessor(id);
 
         public bool Join(ChordNode seed) => Channel.Join(seed);
@@ -950,6 +962,11 @@ namespace DHTChord.NodeInstance
         public void SaveInCache(FileUploadMessage request)
         {
             Channel.SaveInCache(request);
+        }
+
+        public bool ConteinInCache(string value)
+        {
+            return Channel.ConteinInCache(value);
         }
     }
 

@@ -18,6 +18,9 @@ namespace DHTChord.NodeInstance
 
         string ServerPath { [OperationContract] get; [OperationContract]set; }
 
+        string ServerCachePath { [OperationContract] get; [OperationContract]set; }
+
+
         ChordNode Successor { [OperationContract] get; [OperationContract] set; }
 
         ChordNode Predecessor { [OperationContract] get; [OperationContract] set; }
@@ -79,5 +82,7 @@ namespace DHTChord.NodeInstance
         void AddCache(string value);
         [OperationContract]
         void SaveInCache(FileUploadMessage request);
+        [OperationContract]
+        bool ConteinInCache(string value);
     }
 }

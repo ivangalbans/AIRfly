@@ -35,6 +35,12 @@ namespace Client
 
             var key = ChordServer.GetHash(fileName);
 
+            var instance = ChordServer.Instance(node);
+            if(instance.ConteinInCache(fileName))
+            {
+                return true;
+            }
+
             var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
 
 
@@ -49,11 +55,15 @@ namespace Client
                 request.Metadata = fileMetadata;
                 request.FileByteStream = fileStream;
 
-                ChordServer.Instance(node).AddCacheFile(request);
+                var nodeInstance = ChordServer.Instance(node);
+                nodeInstance.AddCacheFile(request);
                 return true;
             }
 
+
             return false;
         }
+
+        
     }
 }

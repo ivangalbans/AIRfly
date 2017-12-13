@@ -7,6 +7,8 @@ using DHTChord.NodeInstance;
 using System.IO;
 using System.Net;
 using DHTChord.Node;
+using DHTChord.Server;
+
 
 namespace Client
 {
@@ -14,7 +16,7 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            if (args.Length == 0) args = new string[] { "Send", "localhost", "7777" };
+            if (args.Length == 0) args = new string[] { "Find", "localhost", "6060", "010-imagine_dragons-underdog.mp3" };
             if(args[0] == "Send")
             {
                 string host = Dns.GetHostEntry(args[1]).HostName;
@@ -55,6 +57,10 @@ namespace Client
                 if (ClientSide.Find(fileName, node))
                 {
                     Console.WriteLine($"Find Succefully {fileName}");
+                    System.Media.SoundPlayer player = new System.Media.SoundPlayer();
+                    player.SoundLocation = ChordServer.Instance(node).ServerCachePath + fileName;
+                    player.Play();
+
                 }
                 else
                 {

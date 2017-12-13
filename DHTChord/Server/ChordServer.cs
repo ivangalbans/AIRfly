@@ -211,8 +211,7 @@ namespace DHTChord.Server
 
                 if (endpoints.Count > 0)
                 {
-                    Log(LogLevel.Info, "Discovery", $"{endpoints.Count} nodes found");
-                    return endpoints.Select(x => {
+                    var tmp = endpoints.Select(x => {
                         var inst = Instance(x.Address);
                         ChordNode ret = null;
                         if (ChordNodeInstance.IsInstanceValid(inst, "from FindServiceAddress"))
@@ -222,6 +221,17 @@ namespace DHTChord.Server
                         }
                         return ret;
                     }).Where(x => x != null).ToList();
+
+                    Log(LogLevel.Debug, "FindServiceAddress", $"Discovery {tmp.Count} nodes found");
+                    Console.WriteLine("****************************");
+                    foreach (var item in tmp)
+                    {
+                        Console.WriteLine(item);
+                    }
+                    Console.WriteLine("*****************************");
+
+                    return tmp;
+
                 }
                 else
                 {

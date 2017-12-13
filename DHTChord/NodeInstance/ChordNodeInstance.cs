@@ -492,12 +492,6 @@ namespace DHTChord.NodeInstance
                 try
                 {
                     SeedChache = ChordServer.FindServiceAddress();
-                    Console.WriteLine("******************************");
-                    foreach (var item in SeedChache)
-                    {
-                        Console.WriteLine(item);
-                    }
-                    Console.WriteLine("******************************");
                 }
                 catch (Exception e)
                 {

@@ -8,6 +8,7 @@ using System.Text;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
 using static DHTChord.Logger.Logger;
+using System.Collections.Generic;
 
 namespace DHTChord.Server
 {
@@ -185,7 +186,6 @@ namespace DHTChord.Server
                 Log(LogLevel.Error, "Navigation", "Invalid address (Null Argument)");
                 return null;
             }
-
             try
             {
                 return new ChordNodeInstanceClient(CreategBinding(), address);
@@ -199,7 +199,7 @@ namespace DHTChord.Server
             }
         }
 
-        public static EndpointAddress FindServiceAddress()
+        public static List<ChordNode> FindServiceAddress()
         {
             var discoveryClient = new DiscoveryClient(new UdpDiscoveryEndpoint());
             while (true)
@@ -213,7 +213,16 @@ namespace DHTChord.Server
                     if (endpoints.Count > 0)
                     {
                         Log(LogLevel.Info, "Discovery", $"{endpoints.Count} nodes found");
-                        return endpoints[0].Address;
+                        return endpoints.Select(x => {
+                            var inst = Instance(x.Address);
+                            ChordNode ret = null;
+                            if (ChordNodeInstance.IsInstanceValid(inst, "from FindServiceAddress"))
+                            {
+                                ret = inst.LocalNode != ChordServer.LocalNode ? inst.LocalNode : null;
+                                inst.Close();
+                            }
+                            return ret;
+                        }).Where(x => x != null).ToList();
                     }
                     else
                     {
@@ -300,6 +309,10 @@ namespace DHTChord.Server
             return null;
         }
 
+        public static bool SameRing(ChordNode a, ChordNode b)
+        {
+            return CallFindContainerKey(a, b.Id).Equals(b);
+        }
      
         public static Binding CreategBinding()
         {

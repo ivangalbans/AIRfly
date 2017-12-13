@@ -43,6 +43,8 @@ namespace DHTChord.NodeInstance
 
         public ChordNode SeedNode { get; set; }
 
+        public List<ChordNode> SeedChache { get; set; }
+
         public ChordNode Successor
         {
             get => SuccessorCache[0];
@@ -345,19 +347,22 @@ namespace DHTChord.NodeInstance
                         if (SeedNode != null)
                         {
                             ChordNode responsableSeedNode = FindContainerKey(SeedNode.Id);
+                            instance = ChordServer.Instance(SeedNode);
 
-                            if (!SeedNode.Equals(responsableSeedNode))
+                            if (IsInstanceValid(instance, "REJOIN") && !ChordServer.SameRing(SeedNode, responsableSeedNode))
                             {
-                                instance = ChordServer.Instance(SeedNode);
-                                if (IsInstanceValid(instance, "REJOIN"))
+                                Log(LogLevel.Debug, "ReJoin",
+                                    $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
+                                Join(SeedNode);
+                            }
+                            else
+                            {
+                                foreach (var nodeCache in SeedChache)
                                 {
-                                    Log(LogLevel.Debug, "ReJoin",
-                                        $"Unable to contact initial seed node {SeedNode}.  Re-Joining...");
-                                    Join(SeedNode);
+                                    var responsableNodeCache = FindContainerKey(nodeCache.Id);
+                                    if (!ChordServer.SameRing(nodeCache, responsableNodeCache) && Join(nodeCache))
+                                        break;
                                 }
-                                //!!!!!!!!!!!!!!!TODO!!!!!!!!!!!!!!!!!!!!!!!!!!
-                                // otherwise, in the future, there will be a cache of seed nodes to check/join from...
-                                // as it may be the case that the seed node simply has disconnected from the network.
                             }
                         }
                     }

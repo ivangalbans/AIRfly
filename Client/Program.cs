@@ -57,8 +57,20 @@ namespace Client
                 if (ClientSide.Find(fileName, node))
                 {
                     Console.WriteLine($"Find Succefully {fileName}");
+
+                    string pathtoDownload = Directory.GetCurrentDirectory()+ "\\Download\\";
+                    if (!Directory.Exists(pathtoDownload))
+                        Directory.CreateDirectory(pathtoDownload);
+
+
+                    var stream = ClientSide.Download(node, fileName, pathtoDownload);
+
+                    stream.Position = 0;
+
                     System.Media.SoundPlayer player = new System.Media.SoundPlayer();
-                    player.SoundLocation = ChordServer.Instance(node).ServerCachePath + fileName;
+                    player.Stream = null;
+                    player.Stream = stream;
+
                     player.Play();
 
                 }

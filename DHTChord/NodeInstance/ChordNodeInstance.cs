@@ -608,6 +608,7 @@ namespace DHTChord.NodeInstance
 
         public void AddCache(string value)
         {
+            //TODO: Borrar a los n
             _cache.Enqueue(value);
         }
 
@@ -757,12 +758,17 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        public Stream GetRequest(string file)
+        public Stream GetStream(string file, bool chache = false)
         {
-            Stream fileStream = new FileStream(ServerPath + file, FileMode.Open, FileAccess.Read);
+            Stream fileStream;
+            if (chache)            
+                fileStream = new FileStream(ServerCachePath + file, FileMode.Open, FileAccess.Read);                           
+            else
+                fileStream = new FileStream(ServerPath + file, FileMode.Open, FileAccess.Read);
 
             return fileStream;            
         }
+        
 
         private readonly Queue<string> _cache = new Queue<string>();
 
@@ -775,7 +781,7 @@ namespace DHTChord.NodeInstance
         public void SaveInCache(FileUploadMessage request)
         {
             //TODO:Lo mismo que UploadFile
-            string serverFileName = ServerPath + "Cache\\" + request.Metadata.RemoteFileName;
+            string serverFileName = ServerCachePath + request.Metadata.RemoteFileName;
 
             FileStream outfile = null;
             try
@@ -944,9 +950,9 @@ namespace DHTChord.NodeInstance
             return Channel.EraseFile(key);
         }
 
-        public Stream GetRequest(string file)
+        public Stream GetStream(string file, bool cache)
         {
-            return Channel.GetRequest(file);
+            return Channel.GetStream(file, cache);
         }
 
         public void AddCacheFile(FileUploadMessage request)

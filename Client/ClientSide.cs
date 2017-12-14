@@ -46,7 +46,7 @@ namespace Client
 
             if(conteinerNodeInstance.ContainKey(key))
             {
-                var fileStream = conteinerNodeInstance.GetRequest(fileName);
+                var fileStream = conteinerNodeInstance.GetStream(fileName,false);
 
                 var request = new FileUploadMessage();
 
@@ -62,6 +62,35 @@ namespace Client
 
 
             return false;
+        }
+
+        public static Stream Download(ChordNode node, string file, string pathToDownload)
+        {
+            var fileStream = ChordServer.Instance(node).GetStream(file, true);
+
+            var request = new FileUploadMessage();
+
+            var fileMetadata = new FileMetaData(file);
+            request.Metadata = fileMetadata;
+            request.FileByteStream = fileStream;
+
+            FileStream outfile = null;
+
+            outfile = new FileStream(pathToDownload + file , FileMode.Create);
+
+
+            const int bufferSize = 65536; // 64K
+
+            byte[] buffer = new byte[bufferSize];
+            int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+
+            while (bytesRead > 0)
+            {
+                outfile.Write(buffer, 0, bytesRead);
+                bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+            }
+            return outfile;
+
         }
 
         

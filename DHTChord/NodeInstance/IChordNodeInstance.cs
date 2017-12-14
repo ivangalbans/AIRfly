@@ -75,7 +75,7 @@ namespace DHTChord.NodeInstance
         [OperationContract]
         bool EraseFile(ulong key);
         [OperationContract]
-        Stream GetRequest(string file);
+        Stream GetStream(string file, bool cache);
         [OperationContract]
         void AddCacheFile(FileUploadMessage request);
         [OperationContract]

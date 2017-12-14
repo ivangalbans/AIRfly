@@ -50,20 +50,22 @@ namespace Tester1
             //    }
             //}
 
-            if (args.Length == 0) args = new string[1] { "3030" };
-            if (args.Length == 2)
+            if (args.Length == 0) args = new string[] { "3030", "D:\\A" };
+            if (args.Length == 3)
             {
                 System.Console.WriteLine("Start auto");
                 var tmp = ChordServer.FindServiceAddress();
                 var node = ChordServer.Instance(tmp[0]).LocalNode;
-                StartServer.Start(int.Parse(args[0]), "", node);
+                StartServer.Start(int.Parse(args[0]), args[1], node);
             }
-            else if (args.Length == 1)
-                StartServer.Start(int.Parse(args[0]), "");
-            else
+            else if (args.Length == 2)
             {
-                StartServer.Start(int.Parse(args[0]), "", new ChordNode(args[1], int.Parse(args[2])));
+                StartServer.Start(int.Parse(args[0]), args[1]);
             }
+            //else
+            //{
+            //    StartServer.Start(int.Parse(args[0]), "", new ChordNode(args[1], int.Parse(args[2])));
+            //}
         }
     }
 }

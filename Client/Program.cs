@@ -16,14 +16,18 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            if (args.Length == 0) args = new string[] { "Find", "localhost", "6060", "010-imagine_dragons-underdog.mp3" };
+            if (args.Length == 0) args = new string[] { "Find", "009-imagine_dragons-bleeding_out.wav" };
             if(args[0] == "Send")
             {
-                string host = Dns.GetHostEntry(args[1]).HostName;
-                int port = int.Parse(args[2]);
-                var node = new ChordNode(host, port);
+                //string host = Dns.GetHostEntry(args[1]).HostName;
+                //int port = int.Parse(args[2]);
+                //var node = new ChordNode(host, port);
                 //TODO: node = discovery
-            
+
+                var tmp = ChordServer.FindServiceAddress();
+                var node = ChordServer.Instance(tmp[0]).LocalNode;
+
+
                 string[] input = Console.ReadLine().Split(' ');
                 if(input[0] == "1")//all directory
                 {
@@ -47,14 +51,19 @@ namespace Client
             }
             if(args[0] == "Find")
             {
-                string host = Dns.GetHostEntry(args[1]).HostName;
-                int port = int.Parse(args[2]);
-                var node = new ChordNode(host, port);
+                //string host = Dns.GetHostEntry(args[1]).HostName;
+                //int port = int.Parse(args[2]);
+                //var node = new ChordNode(host, port);
                 //TODO: node = discovery
 
-                string fileName = args[3];
+                var tmp = ChordServer.FindServiceAddress();
+                var node = ChordServer.Instance(tmp[0]).LocalNode;
 
-                if (ClientSide.Find(fileName, node))
+
+                string fileName = args[1];
+
+                var result = ClientSide.Find(fileName, node);
+                if (result != Download.Error)
                 {
                     Console.WriteLine($"Find Succefully {fileName}");
 
@@ -62,18 +71,16 @@ namespace Client
                     if (!Directory.Exists(pathtoDownload))
                         Directory.CreateDirectory(pathtoDownload);
 
-
-                    var stream = ClientSide.Download(node, fileName, pathtoDownload);
+                    Stream stream = null;
+                    if (result == Download.Cache)
+                         stream = ClientSide.Download(node, fileName, pathtoDownload, true);
+                    if (result == Download.DataBase)
+                        stream = ClientSide.Download(node, fileName, pathtoDownload, false);
 
                     stream.Position = 0;
-
                     System.Media.SoundPlayer player = new System.Media.SoundPlayer(stream);
-                    //player.Stream = null;
-                    //player.Stream = stream;
 
                     player.Play();
-
-                    //player.Stop();
                 }
                 else
                 {

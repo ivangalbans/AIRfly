@@ -11,6 +11,12 @@ using DHTChord.Node;
 
 namespace Client
 {
+    public enum Download
+    {
+        Cache,
+        DataBase,
+        Error
+    }
     public static class ClientSide
     {
         public static void Send(string fileName, string path, ChordNode node)
@@ -30,22 +36,29 @@ namespace Client
             ChordServer.Instance(conteinerNode).AddNewFile(request);            
         }
 
-        public static bool Find(string fileName, ChordNode node)
+        public static Download Find(string fileName, ChordNode node)
         {
 
             var key = ChordServer.GetHash(fileName);
 
             var instance = ChordServer.Instance(node);
+            if(instance.ContainKey(key))
+            {
+                return Client.Download.DataBase;
+            }
+
             if(instance.ConteinInCache(fileName))
             {
-                return true;
+                return Client.Download.Cache;
             }
 
             var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
 
+            
 
             if(conteinerNodeInstance.ContainKey(key))
             {
+
                 var fileStream = conteinerNodeInstance.GetStream(fileName,false);
 
                 var request = new FileUploadMessage();
@@ -57,16 +70,16 @@ namespace Client
 
                 var nodeInstance = ChordServer.Instance(node);
                 nodeInstance.AddCacheFile(request);
-                return true;
+                return Client.Download.Cache;
             }
 
 
-            return false;
+            return Client.Download.Error;
         }
 
-        public static Stream Download(ChordNode node, string file, string pathToDownload)
+        public static Stream Download(ChordNode node, string file, string pathToDownload, bool from)
         {
-            var fileStream = ChordServer.Instance(node).GetStream(file, true);
+            var fileStream = ChordServer.Instance(node).GetStream(file, from);
 
             var request = new FileUploadMessage();
 

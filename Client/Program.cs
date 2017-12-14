@@ -67,12 +67,13 @@ namespace Client
 
                     stream.Position = 0;
 
-                    System.Media.SoundPlayer player = new System.Media.SoundPlayer();
-                    player.Stream = null;
-                    player.Stream = stream;
+                    System.Media.SoundPlayer player = new System.Media.SoundPlayer(stream);
+                    //player.Stream = null;
+                    //player.Stream = stream;
 
                     player.Play();
 
+                    //player.Stop();
                 }
                 else
                 {

@@ -609,6 +609,11 @@ namespace DHTChord.NodeInstance
         public void AddCache(string value)
         {
             //TODO: Borrar a los n
+            if(_cache.Count == 5)
+            {
+                var file = _cache.Dequeue();
+                File.Delete(ServerCachePath + file);
+            }
             _cache.Enqueue(value);
         }
 

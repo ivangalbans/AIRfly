@@ -17,12 +17,9 @@ namespace Client
         static void Main(string[] args)
         {
             if (args.Length == 0) args = new string[] { "Find", "009-imagine_dragons-bleeding_out.wav" };
-            if(args[0] == "Send")
+            if (args[0] == "Send")
             {
-                //string host = Dns.GetHostEntry(args[1]).HostName;
-                //int port = int.Parse(args[2]);
-                //var node = new ChordNode(host, port);
-                //TODO: node = discovery
+             
 
                 var tmp = ChordServer.FindServiceAddress();
                 var node = ChordServer.Instance(tmp[0]).LocalNode;
@@ -51,10 +48,7 @@ namespace Client
             }
             if(args[0] == "Find")
             {
-                //string host = Dns.GetHostEntry(args[1]).HostName;
-                //int port = int.Parse(args[2]);
-                //var node = new ChordNode(host, port);
-                //TODO: node = discovery
+         
 
                 var tmp = ChordServer.FindServiceAddress();
                 var node = ChordServer.Instance(tmp[0]).LocalNode;

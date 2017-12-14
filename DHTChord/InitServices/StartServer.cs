@@ -15,10 +15,10 @@ namespace DHTChord.InitServices
         public static void Start(int port, string path, ChordNode seed = null)
         {
             if(!Directory.Exists(path))
-            {
                 Directory.CreateDirectory(path);
+            if(!Directory.Exists(path + "Cache\\"))
                 Directory.CreateDirectory(path + "Cache\\");
-            }
+
             ChordServer.LocalNode = new ChordNode(Dns.GetHostName(), port) {Path = path};
             Uri baseAddress = new Uri($"net.tcp://{ChordServer.LocalNode.Host}:{port}/chord");
             using (ServiceHost serviceHost = new ServiceHost(typeof(ChordNodeInstance), baseAddress))

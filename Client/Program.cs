@@ -17,7 +17,7 @@ namespace Client
         static void Main(string[] args)
         {
             if (args.Length == 0) args = new string[] { "Find", "009-imagine_dragons-bleeding_out.wav" };
-            if (args[0] == "Send")
+            if (args[0] == "Upload")
             {
              
 
@@ -46,7 +46,7 @@ namespace Client
                     ClientSide.Send(fileName, path, node);
                 }
             }
-            if(args[0] == "Find")
+            if(args[0] == "Download")
             {
          
 
@@ -84,6 +84,22 @@ namespace Client
                 {
                     Console.WriteLine($"{fileName} not found");
                 }
+            }
+            if(args[0] == "Show")
+            {
+                var tmp = ChordServer.FindServiceAddress();
+                var node = ChordServer.Instance(tmp[0]).LocalNode;
+
+                var list = ClientSide.GetAllFilesInSystem(node);
+
+                foreach (var item in list)
+                {
+                    Console.WriteLine(item);
+                }
+            }
+            if(args[0] == "Listend")
+            {
+                //TODO:
             }
         }
     }

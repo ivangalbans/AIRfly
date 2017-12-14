@@ -106,6 +106,30 @@ namespace Client
 
         }
 
-        
+        public static IEnumerable<string> GetAllFilesInSystem(ChordNode node)
+        {
+            var initInstance = ChordServer.Instance(node);
+
+            SortedSet<string> result = new SortedSet<string>();
+
+            foreach (var item in initInstance.GetDb())
+            {
+                result.Add(item);
+            }
+
+            initInstance = ChordServer.Instance(initInstance.Successor);
+
+            while(initInstance.Id != node.Id)
+            {
+                foreach (var item in initInstance.GetDb())
+                {
+                    result.Add(item);
+                }
+
+                initInstance = ChordServer.Instance(initInstance.Successor);
+            }
+
+            return result;
+        }
     }
 }

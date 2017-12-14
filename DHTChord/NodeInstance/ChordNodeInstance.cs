@@ -577,15 +577,7 @@ namespace DHTChord.NodeInstance
                     instance.Close();
             }
         }
-
-        //public string path = "C:\\AIRfly\\";
-        //private static string replication = path + "replication\\";
-
-
-
-
-
-
+        
         private readonly SortedList<ulong, string> _db = new SortedList<ulong, string>();
 
 
@@ -608,7 +600,7 @@ namespace DHTChord.NodeInstance
 
         public void AddCache(string value)
         {
-            //TODO: Borrar a los n
+            //TODO: Delete n
             if(_cache.Count == 5)
             {
                 var file = _cache.Dequeue();
@@ -794,6 +786,12 @@ namespace DHTChord.NodeInstance
         {
             return _cache.Contains(value);
         }
+
+        public IEnumerable<string> GetDb()
+        {
+            IEnumerable<string> copy = new List<string>(_db.Values);
+            return copy;
+        }
     }
 
 
@@ -945,6 +943,11 @@ namespace DHTChord.NodeInstance
         public bool ConteinInCache(string value)
         {
             return Channel.ConteinInCache(value);
+        }
+
+        public IEnumerable<string> GetDb()
+        {
+            return Channel.GetDb();
         }
     }
 

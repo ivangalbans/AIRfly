@@ -79,9 +79,7 @@ namespace DHTChord.NodeInstance
         [OperationContract]
         void AddCacheFile(FileUploadMessage request);
         [OperationContract]
-        void AddCache(string value);
-        [OperationContract]
-        void SaveInCache(FileUploadMessage request);
+        void AddCache(string value);        
         [OperationContract]
         bool ConteinInCache(string value);
     }

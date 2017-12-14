@@ -726,7 +726,12 @@ namespace DHTChord.NodeInstance
 
         public void UploadFile(FileUploadMessage request)
         {
-            string serverFileName = ServerPath + request.Metadata.RemoteFileName;
+            string serverFileName;
+
+            if (request.Cache)
+                serverFileName = ServerCachePath + request.Metadata.RemoteFileName;
+            else
+                serverFileName = ServerPath + request.Metadata.RemoteFileName;
 
             FileStream outfile = null;
             try
@@ -774,45 +779,12 @@ namespace DHTChord.NodeInstance
 
 
         public void AddCacheFile(FileUploadMessage request)
-        {            
-            AddCache(request.Metadata.RemoteFileName);
-            SaveInCache(request);
-        }
-        public void SaveInCache(FileUploadMessage request)
         {
-            //TODO:Lo mismo que UploadFile
-            string serverFileName = ServerCachePath + request.Metadata.RemoteFileName;
-
-            FileStream outfile = null;
-            try
-            {
-                outfile = new FileStream(serverFileName, FileMode.Create);
-
-
-                const int bufferSize = 65536; // 64K
-
-                byte[] buffer = new byte[bufferSize];
-                int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
-
-                while (bytesRead > 0)
-                {
-                    outfile.Write(buffer, 0, bytesRead);
-                    bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
-                }
-
-                Log(LogLevel.Info, "Caching Data", $"{Host} {Port} Recive Succefully {request.Metadata.RemoteFileName}");
-
-            }
-            catch (IOException e)
-            {
-                Log(LogLevel.Error, "Cachin Data", $"Error while Recive {serverFileName}:   {e}");
-            }
-            finally
-            {
-                outfile?.Close();
-            }
+            request.Cache = true;
+            AddCache(request.Metadata.RemoteFileName);
+            UploadFile(request);
         }
-
+      
         public bool ConteinInCache(string value)
         {
             return _cache.Contains(value);
@@ -965,11 +937,6 @@ namespace DHTChord.NodeInstance
             Channel.AddCache(value);
         }
 
-        public void SaveInCache(FileUploadMessage request)
-        {
-            Channel.SaveInCache(request);
-        }
-
         public bool ConteinInCache(string value)
         {
             return Channel.ConteinInCache(value);
@@ -985,6 +952,8 @@ namespace DHTChord.NodeInstance
         public FileMetaData Metadata;
         [MessageBodyMember(Order = 1)]
         public Stream FileByteStream;
+        [DataMember(Name = "Cache", Order = 2, IsRequired = false)]
+        public bool Cache;
     }
 
 

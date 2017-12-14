@@ -28,6 +28,8 @@ namespace DHTChord.Logger
         {
             lock (Obj)
             {
+                if (logLevel == LogLevel.Debug)
+                    return;
                 ConsoleColor originColor = Console.ForegroundColor;
                 ConsoleColor color = ConsoleColor.Black;
                 if (logLevel == LogLevel.Error)
@@ -50,6 +52,7 @@ namespace DHTChord.Logger
                 Console.ForegroundColor = color;
                 Console.Write($" {logArea}: ");
                 Console.ForegroundColor = originColor;
+
                 Console.WriteLine($"{message}");
             }
         }

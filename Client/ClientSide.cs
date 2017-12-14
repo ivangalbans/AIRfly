@@ -1,10 +1,14 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DHTChord.Server;
 using System.IO;
+using System.Threading;
+using DHTChord.Logger;
 using DHTChord.NodeInstance;
 using DHTChord.Node;
 
@@ -36,20 +40,20 @@ namespace Client
             ChordServer.Instance(conteinerNode).AddNewFile(request);            
         }
 
-        public static Download Find(string fileName, ChordNode node)
+        public static void Find(string fileName, ChordNode node, string pathToDownload)
         {
-
+            var where = Client.Download.Error;
             var key = ChordServer.GetHash(fileName);
 
             var instance = ChordServer.Instance(node);
             if(instance.ContainKey(key))
             {
-                return Client.Download.DataBase;
+                where = Client.Download.DataBase;
             }
 
             if(instance.ConteinInCache(fileName))
             {
-                return Client.Download.Cache;
+                where = Client.Download.Cache;
             }
 
             var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
@@ -70,14 +74,20 @@ namespace Client
 
                 var nodeInstance = ChordServer.Instance(node);
                 nodeInstance.AddCacheFile(request);
-                return Client.Download.Cache;
+                where = Client.Download.Cache;
             }
 
 
-            return Client.Download.Error;
+            if (Client.Download.Error != where)
+            {
+                if (where == Client.Download.Cache)
+                    Download(node, fileName,pathToDownload, true);
+                else
+                    Download(node, fileName, pathToDownload,false);
+            }
         }
 
-        public static Stream Download(ChordNode node, string file, string pathToDownload, bool from)
+        public static void Download(ChordNode node, string file, string pathToDownload, bool from)
         {
             var fileStream = ChordServer.Instance(node).GetStream(file, from);
 
@@ -102,7 +112,6 @@ namespace Client
                 outfile.Write(buffer, 0, bytesRead);
                 bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
             }
-            return outfile;
 
         }
 
@@ -131,5 +140,78 @@ namespace Client
 
             return result;
         }
+    }
+
+    public class ClientInstance
+    {
+        private readonly BackgroundWorker _findServers = new BackgroundWorker();
+
+        private List<ChordNode> _nodeCache = new List<ChordNode>();
+
+        public ClientInstance()
+        {
+            _nodeCache = ChordServer.FindServiceAddress();
+            _findServers.DoWork += Discover;
+            _findServers.WorkerSupportsCancellation = true;
+            _findServers.RunWorkerAsync();
+        }
+
+        public void Start()
+        {
+            while (true)
+            {
+                var o = Console.ReadLine()?.Split(' ');
+                if (o != null && o[0] == "download")
+                {
+                    ClientSide.Find(o[1],_nodeCache[0],Directory.GetCurrentDirectory()+ "\\Download\\");
+                    Logger.Log(Logger.LogLevel.Info, "Download Finish", $"Download a new file {o[1]}");
+                }
+                else if (o != null && o[0] == "upload")
+                {
+                    if (o[1] == "-d")
+                    {
+                        var directory = Directory.EnumerateFiles(o[2]);
+                        foreach (var file in directory)
+                        {
+                            string fileName = Path.GetFileName(file);
+                            ClientSide.Send(fileName, file, _nodeCache[0]);                            
+                        }
+                        Logger.Log(Logger.LogLevel.Info, "Upload Finish", $"Upload a new directory {o[2]}");
+
+                    }
+                    else if (o[1] == "-f")
+                    {
+                        string path = o[2];
+                        string fileName = Path.GetFileName(path);
+
+                        ClientSide.Send(fileName, path, _nodeCache[0]);
+                        Logger.Log(Logger.LogLevel.Info, "Upload Finish", $"Upload a new file {fileName}");
+
+                    }
+                }
+                else if (o != null && o[0] == "show")
+                {
+                    var result = ClientSide.GetAllFilesInSystem(_nodeCache[0]);
+                    foreach (var file in result)
+                    {
+                        Console.WriteLine(file);
+                    }
+
+                }
+            }
+        }
+
+        private void Discover(object sender, DoWorkEventArgs ea)
+        {
+            var me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                Thread.Sleep(10000);
+                _nodeCache= ChordServer.FindServiceAddress();
+            }
+        }
+
+
     }
 }

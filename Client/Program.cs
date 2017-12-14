@@ -74,7 +74,11 @@ namespace Client
                     stream.Position = 0;
                     System.Media.SoundPlayer player = new System.Media.SoundPlayer(stream);
 
+                    
                     player.Play();
+                    int i = 0;
+                    while (i < player.Stream.Length) ;
+                    
                 }
                 else
                 {

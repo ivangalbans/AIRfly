@@ -81,7 +81,7 @@ namespace DHTChord.NodeInstance
         [OperationContract]
         void AddCache(string value);        
         [OperationContract]
-        bool ConteinInCache(string value);
+        bool ContainInCache(string value);
         [OperationContract]
         IEnumerable<string> GetDb();
     }

@@ -595,7 +595,6 @@ namespace DHTChord.NodeInstance
         public void AddDb(ulong key, string value)
         {
             _db.Add(key, value);
-            Console.WriteLine(_db.Count);
         }
 
         public void AddCache(string value)
@@ -782,7 +781,7 @@ namespace DHTChord.NodeInstance
             UploadFile(request);
         }
       
-        public bool ConteinInCache(string value)
+        public bool ContainInCache(string value)
         {
             return _cache.Contains(value);
         }
@@ -940,9 +939,9 @@ namespace DHTChord.NodeInstance
             Channel.AddCache(value);
         }
 
-        public bool ConteinInCache(string value)
+        public bool ContainInCache(string value)
         {
-            return Channel.ConteinInCache(value);
+            return Channel.ContainInCache(value);
         }
 
         public IEnumerable<string> GetDb()

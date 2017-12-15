@@ -49,42 +49,33 @@ namespace Client
             if(instance.ContainKey(key))
             {
                 where = Client.Download.DataBase;
+                
             }
-
-            if(instance.ConteinInCache(fileName))
+            else if(instance.ContainInCache(fileName))
             {
                 where = Client.Download.Cache;
             }
-
-            var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
-
-            
-
-            if(conteinerNodeInstance.ContainKey(key))
+            else
             {
+                var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
 
-                var fileStream = conteinerNodeInstance.GetStream(fileName,false);
+                if (conteinerNodeInstance.ContainKey(key))
+                {
 
-                var request = new FileUploadMessage();
+                    var fileStream = conteinerNodeInstance.GetStream(fileName, false);
+                    var request = new FileUploadMessage();
+                    var fileMetadata = new FileMetaData(fileName);
 
+                    request.Metadata = fileMetadata;
+                    request.FileByteStream = fileStream;
 
-                var fileMetadata = new FileMetaData(fileName);
-                request.Metadata = fileMetadata;
-                request.FileByteStream = fileStream;
-
-                var nodeInstance = ChordServer.Instance(node);
-                nodeInstance.AddCacheFile(request);
-                where = Client.Download.Cache;
+                    instance.AddCacheFile(request);
+                    where = Client.Download.Cache;
+                }
             }
-
 
             if (Client.Download.Error != where)
-            {
-                if (where == Client.Download.Cache)
-                    Download(node, fileName,pathToDownload, true);
-                else
-                    Download(node, fileName, pathToDownload,false);
-            }
+                Download(node, fileName,pathToDownload, where == Client.Download.Cache);
         }
 
         public static void Download(ChordNode node, string file, string pathToDownload, bool from)

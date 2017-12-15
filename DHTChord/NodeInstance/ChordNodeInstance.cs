@@ -746,12 +746,12 @@ namespace DHTChord.NodeInstance
                     bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
                 }
 
-                Log(LogLevel.Info, "Data Recive", $"{Host} {Port} Recive Succefully {request.Metadata.RemoteFileName}");
+                Log(LogLevel.Info, "Data Receive", $"Succefully {request.Metadata.RemoteFileName}");
 
             }
             catch (IOException e)
             {
-                Log(LogLevel.Error, "Recive Data", $"Error while Recive {serverFileName}:   {e}");
+                Log(LogLevel.Error, "Receive Data", $"Error while Receive {serverFileName}:   {e}");
             }
             finally
             {

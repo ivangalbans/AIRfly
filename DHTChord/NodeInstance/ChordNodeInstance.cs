@@ -339,7 +339,7 @@ namespace DHTChord.NodeInstance
                     if (preInstance != null && preInstance.State != CommunicationState.Closed)
                         preInstance.Close();
                 }
-                Thread.Sleep(3000);
+                Thread.Sleep(30000);
             }
         }
 
@@ -369,7 +369,7 @@ namespace DHTChord.NodeInstance
                 {
                     Log(LogLevel.Error, "Maintenance", $"Error occured during ReJoin ({e.Message})");
                 }
-                Thread.Sleep(5000);
+                Thread.Sleep(50000);
             }
         }
 
@@ -404,7 +404,7 @@ namespace DHTChord.NodeInstance
 
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(10000);
             }
         }
 
@@ -484,7 +484,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(10000);
             }
         }
 
@@ -503,7 +503,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "UpdateSeedCache", $"Update Seed Cache error: {e.Message}");
                 }
             }
-            Thread.Sleep(5000);
+            Thread.Sleep(30000);
         }
 
         public void Notify(ChordNode callingNode)
@@ -543,7 +543,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(10000);
             }
         }
 
@@ -685,7 +685,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during ReplicateStorage ({e.Message})");
                 }
 
-                Thread.Sleep(3000);
+                Thread.Sleep(30000);
             }
         }
 

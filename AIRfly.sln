@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DHTChord", "DHTChord\DHTChord.csproj", "{89108981-C90E-4D81-BCEA-2F1DAD007252}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester1", "Tester1\Tester1.csproj", "{121F0FF0-A725-494C-82F9-47B734C6D4E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{F1BD1055-586D-4C0C-91B1-45308A9865F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIRflyWebApp", "AIRflyWebApp\AIRflyWebApp.csproj", "{80ED8E32-B594-428C-839E-1551CBFA88BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{F1BD1055-586D-4C0C-91B1-45308A9865F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1BD1055-586D-4C0C-91B1-45308A9865F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1BD1055-586D-4C0C-91B1-45308A9865F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80ED8E32-B594-428C-839E-1551CBFA88BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80ED8E32-B594-428C-839E-1551CBFA88BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80ED8E32-B594-428C-839E-1551CBFA88BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80ED8E32-B594-428C-839E-1551CBFA88BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -39,7 +39,7 @@ namespace AIRflyWebApp.Controllers
                
             }
            
-            return Ok(new { count = files.Count, size, filePath });
+            return new RedirectToActionResult("AllMusic", "Home", new { });
         }
 
 

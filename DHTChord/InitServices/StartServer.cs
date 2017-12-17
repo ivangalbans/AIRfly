@@ -29,7 +29,8 @@ namespace DHTChord.InitServices
                 serviceHost.Open();
 
 
-                var instance = ChordServer.Instance(ChordServer.LocalNode);                
+                var instance = ChordServer.Instance(ChordServer.LocalNode);
+                instance.ReloadDb();
                 instance.Join(seed);
 
                 while (true)

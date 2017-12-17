@@ -19,7 +19,7 @@ namespace AIRflyWebApp
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>().UseUrls("http://192.168.43.131:80", "http://localhost:12465")
+                .UseStartup<Startup>()//.UseUrls("http://192.168.43.131:80", "http://localhost:12465")
                 .Build();
     }
 }

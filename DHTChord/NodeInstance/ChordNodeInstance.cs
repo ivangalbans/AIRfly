@@ -791,6 +791,21 @@ namespace DHTChord.NodeInstance
             IEnumerable<string> copy = new List<string>(_db.Values);
             return copy;
         }
+
+        public void ReloadDb()
+        {
+            var directory = Directory.EnumerateFiles(ServerPath);
+            foreach (var f in directory)
+            {
+                var key = ChordServer.GetHash(Path.GetFileName(f));
+                AddDb(key, Path.GetFileName(f));
+            }
+            directory = Directory.EnumerateFiles(ServerCachePath);
+            foreach (var c in directory)
+            {
+                AddCache(Path.GetFileName(c));
+            }
+        }
     }
 
 
@@ -947,6 +962,11 @@ namespace DHTChord.NodeInstance
         public IEnumerable<string> GetDb()
         {
             return Channel.GetDb();
+        }
+
+        public void ReloadDb()
+        {
+            Channel.ReloadDb();
         }
     }
 

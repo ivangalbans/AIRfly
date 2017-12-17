@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DHTChord.Node;
 using DHTChord.NodeInstance;
 using DHTChord.Server;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace AIRflyWebApp.AIRfly
@@ -41,26 +42,25 @@ namespace AIRflyWebApp.AIRfly
             return nodes;
         }
 
-        public void SendFile(string fileName, string path)
+        public void SendFile(IFormFile fileStream)
         {
             var node = GetNodes()[0];
 
-            var key = ChordServer.GetHash(fileName);
+            var key = ChordServer.GetHash(fileStream.FileName);
 
-            Stream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
 
             var request = new FileUploadMessage();
 
-            var fileMetadata = new FileMetaData(fileName);
+            var fileMetadata = new FileMetaData(fileStream.FileName);
             request.Metadata = fileMetadata;
-            request.FileByteStream = fileStream;
+            request.FileByteStream = fileStream.OpenReadStream();
 
             var conteinerNode = ChordServer.CallFindContainerKey(node, key);
 
             ChordServer.Instance(conteinerNode).AddNewFile(request);
         }
 
-        public void FindFile(string fileName, string pathToDownload)
+        public Stream FindFile(string fileName)
         {
             var node = GetNodes()[0];
 
@@ -97,34 +97,33 @@ namespace AIRflyWebApp.AIRfly
             }
 
             if (AIRfly.Download.Error != where)
-                Download(node, fileName, pathToDownload, where == AIRfly.Download.Cache);
+               return Download(node, fileName, where == AIRfly.Download.Cache);
+            return null;
         }
 
-        private static void Download(ChordNode node, string file, string pathToDownload, bool from)
+        private static Stream Download(ChordNode node, string file, bool from)
         {
-            var fileStream = ChordServer.Instance(node).GetStream(file, from);
+            return ChordServer.Instance(node).GetStream(file, from);
 
-            var request = new FileUploadMessage();
+            //var request = new FileUploadMessage();
 
-            var fileMetadata = new FileMetaData(file);
-            request.Metadata = fileMetadata;
-            request.FileByteStream = fileStream;
-
-            FileStream outfile = null;
-
-            outfile = new FileStream(pathToDownload + file, FileMode.Create);
+            //var fileMetadata = new FileMetaData(file);
+            //request.Metadata = fileMetadata;
+            //request.FileByteStream = fileStream;
 
 
-            const int bufferSize = 65536; // 64K
 
-            byte[] buffer = new byte[bufferSize];
-            int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
 
-            while (bytesRead > 0)
-            {
-                outfile.Write(buffer, 0, bytesRead);
-                bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
-            }
+            //const int bufferSize = 65536; // 64K
+
+            //byte[] buffer = new byte[bufferSize];
+            //int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+
+            //while (bytesRead > 0)
+            //{
+            //    outfile.Write(buffer, 0, bytesRead);
+            //    bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
+            //}
 
         }
 

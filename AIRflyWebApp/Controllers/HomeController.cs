@@ -38,8 +38,15 @@ namespace AIRflyWebApp.Controllers
         {
             ViewData["Message"] = "Your contact page.";
 
-            service.SendFile("text.txt", @"D:\text.txt");
+            var directory = Directory.EnumerateFiles(@"D:\toSend");
+           
 
+            return View();
+        }
+        public IActionResult AllMusic()
+        {
+            ViewBag.songs = service.GetAllFilesInSystem();
+            
             return View();
         }
 

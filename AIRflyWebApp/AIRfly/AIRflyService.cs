@@ -34,7 +34,7 @@ namespace AIRflyWebApp.AIRfly
             var nodes = cache.GetOrCreate(cacheName, e =>
             {
                 e.SetOptions(new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
+                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
 
                 return ChordServer.FindServiceAddress();
             });
@@ -44,60 +44,103 @@ namespace AIRflyWebApp.AIRfly
 
         public void SendFile(IFormFile fileStream)
         {
-            var node = GetNodes()[0];
+            var node = GetValidNode();
 
-            var key = ChordServer.GetHash(fileStream.FileName);
+            try
+            {
+                if(node != null)
+                {
+                    var key = ChordServer.GetHash(fileStream.FileName);
 
 
-            var request = new FileUploadMessage();
+                    var request = new FileUploadMessage();
 
-            var fileMetadata = new FileMetaData(fileStream.FileName);
-            request.Metadata = fileMetadata;
-            request.FileByteStream = fileStream.OpenReadStream();
+                    var fileMetadata = new FileMetaData(fileStream.FileName);
+                    request.Metadata = fileMetadata;
+                    request.FileByteStream = fileStream.OpenReadStream();
 
-            var conteinerNode = ChordServer.CallFindContainerKey(node, key);
+                    var conteinerNode = ChordServer.CallFindContainerKey(node, key);
 
-            ChordServer.Instance(conteinerNode).AddNewFile(request);
+                    ChordServer.Instance(conteinerNode).AddNewFile(request);
+                }
+            }
+            catch (Exception e)
+            {
+                DHTChord.Logger.Logger.Log(DHTChord.Logger.Logger.LogLevel.Error, "Sending file", $"Error during sending file {fileStream.FileName} {e.ToString()}");
+                SendFile(fileStream);
+            }
+            
+        }
+
+        private ChordNode GetValidNode()
+        {
+            var list = GetNodes();
+
+            ChordNode node = null;
+
+            foreach (var n in list)
+            {
+                if (ChordNodeInstance.IsInstanceValid(ChordServer.Instance(n), "send file"))
+                {
+                    node = n;
+                    break;
+                }
+            }
+
+            return node;
         }
 
         public Stream FindFile(string fileName)
         {
-            var node = GetNodes()[0];
 
-            var where = AIRfly.Download.Error;
-            var key = ChordServer.GetHash(fileName);
+            var node = GetValidNode();
 
-            var instance = ChordServer.Instance(node);
-            if (instance.ContainKey(key))
+            try
             {
-                where = AIRfly.Download.DataBase;
-
-            }
-            else if (instance.ContainInCache(fileName))
-            {
-                where = AIRfly.Download.Cache;
-            }
-            else
-            {
-                var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
-
-                if (conteinerNodeInstance.ContainKey(key))
+                if(node != null)
                 {
+                    var where = AIRfly.Download.Error;
+                    var key = ChordServer.GetHash(fileName);
 
-                    var fileStream = conteinerNodeInstance.GetStream(fileName, false);
-                    var request = new FileUploadMessage();
-                    var fileMetadata = new FileMetaData(fileName);
+                    var instance = ChordServer.Instance(node);
+                    if (instance.ContainKey(key))
+                    {
+                        where = AIRfly.Download.DataBase;
 
-                    request.Metadata = fileMetadata;
-                    request.FileByteStream = fileStream;
+                    }
+                    else if (instance.ContainInCache(fileName))
+                    {
+                        where = AIRfly.Download.Cache;
+                    }
+                    else
+                    {
+                        var conteinerNodeInstance = ChordServer.Instance(ChordServer.CallFindContainerKey(node, key));
 
-                    instance.AddCacheFile(request);
-                    where = AIRfly.Download.Cache;
+                        if (conteinerNodeInstance.ContainKey(key))
+                        {
+
+                            var fileStream = conteinerNodeInstance.GetStream(fileName, false);
+                            var request = new FileUploadMessage();
+                            var fileMetadata = new FileMetaData(fileName);
+
+                            request.Metadata = fileMetadata;
+                            request.FileByteStream = fileStream;
+
+                            instance.AddCacheFile(request);
+                            where = AIRfly.Download.Cache;
+                        }
+                    }
+
+                    if (AIRfly.Download.Error != where)
+                        return Download(node, fileName, where == AIRfly.Download.Cache);
                 }
             }
+            catch (Exception e)
+            {
+                DHTChord.Logger.Logger.Log(DHTChord.Logger.Logger.LogLevel.Error, "Find file", $"Error during finding file {fileName} {e.ToString()}");
+                FindFile(fileName);
+            }
 
-            if (AIRfly.Download.Error != where)
-               return Download(node, fileName, where == AIRfly.Download.Cache);
             return null;
         }
 
@@ -129,30 +172,42 @@ namespace AIRflyWebApp.AIRfly
 
         public IEnumerable<string> GetAllFilesInSystem()
         {
-            var node = GetNodes()[0];
+            var node = GetValidNode();
 
-            var initInstance = ChordServer.Instance(node);
-
-            SortedSet<string> result = new SortedSet<string>();
-
-            foreach (var item in initInstance.GetDb())
+            try
             {
-                result.Add(item);
-            }
-
-            initInstance = ChordServer.Instance(initInstance.Successor);
-
-            while (initInstance.Id != node.Id)
-            {
-                foreach (var item in initInstance.GetDb())
+                if(node != null)
                 {
-                    result.Add(item);
+                    var initInstance = ChordServer.Instance(node);
+
+                    SortedSet<string> result = new SortedSet<string>();
+
+                    foreach (var item in initInstance.GetDb())
+                    {
+                        result.Add(item);
+                    }
+
+                    initInstance = ChordServer.Instance(initInstance.Successor);
+
+                    while (initInstance.Id != node.Id)
+                    {
+                        foreach (var item in initInstance.GetDb())
+                        {
+                            result.Add(item);
+                        }
+
+                        initInstance = ChordServer.Instance(initInstance.Successor);
+                    }
+
+                    return result;
                 }
-
-                initInstance = ChordServer.Instance(initInstance.Successor);
             }
-
-            return result;
+            catch (Exception e)
+            {
+                DHTChord.Logger.Logger.Log(DHTChord.Logger.Logger.LogLevel.Error, "showing all files", $"Error during showing all files {e.ToString()}");
+                GetAllFilesInSystem();
+            }
+            return new List<string>();
         }
     }
 }

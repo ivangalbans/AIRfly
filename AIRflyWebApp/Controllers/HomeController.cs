@@ -28,18 +28,12 @@ namespace AIRflyWebApp.Controllers
         {
             ViewData["Message"] = "Your application description page.";
 
-           // service.FindFile("text.txt", @"D:\_3000-Down\");
-
-            var a = service.GetAllFilesInSystem();
             return View();
         }
 
         public IActionResult Contact()
         {
             ViewData["Message"] = "Your contact page.";
-
-            var directory = Directory.EnumerateFiles(@"D:\toSend");
-           
 
             return View();
         }

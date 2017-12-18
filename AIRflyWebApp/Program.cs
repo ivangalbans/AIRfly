@@ -8,6 +8,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+
 namespace AIRflyWebApp
 {
     public class Program
@@ -16,6 +17,7 @@ namespace AIRflyWebApp
         {
             BuildWebHost(args).Run();
         }
+
         public static IWebHost BuildWebHost(string[] args)
         {
             var ips = Dns.GetHostAddresses(Dns.GetHostName())
@@ -25,8 +27,8 @@ namespace AIRflyWebApp
                         .Distinct()
                         .ToList();
             ips.Add("http://localhost:12465");
+
             return WebHost.CreateDefaultBuilder(args)
-                     .UseKestrel(opts => { opts.Limits.MaxRequestBodySize = 132428800; })
                      .UseStartup<Startup>()
                      .UseUrls(ips.ToArray())
                      .Build();

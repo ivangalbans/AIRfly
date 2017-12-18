@@ -28,6 +28,7 @@ namespace AIRflyWebApp.Controllers
 
 
         [HttpPost("UploadFiles")]
+        [RequestSizeLimit(432428800)]
         public async Task<IActionResult> Post(List<IFormFile> files)
         {
             long size = files.Sum(f => f.Length);

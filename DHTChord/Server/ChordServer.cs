@@ -206,8 +206,7 @@ namespace DHTChord.Server
             Log(LogLevel.Debug, "Discovery", "Discovering ChordNode Instances");
             try
             {
-                var endpoints = discoveryClient.Find(new FindCriteria(typeof(IChordNodeInstance))).Endpoints
-                    .Where(x => x.Address.Uri.AbsoluteUri.StartsWith("net.tcp")).ToList();
+                var endpoints = discoveryClient.Find(new FindCriteria(typeof(IChordNodeInstance)) { MaxResults = 4,  }).Endpoints;
 
                 if (endpoints.Count > 0)
                 {

@@ -29,7 +29,7 @@ namespace DHTChord.Server
         /// </summary>
         /// <param name="id"> The ID to look up (ChordServer.LocalNode is used as the remoteNode).</param>
         /// <returns>The Successor of ID, or NULL in case of error.</returns>
-        private const int RetryCount = 3;
+        private const int RetryCount = 2;
         /// 
         public static ChordNode CallFindSuccessor(ulong id)
         {
@@ -206,10 +206,9 @@ namespace DHTChord.Server
             Log(LogLevel.Debug, "Discovery", "Discovering ChordNode Instances");
             try
             {
-                var endpoints = discoveryClient.Find(new FindCriteria(typeof(IChordNodeInstance)) { MaxResults = 4,  }).Endpoints;
+                var endpoints = discoveryClient.Find(new FindCriteria(typeof(IChordNodeInstance)) { MaxResults = 3,  }).Endpoints;
 
-                if (endpoints.Count > 0)
-                {
+               
                     var tmp = endpoints.Select(x => {
                         var inst = Instance(x.Address);
                         ChordNode ret = null;
@@ -221,16 +220,10 @@ namespace DHTChord.Server
                         return ret;
                     }).Where(x => x != null).ToList();
 
+                if (endpoints.Count > 0)
+                {
                     Log(LogLevel.Debug, "FindServiceAddress", $"Discovery {tmp.Count} nodes found");
-                    Console.WriteLine("****************************");
-                    foreach (var item in tmp)
-                    {
-                        Console.WriteLine(item);
-                    }
-                    Console.WriteLine("*****************************");
-
                     return tmp;
-
                 }
                 else
                 {
@@ -318,9 +311,9 @@ namespace DHTChord.Server
 
         public static bool SameRing(ChordNode a, ChordNode b)
         {
-            return CallFindContainerKey(a, b.Id).Equals(b);
+            return  CallFindContainerKey(a, b.Id).Equals(b);
         }
-     
+
         public static Binding CreategBinding()
         {
             return new NetTcpBinding(SecurityMode.None)

@@ -175,7 +175,7 @@ namespace DHTChord.NodeInstance
         {
             SeedNode = seed;
             FingerTable = new FingerTable(ChordServer.LocalNode);
-            SuccessorCache = new ChordNode[8];
+            SuccessorCache = new ChordNode[3];
 
             for (var i = 0; i < SuccessorCache.Length; i++)
             {
@@ -223,7 +223,6 @@ namespace DHTChord.NodeInstance
         private readonly BackgroundWorker _reJoin = new BackgroundWorker();
         private readonly BackgroundWorker _replicationStorage = new BackgroundWorker();
         private readonly BackgroundWorker _stabilizeDataBase = new BackgroundWorker();
-        private readonly BackgroundWorker _updateSeedCache = new BackgroundWorker();
 
         public void StartMaintenance()
         {
@@ -250,10 +249,6 @@ namespace DHTChord.NodeInstance
             _stabilizeDataBase.DoWork += StabilizeDataBase;
             _stabilizeDataBase.WorkerSupportsCancellation = true;
             _stabilizeDataBase.RunWorkerAsync();
-
-            _updateSeedCache.DoWork += UpdateSeedCache;
-            _updateSeedCache.WorkerSupportsCancellation = true;
-            _updateSeedCache.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -339,11 +334,10 @@ namespace DHTChord.NodeInstance
                     if (preInstance != null && preInstance.State != CommunicationState.Closed)
                         preInstance.Close();
                 }
-                Thread.Sleep(3000);
+                Thread.Sleep(30000);
             }
         }
-
-        private void ReJoin(object sender, DoWorkEventArgs ea)
+        private void ReplicateStorage(object sender, DoWorkEventArgs ea)
         {
             BackgroundWorker me = (BackgroundWorker)sender;
 
@@ -351,12 +345,56 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
+
+                    foreach (var key in GetKeys())
+                    {
+                        if (IsIdInRange(key, Predecessor.Id, Id))
+                        {
+                            ChordServer.CallReplicationFile(Successor, GetFromDb(key));
+
+                        }
+                    }
+
+                    var sucInstance = ChordServer.Instance(Successor);
+                    if (IsInstanceValid(sucInstance, "ReplicationFile"))
+                    {
+                        foreach (var key in sucInstance.GetKeys())
+                        {
+                            if (IsIdInRange(key, Predecessor.Id, Id))
+                            {
+                                sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode, null);
+                            }
+                        }
+                        sucInstance.Close();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "Maintenance", $"Error occured during ReplicateStorage ({e.Message})");
+                }
+
+                Thread.Sleep(30000);
+            }
+        }
+
+
+        private void ReJoin(object sender, DoWorkEventArgs ea)
+        {
+            BackgroundWorker me = (BackgroundWorker) sender;
+
+            while (!me.CancellationPending)
+            {
+                try
+                {
+
                     if (_hasReJoin)
                     {
+                        SeedChache = ChordServer.FindServiceAddress();
                         foreach (var nodeCache in SeedChache)
                         {
                             var responsableNodeCache = FindContainerKey(nodeCache.Id);
-                            if (!ChordServer.SameRing(nodeCache, responsableNodeCache) && Join(nodeCache))
+                            if (responsableNodeCache != null &&
+                                !ChordServer.SameRing(nodeCache, responsableNodeCache) && Join(nodeCache))
                                 break;
                         }
                     }
@@ -416,22 +454,6 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    //if (SeedNode != null)
-                    //{
-                    //    Console.WriteLine("***************************************");
-                    //    var node = LocalNode;
-                    //    var nodee = FindContainerKey(node.Id);
-
-                    //    Console.WriteLine(node);
-                    //    Console.WriteLine(nodee);
-
-                    //    Console.WriteLine("---------------------");
-                    //    Console.WriteLine(SeedNode);
-                    //    Console.WriteLine(FindContainerKey(SeedNode.Id));
-
-                    //    Console.WriteLine("***************************************");
-                    //}
-
                     var succPredNode = ChordServer.GetPredecessor(Successor);
                     if (succPredNode != null)
                     {
@@ -488,23 +510,7 @@ namespace DHTChord.NodeInstance
             }
         }
 
-        private void UpdateSeedCache(object sender, DoWorkEventArgs ea)
-        {
-            var me = (BackgroundWorker)sender;
-
-            while (!me.CancellationPending)
-            {
-                try
-                {
-                    SeedChache = ChordServer.FindServiceAddress();
-                }
-                catch (Exception e)
-                {
-                    Log(LogLevel.Error, "UpdateSeedCache", $"Update Seed Cache error: {e.Message}");
-                }
-            }
-            Thread.Sleep(5000);
-        }
+     
 
         public void Notify(ChordNode callingNode)
         {
@@ -518,7 +524,6 @@ namespace DHTChord.NodeInstance
 
         private void UpdateFingerTable(object sender, DoWorkEventArgs ea)
         {
-            //TODO
             var me = (BackgroundWorker)sender;
 
             while (!me.CancellationPending)
@@ -599,7 +604,6 @@ namespace DHTChord.NodeInstance
 
         public void AddCache(string value)
         {
-            //TODO: Delete n
             if (_cache.Count == 5)
             {
                 var file = _cache.Dequeue();
@@ -639,7 +643,7 @@ namespace DHTChord.NodeInstance
         {
             ChordNode owningNode = ChordServer.CallFindSuccessor(key);
             //return owningNode;
-            if (owningNode.Equals(ChordServer.LocalNode))
+            if (owningNode!=null && owningNode.Equals(ChordServer.LocalNode))
                 return owningNode;
             return ChordServer.CallFindContainerKey(owningNode, key);
         }
@@ -649,46 +653,7 @@ namespace DHTChord.NodeInstance
         /// </summary>
         /// <param name="sender">The background worker thread this task is running on.</param>
         /// <param name="ea">Args (ignored).</param>
-        private void ReplicateStorage(object sender, DoWorkEventArgs ea)
-        {
-            BackgroundWorker me = (BackgroundWorker)sender;
-
-            while (!me.CancellationPending)
-            {
-                try
-                {
-
-                    foreach (var key in GetKeys())
-                    {
-                        if (IsIdInRange(key, Predecessor.Id, Id))
-                        {
-                            ChordServer.CallReplicationFile(Successor, GetFromDb(key));
-
-                        }
-                    }
-
-                    var sucInstance = ChordServer.Instance(Successor);
-                    if (IsInstanceValid(sucInstance, "ReplicationFile"))
-                    {
-                        foreach (var key in sucInstance.GetKeys())
-                        {
-                            if (IsIdInRange(key, Predecessor.Id, Id))
-                            {
-                                sucInstance.SendFile(sucInstance.GetFromDb(key), LocalNode, null);
-                            }
-                        }
-                        sucInstance.Close();
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log(LogLevel.Error, "Maintenance", $"Error occured during ReplicateStorage ({e.Message})");
-                }
-
-                Thread.Sleep(30000);
-            }
-        }
-
+    
         public void AddNewFile(FileUploadMessage request)
         {
             ulong key = ChordServer.GetHash(request.Metadata.RemoteFileName);
@@ -698,8 +663,6 @@ namespace DHTChord.NodeInstance
 
         public void SendFile(string remoteFileName, ChordNode remoteNode, string remotePath)
         {
-
-
             if (remotePath is null)
                 remotePath = ServerPath;
 

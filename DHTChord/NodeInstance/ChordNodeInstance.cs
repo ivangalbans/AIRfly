@@ -223,6 +223,7 @@ namespace DHTChord.NodeInstance
         private readonly BackgroundWorker _reJoin = new BackgroundWorker();
         private readonly BackgroundWorker _replicationStorage = new BackgroundWorker();
         private readonly BackgroundWorker _stabilizeDataBase = new BackgroundWorker();
+        private readonly BackgroundWorker _updateSeedCache = new BackgroundWorker();
 
         public void StartMaintenance()
         {
@@ -238,6 +239,16 @@ namespace DHTChord.NodeInstance
             _updateFingerTable.WorkerSupportsCancellation = true;
             _updateFingerTable.RunWorkerAsync();
 
+            try
+            {
+                SeedChache = ChordServer.FindServiceAddress();
+            }
+            catch (Exception e)
+            {
+                Log(LogLevel.Error, "UpdateSeedCache", $"Update Seed Cache error: {e.Message}");
+            }
+
+
             _reJoin.DoWork += ReJoin;
             _reJoin.WorkerSupportsCancellation = true;
             _reJoin.RunWorkerAsync();
@@ -249,6 +260,10 @@ namespace DHTChord.NodeInstance
             _stabilizeDataBase.DoWork += StabilizeDataBase;
             _stabilizeDataBase.WorkerSupportsCancellation = true;
             _stabilizeDataBase.RunWorkerAsync();
+
+            _updateSeedCache.DoWork += UpdateSeedCache;
+            _updateSeedCache.WorkerSupportsCancellation = true;
+            _updateSeedCache.RunWorkerAsync();
         }
 
         public void StopMaintenance()
@@ -377,6 +392,23 @@ namespace DHTChord.NodeInstance
             }
         }
 
+        private void UpdateSeedCache(object sender, DoWorkEventArgs ea)
+        {
+            var me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                Thread.Sleep(20000);
+                try
+                {
+                    SeedChache = ChordServer.FindServiceAddress();
+                }
+                catch (Exception e)
+                {
+                    Log(LogLevel.Error, "UpdateSeedCache", $"Update Seed Cache error: {e.Message}");
+                }
+            }
+        }
 
         private void ReJoin(object sender, DoWorkEventArgs ea)
         {
@@ -386,10 +418,8 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-
                     if (_hasReJoin)
                     {
-                        SeedChache = ChordServer.FindServiceAddress();
                         foreach (var nodeCache in SeedChache)
                         {
                             var responsableNodeCache = FindContainerKey(nodeCache.Id);

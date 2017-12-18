@@ -21,12 +21,13 @@ namespace AIRflyWebApp.AIRfly
     public class AIRflyService
     {
         private IMemoryCache cache;
-
+        public static List<ChordNode> Nodes;
         private static readonly string cacheName = "chord_nodes";
 
         public AIRflyService(IMemoryCache cache)
         {
             this.cache = cache;
+
         }
 
         private List<ChordNode> GetNodes()
@@ -36,13 +37,14 @@ namespace AIRflyWebApp.AIRfly
                 e.SetOptions(new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(30)));
 
+                return Nodes;
                 return ChordServer.FindServiceAddress();
             });
 
             return nodes;
         }
 
-        public void SendFile(IFormFile fileStream)
+        public void SendFile(IFormFile file)
         {
             var node = GetValidNode();
 
@@ -50,14 +52,14 @@ namespace AIRflyWebApp.AIRfly
             {
                 if(node != null)
                 {
-                    var key = ChordServer.GetHash(fileStream.FileName);
+                    var key = ChordServer.GetHash(file.FileName);
 
 
                     var request = new FileUploadMessage();
 
-                    var fileMetadata = new FileMetaData(fileStream.FileName);
+                    var fileMetadata = new FileMetaData(file.FileName);
                     request.Metadata = fileMetadata;
-                    request.FileByteStream = fileStream.OpenReadStream();
+                    request.FileByteStream = file.OpenReadStream();
 
                     var conteinerNode = ChordServer.CallFindContainerKey(node, key);
 
@@ -66,8 +68,8 @@ namespace AIRflyWebApp.AIRfly
             }
             catch (Exception e)
             {
-                DHTChord.Logger.Logger.Log(DHTChord.Logger.Logger.LogLevel.Error, "Sending file", $"Error during sending file {fileStream.FileName} {e.ToString()}");
-                SendFile(fileStream);
+                DHTChord.Logger.Logger.Log(DHTChord.Logger.Logger.LogLevel.Error, "Sending file", $"Error during sending file {file.FileName} {e.ToString()}");
+                SendFile(file);
             }
             
         }
@@ -147,27 +149,6 @@ namespace AIRflyWebApp.AIRfly
         private static Stream Download(ChordNode node, string file, bool from)
         {
             return ChordServer.Instance(node).GetStream(file, from);
-
-            //var request = new FileUploadMessage();
-
-            //var fileMetadata = new FileMetaData(file);
-            //request.Metadata = fileMetadata;
-            //request.FileByteStream = fileStream;
-
-
-
-
-            //const int bufferSize = 65536; // 64K
-
-            //byte[] buffer = new byte[bufferSize];
-            //int bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
-
-            //while (bytesRead > 0)
-            //{
-            //    outfile.Write(buffer, 0, bytesRead);
-            //    bytesRead = request.FileByteStream.Read(buffer, 0, bufferSize);
-            //}
-
         }
 
         public IEnumerable<string> GetAllFilesInSystem()

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AIRflyWebApp.AIRfly;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 namespace AIRflyWebApp.Controllers
 {
@@ -22,6 +23,9 @@ namespace AIRflyWebApp.Controllers
         [HttpGet("/getfile/{song}")]
         public FileStreamResult GetFile(string song)
         {
+            return new FileStreamResult(service.FindFile(song), "audio/mpeg");
+            StringSegmetn
+            MediaTypeHeaderValue v=new MediaTypeHeaderValue();
             return new FileStreamResult(service.FindFile(song), "audio/mpeg");
         }
 

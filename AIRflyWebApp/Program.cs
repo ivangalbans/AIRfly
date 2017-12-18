@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
+using AIRflyWebApp.AIRfly;
+using DHTChord.Server;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,8 +17,30 @@ namespace AIRflyWebApp
 {
     public class Program
     {
+        private static readonly BackgroundWorker _updateSeedCache = new BackgroundWorker();
+
+        public static void StartMaintenance()
+        {
+            _updateSeedCache.DoWork += UpdateSeedCache;
+            _updateSeedCache.WorkerSupportsCancellation = true;
+            _updateSeedCache.RunWorkerAsync();
+        }
+        private static void UpdateSeedCache(object sender, DoWorkEventArgs ea)
+        {
+            var me = (BackgroundWorker)sender;
+
+            while (!me.CancellationPending)
+            {
+                Thread.Sleep(5000);
+                AIRflyService.Nodes = ChordServer.FindServiceAddress();
+            }
+        }
+
+
         public static void Main(string[] args)
         {
+            AIRflyService.Nodes = ChordServer.FindServiceAddress();
+            StartMaintenance();
             BuildWebHost(args).Run();
         }
 

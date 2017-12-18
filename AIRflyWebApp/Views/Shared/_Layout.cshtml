@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AIRflyWebApp</title>
+    <title>@ViewData["Title"] - AIRfly</title>
 
     @*<environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -14,12 +14,12 @@
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
-    </environment>*@
-
-
+    </environment>
+        *@
     <link rel="stylesheet" href="static/css/reset.css" type="text/css" media="all">
     <link rel="stylesheet" href="static/css/layout.css" type="text/css" media="all">
     <link rel="stylesheet" href="static/css/style.css" type="text/css" media="all">
+    
 
 </head>
 <body>
@@ -45,13 +45,12 @@
             </div>
         </div>
     </nav>*@
-    <div class="container body-content">
-        @RenderBody()
-        <hr />
-        <footer>
-            <p>&copy; 2017 - AIRfly</p>
-        </footer>
-    </div>
+
+
+    @RenderBody()
+
+    
+
 
     @*<environment include="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>

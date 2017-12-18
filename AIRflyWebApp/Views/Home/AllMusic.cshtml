@@ -8,8 +8,8 @@
 
     .name-song {
         font-size: x-large;
-        background-color: rgba(47, 0, 130, 0.83);
-        color: white
+        color: white;
+        font-family:cursive;
     }
 
 </style>
@@ -19,20 +19,21 @@
         foreach (var v in ViewBag.songs)
         {
             
-            <li><a class="name-song" asp-controller="DataTransfer" asp-route-song="@v" asp-action="GetFile">@v</a></li>
+            <a class="name-song" asp-controller="DataTransfer" asp-route-song="@v" asp-action="GetFile">@v</a>
             
             <!--<audio controls="" name="media"><source src="http://localhost:12465/getfile/@v"></audio>-->
             <br />
         }
     }
+    
+    <br />
+    <br />
+    <br />
+    
 
-    <form id="ContactForm" method="post" enctype="multipart/form-data" asp-controller="DataTransfer" asp-action="Post">
-        <div class="button">
-            <input  type="file" name="files" multiple />
-        </div>
-        <div class="button">
-            <button  type="submit" value="Upload">Upload</button>
-        </div>
+    <form method="post" enctype="multipart/form-data" asp-controller="DataTransfer" asp-action="Post">
+        <input class="btn btn-primary"  type="file" name="files" multiple />
+        <button class="btn btn-primary"  type="submit" value="Upload">Upload</button>
     </form>
 
     <script>

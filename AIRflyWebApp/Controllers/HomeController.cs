@@ -17,6 +17,7 @@ namespace AIRflyWebApp.Controllers
         public HomeController(AIRflyService service)
         {
             this.service = service;
+            service.GetAllFilesInSystem();
         }
 
         public IActionResult Index()

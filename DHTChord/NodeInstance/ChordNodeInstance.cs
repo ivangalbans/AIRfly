@@ -165,7 +165,7 @@ namespace DHTChord.NodeInstance
             }
             catch (Exception e)
             {
-                
+
                 Log(LogLevel.Debug, "Instance", $" {message}  Incoming instance was not valid: ({e.Message}).");
                 return false;
             }
@@ -339,7 +339,7 @@ namespace DHTChord.NodeInstance
                     if (preInstance != null && preInstance.State != CommunicationState.Closed)
                         preInstance.Close();
                 }
-                Thread.Sleep(200000);
+                Thread.Sleep(3000);
             }
         }
 
@@ -369,7 +369,7 @@ namespace DHTChord.NodeInstance
                 {
                     Log(LogLevel.Error, "Maintenance", $"Error occured during ReJoin ({e.Message})");
                 }
-                Thread.Sleep(60000);
+                Thread.Sleep(5000);
             }
         }
 
@@ -404,7 +404,7 @@ namespace DHTChord.NodeInstance
 
                 }
 
-                Thread.Sleep(10000);
+                Thread.Sleep(100);
             }
         }
 
@@ -416,7 +416,21 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                   
+                    //if (SeedNode != null)
+                    //{
+                    //    Console.WriteLine("***************************************");
+                    //    var node = LocalNode;
+                    //    var nodee = FindContainerKey(node.Id);
+
+                    //    Console.WriteLine(node);
+                    //    Console.WriteLine(nodee);
+
+                    //    Console.WriteLine("---------------------");
+                    //    Console.WriteLine(SeedNode);
+                    //    Console.WriteLine(FindContainerKey(SeedNode.Id));
+
+                    //    Console.WriteLine("***************************************");
+                    //}
 
                     var succPredNode = ChordServer.GetPredecessor(Successor);
                     if (succPredNode != null)
@@ -447,7 +461,7 @@ namespace DHTChord.NodeInstance
                                 instance.Close();
                                 break;
                             }
-                            if (instance != null &&instance.State != CommunicationState.Closed)
+                            if (instance != null && instance.State != CommunicationState.Closed)
                             {
                                 instance.Close();
                             }
@@ -470,7 +484,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during StabilizeSuccessors ({e.Message})");
                 }
 
-                Thread.Sleep(10000);
+                Thread.Sleep(100);
             }
         }
 
@@ -489,7 +503,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "UpdateSeedCache", $"Update Seed Cache error: {e.Message}");
                 }
             }
-            Thread.Sleep(300000);
+            Thread.Sleep(5000);
         }
 
         public void Notify(ChordNode callingNode)
@@ -529,7 +543,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "Maintenance", $"Error occured during UpdateFingerTable ({e.Message})");
                 }
 
-                Thread.Sleep(10000);
+                Thread.Sleep(100);
             }
         }
 
@@ -563,7 +577,7 @@ namespace DHTChord.NodeInstance
                     instance.Close();
             }
         }
-        
+
         private readonly SortedList<ulong, string> _db = new SortedList<ulong, string>();
 
 
@@ -586,7 +600,7 @@ namespace DHTChord.NodeInstance
         public void AddCache(string value)
         {
             //TODO: Delete n
-            if(_cache.Count == 5)
+            if (_cache.Count == 5)
             {
                 var file = _cache.Dequeue();
                 File.Delete(ServerCachePath + file);
@@ -654,7 +668,7 @@ namespace DHTChord.NodeInstance
                     }
 
                     var sucInstance = ChordServer.Instance(Successor);
-                    if(IsInstanceValid(sucInstance, "ReplicationFile"))
+                    if (IsInstanceValid(sucInstance, "ReplicationFile"))
                     {
                         foreach (var key in sucInstance.GetKeys())
                         {
@@ -664,7 +678,7 @@ namespace DHTChord.NodeInstance
                             }
                         }
                         sucInstance.Close();
-                    }                    
+                    }
                 }
                 catch (Exception e)
                 {
@@ -750,14 +764,14 @@ namespace DHTChord.NodeInstance
         public Stream GetStream(string file, bool chache = false)
         {
             Stream fileStream;
-            if (chache)            
-                fileStream = new FileStream(ServerCachePath + file, FileMode.Open, FileAccess.Read);                           
+            if (chache)
+                fileStream = new FileStream(ServerCachePath + file, FileMode.Open, FileAccess.Read);
             else
                 fileStream = new FileStream(ServerPath + file, FileMode.Open, FileAccess.Read);
 
-            return fileStream;            
+            return fileStream;
         }
-        
+
 
         private readonly Queue<string> _cache = new Queue<string>();
 
@@ -768,7 +782,7 @@ namespace DHTChord.NodeInstance
             AddCache(request.Metadata.RemoteFileName);
             UploadFile(request);
         }
-      
+
         public bool ContainInCache(string value)
         {
             return _cache.Contains(value);
@@ -780,7 +794,7 @@ namespace DHTChord.NodeInstance
             return copy;
         }
 
-        
+
     }
 
 
@@ -939,7 +953,7 @@ namespace DHTChord.NodeInstance
             return Channel.GetDb();
         }
 
-       
+
     }
 
 

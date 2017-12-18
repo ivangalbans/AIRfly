@@ -437,7 +437,7 @@ namespace DHTChord.NodeInstance
                 {
                     Log(LogLevel.Error, "Maintenance", $"Error occured during ReJoin ({e.Message})");
                 }
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
             }
         }
 

@@ -36,9 +36,7 @@ namespace AIRflyWebApp.AIRfly
             {
                 e.SetOptions(new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(30)));
-
-                return Nodes;
-                return ChordServer.FindServiceAddress();
+                return new List<ChordNode>(Nodes);
             });
 
             return nodes;

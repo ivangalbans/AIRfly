@@ -732,6 +732,8 @@ namespace DHTChord.NodeInstance
             FileStream outfile = null;
             try
             {
+                if (File.Exists(serverFileName))
+                    return;
                 outfile = new FileStream(serverFileName, FileMode.Create);
 
 
@@ -792,28 +794,7 @@ namespace DHTChord.NodeInstance
             return copy;
         }
 
-        public void ReloadDb()
-        {
-            var directory = Directory.EnumerateFiles(ServerPath);
-            
-            foreach (var f in directory)
-            {
-                var fileName = Path.GetFileName(f);
-                var key = ChordServer.GetHash(fileName);
-
-                Stream fileStream = new FileStream(f, FileMode.Open, FileAccess.Read);
-
-                var request = new FileUploadMessage();
-
-                var fileMetadata = new FileMetaData(fileName);
-                request.Metadata = fileMetadata;
-                request.FileByteStream = fileStream;
-
-                var conteinerNode = ChordServer.CallFindContainerKey(LocalNode, key);
-
-                ChordServer.Instance(conteinerNode).AddNewFile(request);
-            }           
-        }
+        
     }
 
 
@@ -972,10 +953,7 @@ namespace DHTChord.NodeInstance
             return Channel.GetDb();
         }
 
-        public void ReloadDb()
-        {
-            Channel.ReloadDb();
-        }
+       
     }
 
 

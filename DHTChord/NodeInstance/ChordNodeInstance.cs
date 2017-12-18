@@ -131,7 +131,6 @@ namespace DHTChord.NodeInstance
 
         public void GetSuccessorCache(ChordNode remoteNode)
         {
-            //TODO
             var remoteSuccessorCache = ChordServer.GetSuccessorCache(remoteNode);
             if (remoteSuccessorCache != null)
             {
@@ -285,11 +284,7 @@ namespace DHTChord.NodeInstance
             return copy;
         }
 
-        public bool EraseKey(ulong key)
-        {
-            return _db.Remove(key);
-        }
-
+   
         public bool EraseFile(ulong key)
         {
             var fileName = GetFromDb(key);
@@ -366,7 +361,6 @@ namespace DHTChord.NodeInstance
                         if (IsIdInRange(key, Predecessor.Id, Id))
                         {
                             ChordServer.CallReplicationFile(Successor, GetFromDb(key));
-
                         }
                     }
 
@@ -881,7 +875,6 @@ namespace DHTChord.NodeInstance
 
         public IEnumerable<ulong> GetKeys() => Channel.GetKeys();
 
-        public bool EraseKey(ulong key) => Channel.EraseKey(key);
 
         public bool ContainKey(ulong key) => Channel.ContainKey(key);
 

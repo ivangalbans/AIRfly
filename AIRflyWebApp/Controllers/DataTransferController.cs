@@ -30,17 +30,12 @@ namespace AIRflyWebApp.Controllers
 
         [HttpPost("UploadFiles")]
         [RequestSizeLimit(1297286400)]
-        public async Task<IActionResult> Post(List<IFormFile> files)
+        public IActionResult Post(List<IFormFile> files)
         {
-            long size = files.Sum(f => f.Length);
-            // full path to file in temp location
-            var filePath = Path.GetTempFileName();
             foreach (var formFile in files)
             {
                 service.SendFile(formFile);
-               
             }
-           
             return new RedirectToActionResult("AllMusic", "Home", new { });
         }
 

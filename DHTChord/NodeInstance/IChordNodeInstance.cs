@@ -38,8 +38,6 @@ namespace DHTChord.NodeInstance
         [OperationContract]
         IEnumerable<ulong> GetKeys();
 
-        [OperationContract]
-        bool EraseKey(ulong key);
 
         [OperationContract]
         bool ContainKey(ulong key);

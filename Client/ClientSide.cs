@@ -198,7 +198,7 @@ namespace Client
 
             while (!me.CancellationPending)
             {
-                Thread.Sleep(10000);
+                Thread.Sleep(100000);
                 _nodeCache= ChordServer.FindServiceAddress();
             }
         }

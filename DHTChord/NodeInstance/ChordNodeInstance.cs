@@ -339,7 +339,7 @@ namespace DHTChord.NodeInstance
                     if (preInstance != null && preInstance.State != CommunicationState.Closed)
                         preInstance.Close();
                 }
-                Thread.Sleep(30000);
+                Thread.Sleep(200000);
             }
         }
 
@@ -369,7 +369,7 @@ namespace DHTChord.NodeInstance
                 {
                     Log(LogLevel.Error, "Maintenance", $"Error occured during ReJoin ({e.Message})");
                 }
-                Thread.Sleep(50000);
+                Thread.Sleep(60000);
             }
         }
 
@@ -416,21 +416,7 @@ namespace DHTChord.NodeInstance
             {
                 try
                 {
-                    //if (SeedNode != null)
-                    //{
-                    //    Console.WriteLine("***************************************");
-                    //    var node = LocalNode;
-                    //    var nodee = FindContainerKey(node.Id);
-
-                    //    Console.WriteLine(node);
-                    //    Console.WriteLine(nodee);
-
-                    //    Console.WriteLine("---------------------");
-                    //    Console.WriteLine(SeedNode);
-                    //    Console.WriteLine(FindContainerKey(SeedNode.Id));
-
-                    //    Console.WriteLine("***************************************");
-                    //}
+                   
 
                     var succPredNode = ChordServer.GetPredecessor(Successor);
                     if (succPredNode != null)
@@ -503,7 +489,7 @@ namespace DHTChord.NodeInstance
                     Log(LogLevel.Error, "UpdateSeedCache", $"Update Seed Cache error: {e.Message}");
                 }
             }
-            Thread.Sleep(30000);
+            Thread.Sleep(300000);
         }
 
         public void Notify(ChordNode callingNode)

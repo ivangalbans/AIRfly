@@ -1,32 +1,53 @@
-﻿
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
 
+
+    
+<style>
+
+    .name-song {
+        font-size: x-large;
+        background-color: rgba(47, 0, 130, 0.83);
+        color: white
+    }
+
+</style>
 
     @{
 
         foreach (var v in ViewBag.songs)
         {
-            @*var dict =
-                new Dictionary<string, string>
-                {
-                {"song", v},
-                };
-            <li><a asp-area="" asp-all-route-data="dict" asp-controller="DataTransfer" asd=@v asp-action="GetFile">@v</a></li>*@
-            <h5>@v</h5>
-            <audio controls=""  name="media"><source src="http://localhost:12465/getfile/@v"></audio>
-            <br/>
+            
+            <li><a class="name-song" asp-controller="DataTransfer" asp-route-song="@v" asp-action="GetFile">@v</a></li>
+            
+            <!--<audio controls="" name="media"><source src="http://localhost:12465/getfile/@v"></audio>-->
+            <br />
         }
     }
 
-<form method="post" enctype="multipart/form-data" asp-controller="DataTransfer" asp-action="Post">
-    <div class="form-group">
-        <div class="col-md-10">
-            <p>Upload one or more files using this form:</p>
-            <input type="file" name="files" multiple />
+    <form id="ContactForm" method="post" enctype="multipart/form-data" asp-controller="DataTransfer" asp-action="Post">
+        <div class="button">
+            <input  type="file" name="files" multiple />
         </div>
-    </div>
-    <div class="form-group">
-        <div class="col-md-10">
-            <input type="submit" value="Upload" />
+        <div class="button">
+            <button  type="submit" value="Upload">Upload</button>
         </div>
-    </div>
-</form>
+    </form>
+
+    <script>
+        $(document).ready(function () {
+            //gallery
+            $("#gallery1").jCarouselLite({
+                btnNext: ".next",
+                btnPrev: ".prev",
+                mouseWheel: true,
+                vertical: true,
+                circular: true,
+                visible: 2,
+                speed: 600,
+                easing: 'easeOutCirc'
+            });
+            Cufon.now();
+        })
+    </script>

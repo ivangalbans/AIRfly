@@ -34,7 +34,7 @@ namespace AIRflyWebApp.AIRfly
             var nodes = cache.GetOrCreate(cacheName, e =>
             {
                 e.SetOptions(new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
 
                 return ChordServer.FindServiceAddress();
             });

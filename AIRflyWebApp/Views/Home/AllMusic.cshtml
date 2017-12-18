@@ -15,15 +15,13 @@
 </style>
 
     @{
-
-        foreach (var v in ViewBag.songs)
-        {
-            
-            <a class="name-song" asp-controller="DataTransfer" asp-route-song="@v" asp-action="GetFile">@v</a>
-            
-            <!--<audio controls="" name="media"><source src="http://localhost:12465/getfile/@v"></audio>-->
-            <br />
-        }
+            var num = 0;
+            foreach (var v in ViewBag.songs)
+            {
+                num++;
+                <a class="name-song" asp-controller="DataTransfer" asp-route-song="@v" asp-action="GetFile">@num - @v</a>
+                <br />
+            }
     }
     
     <br />

@@ -1,17 +1,12 @@
 ﻿using DHTChord.InitServices;
-using DHTChord.Node;
 using DHTChord.Server;
-using System.IO;
-using System.Net;
-using static System.IO.Path;
 
-namespace Tester1
+namespace Server
 {
     class Program
     {
         static void Main(string[] args)
         {
-           
             if (args.Length == 0) args = new string[] { "3030", "D:\\A" };
             if (args.Length == 3)
             {

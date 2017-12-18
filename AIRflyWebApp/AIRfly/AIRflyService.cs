@@ -64,6 +64,7 @@ namespace AIRflyWebApp.AIRfly
                     var conteinerNode = ChordServer.CallFindContainerKey(node, key);
 
                     ChordServer.Instance(conteinerNode).AddNewFile(request);
+                    request.FileByteStream.Close();
                 }
             }
             catch (Exception e)

@@ -24,15 +24,12 @@ namespace AIRflyWebApp.Controllers
         public FileStreamResult GetFile(string song)
         {
             return new FileStreamResult(service.FindFile(song), "audio/mpeg");
-            StringSegmetn
-            MediaTypeHeaderValue v=new MediaTypeHeaderValue();
-            return new FileStreamResult(service.FindFile(song), "audio/mpeg");
         }
 
 
 
         [HttpPost("UploadFiles")]
-        [RequestSizeLimit(432428800)]
+        [RequestSizeLimit(1297286400)]
         public async Task<IActionResult> Post(List<IFormFile> files)
         {
             long size = files.Sum(f => f.Length);

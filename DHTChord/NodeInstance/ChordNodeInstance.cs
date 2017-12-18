@@ -629,6 +629,7 @@ namespace DHTChord.NodeInstance
 
         public void AddDb(ulong key, string value)
         {
+            if(!_db.ContainsKey(key))
             _db.Add(key, value);
         }
 

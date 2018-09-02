@@ -75,7 +75,7 @@ Puede contactarnos
 
 * 2235penton@gmail.com
 * ivan.galban.smith@gmail.com
-* raydelalonsobaryolo.gmail.com
+* raydelalonsobaryolo@gmail.com
 
 Authors
 -------

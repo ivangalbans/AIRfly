@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+    
+<style>
+
+    .name-song {
+        font-size: x-large;
+        color: white;
+        font-family:cursive;
+    }
+
+</style>
+
+    @{
+            var num = 0;
+            foreach (var v in ViewBag.songs)
+            {
+                num++;
+                <a class="name-song" asp-controller="DataTransfer" asp-route-song="@v" asp-action="GetFile">@num - @v</a>
+                <br />
+            }
+    }
+    
+    <br />
+    <br />
+    <br />
+    
+
+    <form method="post" enctype="multipart/form-data" asp-controller="DataTransfer" asp-action="Post">
+        <input class="btn btn-primary"  type="file" name="files" multiple />
+        <button class="btn btn-primary"  type="submit" value="Upload">Upload</button>
+    </form>
+
+    <script>
+        $(document).ready(function () {
+            //gallery
+            $("#gallery1").jCarouselLite({
+                btnNext: ".next",
+                btnPrev: ".prev",
+                mouseWheel: true,
+                vertical: true,
+                circular: true,
+                visible: 2,
+                speed: 600,
+                easing: 'easeOutCirc'
+            });
+            Cufon.now();
+        })
+    </script>

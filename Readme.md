@@ -70,16 +70,11 @@ Bibliografía
 
 [1] Ion Stoica, Robert Morris, David Karger, M. Frans Kaashoek, Hari Balakrishnan. Chord: A Scalable Peertopeer Lookup Service for Internet Applications.
 
-Puede contactarnos
--------------------
-
-* 2235penton@gmail.com
-* ivan.galban.smith@gmail.com
-* raydelalonsobaryolo@gmail.com
 
 Authors
 -------
 
-* Abel Penton Ibrahim
-* Ivan Galban Smith
-* Raydel E. Alonso Baryolo
+4th year Computer Science students, University of Havana:
+* Abel Penton Ibrahim: 2235penton@gmail.com
+* Ivan Galban Smith: ivan.galban.smith@gmail.com
+* Raydel E. Alonso Baryolo: raydelalonsobaryolo@gmail.com
